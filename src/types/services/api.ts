@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://supabase-pagluz-backend-new.ztdny5.easypanel.host';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.pagluz.com.br';
 
 // Configuração base do fetch
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
