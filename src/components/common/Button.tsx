@@ -53,50 +53,33 @@ export default function Button({
     className
   ].filter(Boolean).join(' ');
 
-  const iconClasses = [
-    'transition-transform duration-200 flex-shrink-0',
-    loading && 'animate-spin',
-    iconPosition === 'right' && 'ml-2 order-last',
-          {Icon && iconPosition === 'left' && (
-            <Icon className={`h-5 w-5 ${iconClasses}`} />
-          )}
-          <span>{children}</span>
-          {Icon && iconPosition === 'right' && (
-            <Icon className={`h-5 w-5 ${iconClasses}`} />
-          )}
-        </>
-      )}
-    </button>
-  );
-}
-    >
-      {children}
-    </Button>
-  );
-}
-
-export function FloatingButton({
-  children,
-  icon: Icon,
-  variant = 'primary',
-  size = 'lg',
-  className,
-  ...props
-}: ButtonProps) {
   return (
-    <Button
-      variant={variant}
-      size={size}
-      icon={Icon}
-      className={cn(
-        'fixed bottom-6 right-6 rounded-full shadow-[0_0_20px_rgba(0,255,136,0.4)] hover:shadow-[0_0_30px_rgba(0,255,136,0.6)]',
-        'transform hover:scale-110 active:scale-95',
-        'z-50',
-        className
-      )}
+    <button
+      className={`${baseClasses} group relative overflow-hidden flex items-center justify-center`}
+      disabled={disabled || loading}
       {...props}
     >
-      {children}
-    </Button>
+      {/* Shine effect on hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-transparent group-hover:via-white/20 transition-all duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
+      
+      <div className="flex items-center justify-center relative z-10">
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <span>Carregando...</span>
+          </>
+        ) : (
+          <>
+            {Icon && iconPosition === 'left' && (
+              <Icon className="h-5 w-5 mr-2" />
+            )}
+            <span>{children}</span>
+            {Icon && iconPosition === 'right' && (
+              <Icon className="h-5 w-5 ml-2" />
+            )}
+          </>
+        )}
+      </div>
+    </button>
   );
 }

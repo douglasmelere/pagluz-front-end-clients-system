@@ -227,3 +227,6 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
           </button>
         </div>
       </div>
+    </>
+  );
+}
