@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../hooks/useToast';
 import LoadingSpinner from './common/LoadingSpinner';
-import { Zap, Eye, EyeOff, User, Lock, Shield, Leaf, Wind } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, ArrowRight } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { validateEmail, validatePassword, sanitizeInput } from '../utils/security';
 
@@ -12,6 +12,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,54 +33,157 @@ export default function Login() {
       return;
     }
 
-    // Validação básica de senha (apenas verificar se não está vazia)
+    // Validação básica de senha
     if (sanitizedPassword.length === 0) {
       toast.showError('Por favor, insira sua senha.');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await login({ email: sanitizedEmail, password: sanitizedPassword });
       toast.showSuccess('Login realizado com sucesso!');
-      // O redirecionamento acontece automaticamente via AppContext
     } catch (error: any) {
       const errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
       toast.showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorativo animado */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decorativo premium */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Orbs animados */}
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
         
-        {/* Elementos flutuantes */}
-        <div className="absolute top-20 left-20 w-4 h-4 bg-green-400/40 rounded-full animate-bounce delay-300"></div>
-        <div className="absolute top-40 right-32 w-3 h-3 bg-emerald-400/40 rounded-full animate-bounce delay-700"></div>
-        <div className="absolute bottom-32 left-32 w-5 h-5 bg-blue-400/40 rounded-full animate-bounce delay-1000"></div>
-        <div className="absolute bottom-20 right-20 w-2 h-2 bg-green-400/40 rounded-full animate-bounce delay-500"></div>
+        {/* Grid subtle */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
       </div>
 
+      {/* Conteúdo Principal */}
       <div className="max-w-md w-full relative z-10">
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 hover:shadow-3xl transition-all duration-500">
-          {/* Logo e Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-36 h-36 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-3xl mb-6 shadow-[0_4px_14px_0_rgba(22,163,74,0.25)] hover:shadow-[0_0_20px_rgba(0,255,136,0.35)] hover:scale-110 transition-transform duration-300 group">
-              <PagluzLogo className="h-24 w-24 text-white group-hover:scale-110 transition-transform duration-500" />
+        {/* Card Premium */}
+        <div className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-8 border border-white/20 hover:border-emerald-400/40 transition-all duration-500 hover:shadow-emerald-500/10">
+          
+          {/* Header com Logo */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-pagluz rounded-2xl blur-xl opacity-75 animate-pulse"></div>
+              <div className="relative w-20 h-20 bg-gradient-pagluz rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/40 hover:scale-110 transition-transform duration-500 group">
+                <PagluzLogo className="h-12 w-12 text-white group-hover:drop-shadow-lg" />
+              </div>
             </div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">
-              Sistema de Gestão Energética
-            </h2>
-            <p className="text-slate-600 text-sm">
-              Plataforma inteligente para energia renovável
+            
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-2">
+              Pagluz
+            </h1>
+            <p className="text-slate-300 text-sm font-medium">
+              Plataforma Inteligente de Gestão Energética
             </p>
           </div>
 
           {/* Formulário */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            
+            {/* Email Input */}
+            <div className="relative group">
+              <label className="block text-sm font-semibold text-white/80 mb-2">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
+                  <User className="h-5 w-5" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  disabled={authLoading || isSubmitting}
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all duration-300 backdrop-blur-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            {/* Senha Input */}
+            <div className="relative group">
+              <label className="block text-sm font-semibold text-white/80 mb-2">
+                Senha
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  disabled={authLoading || isSubmitting}
+                  className="w-full pl-12 pr-12 py-3 bg-white/10 border-2 border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all duration-300 backdrop-blur-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Botão Submit */}
+            <button
+              type="submit"
+              disabled={authLoading || isSubmitting || !email || !password}
+              className="w-full group relative mt-8 py-3.5 px-6 bg-gradient-pagluz text-white font-bold rounded-xl hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0 flex items-center justify-center gap-3 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              
+              {authLoading || isSubmitting ? (
+                <>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Autenticando...</span>
+                </>
+              ) : (
+                <>
+                  <span>Entrar no Sistema</span>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Info Footer */}
+          <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <p className="text-xs text-slate-300 text-center">
+              🔒 Sua conexão é segura e criptografada. Seus dados nunca são compartilhados com terceiros.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-slate-400 text-sm">
+          <p>Sistema de Gestão Energética © 2024</p>
+          <p className="text-slate-500 mt-2">Transformando o futuro da energia</p>
+        </div>
+      </div>
+
+      {/* Loading Spinner Global */}
+      {authLoading && <LoadingSpinner />}
+    </div>
+  );
+}
+
             <div className="group">
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-green-600 transition-colors duration-200">
                 E-mail

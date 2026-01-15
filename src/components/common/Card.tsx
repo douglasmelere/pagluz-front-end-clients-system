@@ -1,10 +1,10 @@
 import React, { ReactNode } from 'react';
-import { cn, utilityClasses } from '../../utils/designTokens';
+import { utilityClasses } from '../../utils/designTokens';
 
 interface CardProps {
   children: ReactNode;
   className?: string;
-  variant?: 'default' | 'elevated' | 'outlined' | 'interactive';
+  variant?: 'default' | 'elevated' | 'outlined' | 'interactive' | 'gradient';
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   onClick?: () => void;
   disabled?: boolean;
@@ -29,34 +29,32 @@ export default function Card({
   };
 
   const variantClasses = {
-    default: utilityClasses.card.base,
-    elevated: 'bg-white rounded-xl border-0 shadow-lg hover:shadow-xl transition-all duration-300',
-    outlined: 'bg-white rounded-xl border-2 border-gray-200 shadow-sm hover:border-gray-300 transition-all duration-300',
-    interactive: cn(
-      utilityClasses.card.base,
-      utilityClasses.card.hover,
-      utilityClasses.card.active,
-      utilityClasses.card.interactive,
-      'cursor-pointer'
-    ),
-    primary: utilityClasses.card.primary,
-    blue: utilityClasses.card.blue
+    default: 'bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300',
+    elevated: 'bg-white rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1',
+    outlined: 'bg-white rounded-2xl border-2 border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all duration-300',
+    interactive: [
+      'bg-white rounded-2xl border border-slate-200 shadow-sm',
+      'hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1',
+      'transition-all duration-300 cursor-pointer active:scale-95'
+    ].join(' '),
+    gradient: 'bg-gradient-to-br from-white to-slate-50 rounded-2xl border border-slate-200 shadow-md hover:shadow-lg transition-all duration-300'
   };
 
-  const baseClasses = cn(
+  const baseClasses = [
     variantClasses[variant],
     paddingClasses[padding],
-    disabled && utilityClasses.states.disabled,
-    loading && utilityClasses.states.loading,
+    disabled && 'opacity-50 cursor-not-allowed',
+    loading && 'opacity-75',
     className
-  );
+  ].filter(Boolean).join(' ');
 
   return (
     <div 
-      className={cn(baseClasses, 'shadow-pagluzBlue')}
+      className={baseClasses}
       onClick={disabled || loading ? undefined : onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick && !disabled ? 0 : undefined}
+      onKeyDown={onClick && !disabled ? (e) => e.key === 'Enter' && onClick() : undefined}
     >
       {loading && (
         <div className="absolute inset-0 bg-white/80 rounded-xl flex items-center justify-center">

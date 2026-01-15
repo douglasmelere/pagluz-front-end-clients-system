@@ -1,10 +1,10 @@
 import React, { ReactNode, ButtonHTMLAttributes } from 'react';
-import { cn, utilityClasses } from '../../utils/designTokens';
+import { utilityClasses } from '../../utils/designTokens';
 import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'neon';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   icon?: React.ComponentType<{ className?: string }>;
@@ -26,99 +26,49 @@ export default function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseClasses = cn(
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm font-medium',
+    md: 'px-4 py-2.5 text-sm font-medium',
+    lg: 'px-6 py-3 text-base font-medium',
+    xl: 'px-8 py-4 text-lg font-semibold',
+  };
+
+  const variantClasses = {
+    primary: utilityClasses.button.primary,
+    secondary: utilityClasses.button.secondary,
+    outline: utilityClasses.button.outline,
+    ghost: utilityClasses.button.ghost,
+    danger: utilityClasses.button.danger,
+    success: utilityClasses.button.success,
+  };
+
+  const baseClasses = [
     utilityClasses.button.base,
-    utilityClasses.button[variant],
-    utilityClasses.button.sizes[size],
-    'shadow-pagluzGreen hover:shadow-neon transition-shadow duration-200 will-change-transform',
+    variantClasses[variant],
+    sizeClasses[size],
     fullWidth && 'w-full',
     rounded && 'rounded-full',
-    loading && utilityClasses.states.loading,
-    disabled && utilityClasses.states.disabled,
+    loading && 'opacity-75 cursor-wait',
+    disabled && 'opacity-50 cursor-not-allowed',
     className
-  );
+  ].filter(Boolean).join(' ');
 
-  const iconClasses = cn(
-    'transition-transform duration-200',
+  const iconClasses = [
+    'transition-transform duration-200 flex-shrink-0',
     loading && 'animate-spin',
-    iconPosition === 'right' && 'ml-2',
-    iconPosition === 'left' && 'mr-2'
-  );
-
-  return (
-    <button
-      className={cn(baseClasses, 'active:scale-[0.98]')}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? (
-        <>
-          <Loader2 className={cn('h-4 w-4', iconClasses)} />
-          <span className="ml-2">Carregando...</span>
-        </>
-      ) : (
-        <>
+    iconPosition === 'right' && 'ml-2 order-last',
           {Icon && iconPosition === 'left' && (
-            <Icon className={iconClasses} />
+            <Icon className={`h-5 w-5 ${iconClasses}`} />
           )}
           <span>{children}</span>
           {Icon && iconPosition === 'right' && (
-            <Icon className={iconClasses} />
+            <Icon className={`h-5 w-5 ${iconClasses}`} />
           )}
         </>
       )}
     </button>
   );
 }
-
-// Variantes específicas para casos de uso comuns
-type IconButtonProps = Omit<ButtonProps, 'iconPosition' | 'fullWidth' | 'icon'> & {
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-export function IconButton({
-  icon: Icon,
-  children,
-  className,
-  size = 'md',
-  variant = 'ghost',
-  ...props
-}: IconButtonProps) {
-  const sizeClasses = {
-    sm: 'p-2',
-    md: 'p-3',
-    lg: 'p-4',
-    xl: 'p-5'
-  };
-
-  return (
-    <Button
-      variant={variant}
-      size={size}
-      className={cn(sizeClasses[size], 'aspect-square', className)}
-      {...props}
-    >
-      <Icon className="h-5 w-5" />
-      {children}
-    </Button>
-  );
-}
-
-export function ActionButton({
-  children,
-  icon: Icon,
-  variant = 'primary',
-  size = 'md',
-  ...props
-}: ButtonProps) {
-  return (
-    <Button
-      variant={variant}
-      size={size}
-      icon={Icon}
-      iconPosition="left"
-      className="shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-      {...props}
     >
       {children}
     </Button>

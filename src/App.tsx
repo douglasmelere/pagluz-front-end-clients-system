@@ -76,11 +76,11 @@ function AppContent() {
   };
 
   return (
-    <div className="flex h-screen relative bg-gradient-to-br from-white via-pagluz-surface-50 to-white">
+    <div className="flex h-screen relative bg-gradient-to-br from-white via-slate-50 to-slate-100">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
       {/* Empurra o conteúdo quando a sidebar fixa estiver visível - responsivo para notebooks */}
-      <main className="flex-1 overflow-y-auto w-full relative z-0 ml-0 lg:ml-64 xl:ml-72">
-        <div className="mx-auto w-full max-w-full lg:max-w-7xl xl:max-w-screen-2xl px-3 sm:px-4 lg:px-6">
+      <main className="flex-1 overflow-y-auto w-full relative z-0 ml-0 lg:ml-72 xl:ml-72">
+        <div className="mx-auto w-full max-w-full lg:max-w-7xl px-3 sm:px-4 lg:px-6 py-6">
           <div className="animate-fade-in">
             {renderCurrentView()}
           </div>
