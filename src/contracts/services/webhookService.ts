@@ -47,7 +47,7 @@ export const fetchGeradores = async (_authData: any): Promise<GeradorData[]> => 
 
 export const saveGerador = async (
   geradorData: Partial<ContractData>,
-  _authData: any
+  authData: any
 ): Promise<WebhookResponse> => {
   const url = import.meta.env.VITE_SAVE_GERADOR_WEBHOOK_URL || 'https://n8n.pagluz.com.br/webhook/save-gerador';
 
@@ -72,11 +72,18 @@ export const saveGerador = async (
       conta: geradorData.contaGerador,
     };
 
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Adicionar Bearer token se disponível
+    if (authData?.token) {
+      headers['Authorization'] = `Bearer ${authData.token}`;
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -92,22 +99,27 @@ export const saveGerador = async (
 
 export const sendToWebhook = async (
   data: DocumentData,
-  _authData: any
+  authData: any
 ): Promise<WebhookResponse> => {
   const url = import.meta.env.VITE_WEBHOOK_URL || 'https://n8n.pagluz.com.br/webhook/e6e34398-975b-417f-882d-285d377b9659';
-
-  // Sem autenticação básica
 
   if (!url) {
     return { success: false, message: 'URL do webhook não configurada. Verifique as variáveis de ambiente.' };
   }
 
   try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Adicionar Bearer token se disponível
+    if (authData?.token) {
+      headers['Authorization'] = `Bearer ${authData.token}`;
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 
