@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import ErrorMessage from './common/ErrorMessage';
-import { 
-  Users, 
-  Factory, 
-  TrendingUp, 
+import {
+  Users,
+  Factory,
+  TrendingUp,
   Zap,
-  Calendar,
   Activity,
-  BarChart3,
   TrendingDown,
   CheckCircle,
   Target,
@@ -17,7 +15,7 @@ import {
   Download,
   Bell,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 import { useClientesGeradores } from '../hooks/useClientesGeradores';
 import { useClientesConsumidores } from '../hooks/useClientesConsumidores';
@@ -33,7 +31,7 @@ export default function Dashboard() {
   const { dashboardData, loading, error, filters, refetch, updateFilters, clearFilters } = useDashboard();
   const { clientes: geradores } = useClientesGeradores();
   const { clientes: clientesConsumidores } = useClientesConsumidores();
-  const { representantes, statistics: representantesStats } = useRepresentantesComerciais();
+  const { representantes } = useRepresentantesComerciais();
 
   const [showFilters, setShowFilters] = useState(false);
 
@@ -345,82 +343,46 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Header com gradiente da Pagluz */}
-      <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-emerald-600 shadow-2xl rounded-b-3xl overflow-hidden">
-        <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="text-white">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                  <BarChart3 className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Dashboard</h1>
-                  <p className="text-slate-200 text-sm sm:text-base lg:text-lg mt-1">Visão geral do sistema de energia solar</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-              >
-                <Filter className="h-5 w-5" />
-                <span>Filtros</span>
-              </button>
-              <button
-                onClick={exportDashboard}
-                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-              >
-                <Download className="h-5 w-5" />
-                <span>Exportar</span>
-              </button>
-              <div className="hidden lg:flex items-center space-x-3 text-slate-200 bg-white/10 px-4 lg:px-6 py-2 lg:py-3 rounded-2xl backdrop-blur-sm border border-white/20">
-                <Calendar className="h-4 w-4 lg:h-5 lg:w-5" />
-                <span className="font-medium text-xs lg:text-sm">{new Date().toLocaleDateString('pt-BR', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[var(--background)]">
+      <div className="border-b border-border bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-display">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Visao geral do sistema</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-10 rounded-xl border border-border px-4 text-sm hover:bg-muted"
+            >
+              <Filter className="h-4 w-4 inline mr-2" />Filtros
+            </button>
+            <button
+              onClick={exportDashboard}
+              className="h-10 rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-4 text-sm text-white"
+            >
+              <Download className="h-4 w-4 inline mr-2" />Exportar
+            </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-full lg:max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 lg:py-8 space-y-6 lg:space-y-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => {
             const Icon = stat.icon;
-            const colorClasses = {
-              blue: 'from-blue-500 to-indigo-500',
-              green: 'from-green-500 to-emerald-500', 
-              yellow: 'from-yellow-500 to-orange-500',
-              purple: 'from-purple-500 to-pink-500'
-            };
+            
 
             return (
-              <div key={stat.title} className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-4 rounded-2xl bg-gradient-to-r ${colorClasses[stat.color as keyof typeof colorClasses]} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="h-8 w-8 text-white" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <TrendingUp className="h-4 w-4 text-emerald-600" />
-                    <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-                      {stat.change}
-                    </span>
+              <div key={stat.title} className="rounded-2xl border border-border bg-card p-6 shadow-md">
+                <div className="mb-4 flex items-center justify-between">
+                      <div className="rounded-xl bg-gradient-to-r from-accent to-accent-secondary p-3 text-slate-900 shadow-lg ring-1 ring-white/10">
+                        <Icon className="h-6 w-6" strokeWidth={2.2} />
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</h3>
-                  <p className="text-lg font-semibold text-slate-700 mb-2">{stat.title}</p>
-                  
-                  <p className="text-sm text-slate-500">{stat.description}</p>
-                </div>
+                <div className="text-3xl font-semibold">{stat.value}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{stat.title}</div>
               </div>
             );
           })}
@@ -442,8 +404,8 @@ export default function Dashboard() {
 
           {/* Verificar se há notificações */}
           {(() => {
-            const pendingChanges = dashboardData?.summary.pendingChangeRequests ?? 0;
-            const pendingConsumers = dashboardData?.summary.pendingConsumers ?? 0;
+             const pendingChanges = dashboardData.summary?.pendingChangeRequests ?? 0;
+             const pendingConsumers = dashboardData.summary?.pendingConsumers ?? 0;
             const hasNotifications = pendingChanges > 0 || pendingConsumers > 0 || 
               (dashboardData?.notifications?.pendingChangeRequests && dashboardData.notifications.pendingChangeRequests.length > 0);
             
@@ -560,7 +522,7 @@ export default function Dashboard() {
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">Últimas Mudanças Solicitadas</h3>
                     <div className="space-y-3">
-                      {dashboardData.notifications.pendingChangeRequests.slice(0, 5).map((request) => (
+                       {dashboardData.notifications.pendingChangeRequests.slice(0, 5).map((request: any) => (
                         <div
                           key={request.id}
                           className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
@@ -740,12 +702,14 @@ export default function Dashboard() {
               <div className="text-sm font-medium text-yellow-700">Pendentes</div>
             </div>
             
-            <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
-              <div className="text-3xl font-bold text-purple-600 mb-2">
-                N/A
+            {typeof dashboardData?.representatives?.averageCommissionRate === 'number' && (
+              <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
+                <div className="text-3xl font-bold text-purple-600 mb-2">
+                  {dashboardData.representatives.averageCommissionRate.toFixed(2)}%
+                </div>
+                <div className="text-sm font-medium text-purple-700">Taxa Média</div>
               </div>
-              <div className="text-sm font-medium text-purple-700">Taxa Média</div>
-            </div>
+            )}
           </div>
           
           {/* Representantes por Estado */}

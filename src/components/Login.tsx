@@ -52,80 +52,54 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorativo premium */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Orbs animados */}
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-        
-        {/* Grid subtle */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }}></div>
-        </div>
-      </div>
-
-      {/* Conteúdo Principal */}
-      <div className="max-w-md w-full relative z-10">
-        {/* Card Premium */}
-        <div className="bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl p-8 border border-white/20 hover:border-emerald-400/40 transition-all duration-500 hover:shadow-emerald-500/10">
-          
-          {/* Header com Logo */}
-          <div className="text-center -mt-6">
-            <div className="inline-flex items-center justify-center relative">
-              <div className="absolute inset-0 bg-gradient-pagluz rounded-full blur-3xl opacity-70 animate-pulse"></div>
-              <PagluzLogo className="h-64 w-64 text-white hover:scale-110 transition-transform duration-500 relative z-10 drop-shadow-2xl scale-150" />
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-2xl bg-slate-900">
+              <PagluzLogo className="h-16 w-16 drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)]" />
             </div>
+            <h1 className="mt-4 text-3xl font-display">Bem-vindo de volta</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Acesse o sistema para continuar
+            </p>
           </div>
 
-          {/* Formulário */}
-          <form onSubmit={handleSubmit} className="space-y-5 -mt-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             
             {/* Email Input */}
-            <div className="relative group">
-              <label className="block text-sm font-semibold text-white/80 mb-2">
-                Email
-              </label>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Email</label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
-                  <User className="h-5 w-5" />
-                </div>
+                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   disabled={authLoading || isSubmitting}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all duration-300 backdrop-blur-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-12 w-full rounded-xl border border-border bg-transparent pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
                 />
               </div>
             </div>
 
             {/* Senha Input */}
-            <div className="relative group">
-              <label className="block text-sm font-semibold text-white/80 mb-2">
-                Senha
-              </label>
+            <div>
+              <label className="mb-2 block text-sm font-medium">Senha</label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
-                  <Lock className="h-5 w-5" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   disabled={authLoading || isSubmitting}
-                  className="w-full pl-12 pr-12 py-3 bg-white/10 border-2 border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white/15 transition-all duration-300 backdrop-blur-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-12 w-full rounded-xl border border-border bg-transparent pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -136,40 +110,14 @@ export default function Login() {
             <button
               type="submit"
               disabled={authLoading || isSubmitting || !email || !password}
-              className="w-full group relative mt-8 py-3.5 px-6 bg-gradient-pagluz text-white font-bold rounded-xl hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0 flex items-center justify-center gap-3 overflow-hidden"
+              className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-secondary text-white transition-all hover:-translate-y-0.5 hover:shadow-accent-lg disabled:opacity-50"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              
-              {authLoading || isSubmitting ? (
-                <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Autenticando...</span>
-                </>
-              ) : (
-                <>
-                  <span>Entrar no Sistema</span>
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+              {authLoading || isSubmitting ? 'Autenticando…' : 'Entrar'}
+              {!authLoading && !isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </form>
-
-          {/* Info Footer */}
-          <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-            <p className="text-xs text-slate-300 text-center">
-              🔒 Sua conexão é segura e criptografada. Seus dados nunca são compartilhados com terceiros.
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center text-slate-400 text-sm">
-          <p>Sistema de Gestão Energética © 2024</p>
-          <p className="text-slate-500 mt-2">Transformando o futuro da energia</p>
         </div>
       </div>
-
-      {/* Loading Spinner Global */}
       {authLoading && <LoadingSpinner />}
     </div>
   );

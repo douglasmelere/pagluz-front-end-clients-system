@@ -331,6 +331,19 @@ export interface AdminDashboard {
   totalInstalledPower: number;
   totalMonthlyConsumption: number;
   allocationRate: number;
+  summary?: {
+    pendingConsumers?: number;
+    pendingChangeRequests?: number;
+  };
+  notifications?: {
+    pendingChangeRequests?: Array<{
+      id: string;
+      consumerName: string;
+      representativeName: string;
+      changedFields: string[];
+      requestedAt: string;
+    }>;
+  };
   generatorsBySource: Array<{
     sourceType: SourceType;
     count: number;

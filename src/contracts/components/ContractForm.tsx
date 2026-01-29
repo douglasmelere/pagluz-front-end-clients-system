@@ -92,15 +92,34 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
     setSelectedGerador(gerador);
     setShowGeradorSelector(false);
     if (documentType === 'locacao') {
-      const normalizedTipoDocumento = gerador.tipo_documento.toLowerCase();
+      const normalizedTipoDocumento = (
+        gerador.tipo_documento || (gerador as any).tipoDocumento || ''
+      )
+        .toString()
+        .toLowerCase();
+
+      const cpfCnpj =
+        gerador.cpf_cnpj ||
+        (gerador as any).cpfCnpj ||
+        (gerador as any).cpf_cnpj ||
+        '';
+
+      const numeroUc =
+        (gerador as any).numero_uc ||
+        (gerador as any).numeroUc ||
+        (gerador as any).numeroUcGerador ||
+        '';
+
+      const numeroEndereco =
+        (gerador as any).numero || (gerador as any).numero_casa || gerador.numero;
       setFormData(prev => ({
         ...prev,
         documentType: 'locacao',
         nomeGerador: gerador.nome,
         tipoDocumentoGerador: normalizedTipoDocumento as 'cpf' | 'cnpj',
-        cpfCnpjGerador: gerador.cpf_cnpj,
+        cpfCnpjGerador: cpfCnpj,
         ruaGerador: gerador.rua,
-        numeroGerador: gerador.numero,
+        numeroGerador: numeroEndereco,
         bairroGerador: gerador.bairro,
         cidadeGerador: gerador.cidade,
         ufGerador: gerador.uf,
@@ -109,6 +128,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
         bancoGerador: gerador.banco,
         agenciaGerador: gerador.agencia,
         contaGerador: gerador.conta,
+        numeroUcGerador: numeroUc,
       }));
     }
   };

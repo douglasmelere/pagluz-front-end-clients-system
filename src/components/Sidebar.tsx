@@ -124,19 +124,6 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
           transform: isMobile && !isMobileMenuOpen ? 'translateX(-100%)' : 'translateX(0)'
         }}
       >
-        {/* Logo e Branding */}
-        <div className="px-6 py-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-pagluz shadow-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">⚡</span>
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Pagluz</h2>
-              <p className="text-xs text-emerald-300/70 font-medium">Gestão Energética</p>
-            </div>
-          </div>
-        </div>
-
         {/* Navegação Principal */}
         <nav className="flex-1 px-3 py-6 space-y-1">
           <div>

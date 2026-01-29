@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: #FAFAFA;
+    --foreground: #0F172A;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --accent: #0052FF;
+    --accent-secondary: #4D7CFF;
+    --border: #E2E8F0;
+    --card: #FFFFFF;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  h1, h2 {
+    font-family: "Calistoga", Georgia, serif;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
 /* CSS Global da PagLuz */
 
 /* Reset e base */

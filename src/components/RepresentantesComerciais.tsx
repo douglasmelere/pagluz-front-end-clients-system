@@ -307,21 +307,23 @@ export default function RepresentantesComerciais() {
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-600">Taxa Média</p>
-                    <p className="text-2xl font-bold text-purple-600">
-                      N/A
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 rounded-xl">
-                    <Percent className="h-6 w-6 text-purple-600" />
+
+              {typeof statistics.averageCommissionRate === 'number' && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600">Taxa Média</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {statistics.averageCommissionRate.toFixed(2)}%
+                      </p>
+                    </div>
+                    <div className="p-3 bg-purple-100 rounded-xl">
+                      <Percent className="h-6 w-6 text-purple-600" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
+              )}
+
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between">
                   <div>

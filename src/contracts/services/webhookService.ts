@@ -1,4 +1,7 @@
 import { DocumentData, WebhookResponse, ContractData } from '../types/Contract';
+import { authService } from '../../types/services/authService';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export interface GeradorData {
   id: number;
@@ -19,19 +22,32 @@ export interface GeradorData {
   updated_at: string;
 }
 
-export const fetchGeradores = async (_authData: any): Promise<GeradorData[]> => {
-  const url = import.meta.env.VITE_GERADORES_WEBHOOK_URL || 'https://n8n.pagluz.com.br/webhook/047eb254-d124-40c8-991f-e109c7a4da09';
+const getAuthToken = (authData: any): string | null => {
+  return authData?.token || authService.getStoredToken();
+};
+
+export const fetchGeradores = async (authData: any): Promise<GeradorData[]> => {
+  const url = import.meta.env.VITE_GERADORES_WEBHOOK_URL || `${API_BASE_URL}/contracts/generators`;
+
+  const token = getAuthToken(authData);
+  if (!token) {
+    throw new Error('Token não encontrado. Faça login novamente.');
+  }
 
   if (!url) {
     throw new Error('URL do webhook de geradores não configurada. Verifique as variáveis de ambiente.');
   }
 
   try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -49,7 +65,12 @@ export const saveGerador = async (
   geradorData: Partial<ContractData>,
   authData: any
 ): Promise<WebhookResponse> => {
-  const url = import.meta.env.VITE_SAVE_GERADOR_WEBHOOK_URL || 'https://n8n.pagluz.com.br/webhook/save-gerador';
+  const url = import.meta.env.VITE_SAVE_GERADOR_WEBHOOK_URL || `${API_BASE_URL}/contracts/generators`;
+
+  const token = getAuthToken(authData);
+  if (!token) {
+    return { success: false, message: 'Token não encontrado. Faça login novamente.' };
+  }
 
   if (!url) {
     return { success: false, message: 'URL do webhook de salvamento não configurada.' };
@@ -76,10 +97,7 @@ export const saveGerador = async (
       'Content-Type': 'application/json',
     };
 
-    // Adicionar Bearer token se disponível
-    if (authData?.token) {
-      headers['Authorization'] = `Bearer ${authData.token}`;
-    }
+    headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -101,7 +119,12 @@ export const sendToWebhook = async (
   data: DocumentData,
   authData: any
 ): Promise<WebhookResponse> => {
-  const url = import.meta.env.VITE_WEBHOOK_URL || 'https://n8n.pagluz.com.br/webhook/e6e34398-975b-417f-882d-285d377b9659';
+  const url = import.meta.env.VITE_WEBHOOK_URL || `${API_BASE_URL}/contracts/generate`;
+
+  const token = getAuthToken(authData);
+  if (!token) {
+    return { success: false, message: 'Token não encontrado. Faça login novamente.' };
+  }
 
   if (!url) {
     return { success: false, message: 'URL do webhook não configurada. Verifique as variáveis de ambiente.' };
@@ -112,10 +135,7 @@ export const sendToWebhook = async (
       'Content-Type': 'application/json',
     };
 
-    // Adicionar Bearer token se disponível
-    if (authData?.token) {
-      headers['Authorization'] = `Bearer ${authData.token}`;
-    }
+    headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(url, {
       method: 'POST',

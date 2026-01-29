@@ -67,6 +67,7 @@ export const representanteComercialService = {
     total: number;
     byStatus: Record<string, number>;
     byState: Record<string, number>;
+    averageCommissionRate?: number;
   }> {
     try {
       const response = await api.get('/representatives/statistics');
@@ -85,11 +86,18 @@ export const representanteComercialService = {
           byState[item.state] = item.count;
         });
       }
+
+      const averageCommissionRate =
+        response.averageCommissionRate ??
+        response.avgCommissionRate ??
+        response.meanCommissionRate ??
+        undefined;
       
       return {
         total: response.totalRepresentatives || 0,
         byStatus,
         byState,
+        averageCommissionRate,
       };
     } catch (error: any) {
       // Se o endpoint não existir ainda, retornar estrutura padrão
@@ -98,6 +106,7 @@ export const representanteComercialService = {
           total: 0,
           byStatus: {},
           byState: {},
+          averageCommissionRate: undefined,
         };
       }
       throw error;
