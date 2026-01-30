@@ -137,10 +137,25 @@ export const sendToWebhook = async (
 
     headers['Authorization'] = `Bearer ${token}`;
 
+    const payload: DocumentData = { ...data };
+    if (data.documentType === 'procuracao') {
+      const tipo =
+        (data as any).procuracaoType ||
+        (data as any).tipoProcuracao ||
+        (data as any).tipo_procuracao ||
+        null;
+
+      if (tipo) {
+        (payload as any).procuracaoType = tipo;
+        (payload as any).tipoProcuracao = tipo;
+        (payload as any).tipo_procuracao = tipo;
+      }
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
