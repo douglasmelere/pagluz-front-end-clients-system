@@ -30,9 +30,6 @@ export const fetchGeradores = async (authData: any): Promise<GeradorData[]> => {
   const url = import.meta.env.VITE_GERADORES_WEBHOOK_URL || `${API_BASE_URL}/contracts/generators`;
 
   const token = getAuthToken(authData);
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login novamente.');
-  }
 
   if (!url) {
     throw new Error('URL do webhook de geradores não configurada. Verifique as variáveis de ambiente.');
@@ -43,7 +40,9 @@ export const fetchGeradores = async (authData: any): Promise<GeradorData[]> => {
       'Content-Type': 'application/json',
     };
 
-    headers['Authorization'] = `Bearer ${token}`;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
     const response = await fetch(url, {
       method: 'GET',
@@ -51,7 +50,8 @@ export const fetchGeradores = async (authData: any): Promise<GeradorData[]> => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
