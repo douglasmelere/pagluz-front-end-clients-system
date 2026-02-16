@@ -76,16 +76,21 @@ function AppContent() {
   };
 
   return (
-    <div className="flex h-screen relative bg-gradient-to-br from-white via-slate-50 to-slate-100">
+    <div className="flex h-screen relative bg-slate-50 overflow-hidden">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      {/* Empurra o conteúdo quando a sidebar fixa estiver visível - responsivo para notebooks */}
-      <main className="flex-1 overflow-y-auto w-full relative z-0 ml-0 lg:ml-72 xl:ml-72">
-        <div className="mx-auto w-full max-w-full lg:max-w-7xl px-3 sm:px-4 lg:px-6 py-6">
-          <div className="animate-fade-in">
-            {renderCurrentView()}
+      
+      {/* Main Content Area */}
+      <main className="flex-1 w-full relative z-0 lg:ml-72 flex flex-col h-full overflow-hidden">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+            <div className="animate-fade-in relative">
+              {renderCurrentView()}
+            </div>
           </div>
         </div>
       </main>
+      
       <PWAInstallPrompt />
     </div>
   );

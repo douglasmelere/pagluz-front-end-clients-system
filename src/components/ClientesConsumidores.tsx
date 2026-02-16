@@ -1,38 +1,34 @@
 import { useState, useEffect } from 'react';
 import {
-  Plus,
   Search,
   Filter,
+  Download,
+  Plus,
+  X,
   Users,
-  MapPin,
-  Activity,
-  Edit,
-  Trash2,
-  TrendingDown,
   Link,
-  Building,
   BarChart3,
-  ArrowRight,
   CheckCircle,
   AlertCircle,
-  X,
   Loader,
   Factory,
   Wind,
   Droplet,
   Leaf,
   Sun,
-  Eye,
   UserCheck,
-  Download,
-  Phone,
-  Mail,
   Home,
   MessageSquare,
-  RefreshCw,
-  FileText
+  FileText,
+  Activity,
+  Phone,
+  Mail,
+  MapPin,
+  TrendingDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import PagluzLogo from './common/PagluzLogo';
+
 import { useToast } from '../hooks/useToast';
 import { useClientesConsumidores } from '../hooks/useClientesConsumidores';
 import { useClientesGeradores } from '../hooks/useClientesGeradores';
@@ -45,6 +41,11 @@ import { applyPhoneMask, applyCepMask, applyDocumentMask, isValidEmail, isValidP
 import { Consumer, ConsumerStatus, Generator, DocumentType } from '../types';
 import InvoiceView from './admin/InvoiceView';
 import InvoiceModal from './admin/InvoiceModal';
+import ConsumerList from './ConsumerList';
+import Modal, { ModalFooter } from './ui/Modal';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Button from './ui/Button';
 
 export default function ClientesConsumidores() {
   const toast = useToast();
@@ -53,13 +54,12 @@ export default function ClientesConsumidores() {
     loading,
     createCliente,
     updateCliente,
-    deleteCliente,
     allocateToGenerator,
     deallocateFromGenerator,
     clearFilters,
     refetch
   } = useClientesConsumidores();
-  
+
   const { generateCommissionsForConsumer, commissions, refetch: refetchCommissions } = useCommissions();
 
   // Função helper para verificar se um consumidor já tem comissão gerada
@@ -75,16 +75,16 @@ export default function ClientesConsumidores() {
         toast.showError('Este consumidor já possui uma comissão gerada.');
         return;
       }
-      
+
       // Buscar dados completos do consumidor
       const consumer = clientesConsumidores.find(c => c.id === consumerId);
       if (!consumer) {
         toast.showError('Consumidor não encontrado.');
         return;
       }
-      
+
       const result = await generateCommissionsForConsumer(consumerId, consumer);
-      
+
       if (result.status === 'NOT_GENERATED') {
         toast.showError(`Nenhuma comissão foi gerada para "${consumer.name}". O backend retornou totalProcessed: 0, indicando que não encontrou consumidores elegíveis. Possíveis causas: 1) Representante não tem configurações de comissão, 2) Consumidor não atende critérios, 3) Backend não está processando corretamente. Use a seção "Gestão de Comissões" como alternativa.`);
       } else {
@@ -108,18 +108,18 @@ export default function ClientesConsumidores() {
 
       // Chamar API real de aprovação
       await clienteConsumidorService.approve(consumer.id);
-      
+
       toast.showSuccess(`Consumidor "${consumer.name}" aprovado com sucesso!`);
-      
+
       // Recarregar a lista de consumidores
       await refetch();
-      
+
     } catch (error) {
       toast.showError('Erro ao aprovar consumidor. Tente novamente.');
     }
   };
 
-  
+
   const { clientes: geradores } = useClientesGeradores();
   const { representantes } = useRepresentantesComerciais();
 
@@ -129,21 +129,31 @@ export default function ClientesConsumidores() {
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [filterGerador, setFilterGerador] = useState<string>('todos');
-  const [showGeneratorDetails, setShowGeneratorDetails] = useState<string | null>(null);
   const [invoiceModal, setInvoiceModal] = useState<{ isOpen: boolean; consumer: Consumer | null }>({
     isOpen: false,
     consumer: null
   });
-  
+
 
   // Removido useEffect que causava loop infinito
 
   const filteredClientes = clientesConsumidores || [];
 
-  // Função helper para verificar se há fatura válida
-  const hasValidInvoice = (consumer: Consumer): boolean => {
-    return !!(consumer.invoiceUrl && consumer.invoiceUrl.trim() !== '');
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterTipo, filterGerador]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredClientes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredClientes.slice(startIndex, endIndex);
+
+
 
   // Stats para dashboard
   const stats = {
@@ -158,16 +168,7 @@ export default function ClientesConsumidores() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este cliente consumidor?')) {
-      try {
-        await deleteCliente(id);
-        toast.showSuccess('Cliente consumidor excluído com sucesso!');
-      } catch (error) {
-        toast.showError('Erro ao excluir cliente consumidor.');
-      }
-    }
-  };
+
 
   const handleAddNew = () => {
     setEditingClient(null);
@@ -191,10 +192,10 @@ export default function ClientesConsumidores() {
         if (filterStatus !== 'todos') queryParams.append('status', filterStatus);
         if (filterTipo !== 'todos') queryParams.append('consumerType', filterTipo);
         if (filterGerador !== 'todos') queryParams.append('generatorId', filterGerador);
-        
+
         const endpoint = `/consumers/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await api.get(endpoint);
-        
+
         // Criar e baixar arquivo CSV
         const csvContent = response.csvContent || '';
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -206,17 +207,17 @@ export default function ClientesConsumidores() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast.showSuccess('Consumidores exportados com sucesso!');
         return;
       } catch (apiError) {
         // Se a API falhar, fazer exportação local
 
       }
-      
+
       // Exportação local como fallback
       const consumidoresParaExportar = filteredClientes;
-      
+
       // Criar CSV localmente
       const headers = ['Nome', 'CPF/CNPJ', 'Tipo', 'Consumo Mensal (kWh)', 'Status', 'Gerador Vinculado', 'Porcentagem Alocada', 'Cidade', 'Estado', 'Data de Criação'];
       const csvRows = [
@@ -234,7 +235,7 @@ export default function ClientesConsumidores() {
           consumidor.createdAt
         ].join(','))
       ];
-      
+
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -245,46 +246,11 @@ export default function ClientesConsumidores() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.showSuccess(`Consumidores exportados localmente (${consumidoresParaExportar.length} registros)`);
     } catch (error) {
       toast.showError('Erro ao exportar consumidores');
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      'AVAILABLE': { 
-        label: 'Disponível', 
-        color: 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200',
-        icon: <CheckCircle className="h-3 w-3" />
-      },
-      'ALLOCATED': { 
-        label: 'Alocado', 
-        color: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200',
-        icon: <Link className="h-3 w-3" />
-      }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return (
-      <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${config?.color || 'bg-gray-100 text-gray-800'}`}>
-        {config?.icon}
-        <span>{config?.label || status}</span>
-      </span>
-    );
-  };
-
-  const getTipoIcon = (tipo: string) => {
-    const icons = {
-      'RESIDENTIAL': { icon: '🏠', color: 'bg-green-100 text-green-600' },
-      'COMMERCIAL': { icon: '🏢', color: 'bg-blue-100 text-blue-600' }, 
-      'RURAL': { icon: '🌾', color: 'bg-yellow-100 text-yellow-600' },
-      'INDUSTRIAL': { icon: '🏭', color: 'bg-purple-100 text-purple-600' },
-      'PUBLIC_POWER': { icon: '🏛️', color: 'bg-indigo-100 text-indigo-600' }
-    };
-    const config = icons[tipo as keyof typeof icons] || { icon: '🏢', color: 'bg-gray-100 text-gray-600' };
-    return { icon: config.icon, color: config.color };
   };
 
   const getGeneratorName = (generatorId: string, geradoresList: Generator[]) => {
@@ -311,9 +277,7 @@ export default function ClientesConsumidores() {
     }
   };
 
-  const getGeneratorDetails = (generatorId: string) => {
-    return geradores.find(g => g.id === generatorId);
-  };
+
 
   // Estatísticas por gerador
   const getGeneratorStats = () => {
@@ -321,7 +285,7 @@ export default function ClientesConsumidores() {
       const consumidoresAlocados = clientesConsumidores.filter(c => c.generatorId === gerador.id);
       const totalAlocado = consumidoresAlocados.reduce((acc, c) => acc + (c.allocatedPercentage || 0), 0);
       const consumoTotal = consumidoresAlocados.reduce((acc, c) => acc + c.averageMonthlyConsumption, 0);
-      
+
       return {
         ...gerador,
         consumidoresCount: consumidoresAlocados.length,
@@ -330,7 +294,7 @@ export default function ClientesConsumidores() {
         capacidadeDisponivel: 100 - totalAlocado
       };
     });
-    
+
     return stats.sort((a, b) => b.consumidoresCount - a.consumidoresCount);
   };
 
@@ -346,134 +310,127 @@ export default function ClientesConsumidores() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-slate-50/50">
       {/* Header com gradiente da Pagluz */}
-      <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-emerald-600 shadow-2xl rounded-b-3xl overflow-hidden">
-        <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="text-white">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                  <Users className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Clientes Consumidores</h1>
-                  <p className="text-slate-200 text-sm sm:text-base lg:text-lg mt-1">Gestão inteligente de consumidores de energia solar</p>
-                </div>
+      <header className="sticky top-0 z-30 border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm mb-8">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-x-4">
+              <div className="h-12 w-12 bg-gradient-to-br from-accent to-accent-secondary rounded-xl flex items-center justify-center shadow-lg shadow-accent/20 text-white">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-semibold text-slate-900">Clientes Consumidores</h1>
+                <p className="text-slate-500 font-medium text-sm">Gestão inteligente de consumidores de energia solar</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-              <button
-                onClick={handleAddNew}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-xl lg:rounded-2xl flex items-center space-x-2 sm:space-x-3 transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/20"
-              >
-                <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="font-semibold text-sm sm:text-base lg:text-lg">Novo Consumidor</span>
-              </button>
-              
-            </div>
+            <button onClick={handleAddNew} className="bg-gradient-to-r from-accent to-accent-secondary text-white px-6 py-3 rounded-xl flex items-center gap-x-2 font-semibold hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 transition-all duration-200 shadow-md text-sm sm:text-base">
+              <Plus className="h-5 w-5" />Novo Consumidor
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="max-w-full mx-auto px-3 sm:px-4 lg:px-6 py-6 lg:py-8 space-y-6 lg:space-y-8">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Total de Clientes</p>
-                <p className="text-4xl font-bold text-slate-900">{stats.total}</p>
+                <p className="text-sm font-medium text-slate-500 font-display mb-2">Total de Clientes</p>
+                <p className="text-3xl font-bold text-slate-900 font-display">{stats.total}</p>
               </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Users className="h-8 w-8 text-white" />
+              <div className="h-12 w-12 bg-slate-50 rounded-xl flex items-center justify-center">
+                <Users className="h-6 w-6 text-slate-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Clientes Alocados</p>
-                <p className="text-4xl font-bold text-blue-600">{stats.alocados}</p>
+                <p className="text-sm font-medium text-slate-500 font-display mb-2">Clientes Alocados</p>
+                <p className="text-3xl font-bold text-accent font-display">{stats.alocados}</p>
               </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Link className="h-8 w-8 text-white" />
+              <div className="h-12 w-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                <Link className="h-6 w-6 text-accent" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Disponíveis</p>
-                <p className="text-4xl font-bold text-emerald-600">{stats.disponiveis}</p>
+                <p className="text-sm font-medium text-slate-500 font-display mb-2">Disponíveis</p>
+                <p className="text-3xl font-bold text-emerald-600 font-display">{stats.disponiveis}</p>
               </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <CheckCircle className="h-8 w-8 text-white" />
+              <div className="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Consumo Total</p>
-                <p className="text-4xl font-bold text-orange-600">{stats.consumoTotal.toLocaleString()}</p>
-                <p className="text-xs text-slate-500">kW/h por mês</p>
+                <p className="text-sm font-medium text-slate-500 font-display mb-2">Consumo Total</p>
+                <p className="text-3xl font-bold text-orange-600 font-display">{stats.consumoTotal.toLocaleString()}</p>
+                <p className="text-xs text-slate-400 font-medium mt-1">kW/h por mês</p>
               </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <BarChart3 className="h-8 w-8 text-white" />
+              <div className="h-12 w-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-orange-500" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Estatísticas por Gerador */}
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200">
-          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-            <Factory className="h-6 w-6 mr-3 text-green-600" />
+        <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <h3 className="text-lg font-semibold font-display text-slate-900 mb-6 flex items-center">
+            <Factory className="h-5 w-5 mr-3 text-accent" />
             Estatísticas por Gerador
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {getGeneratorStats().map((gerador) => {
-                                          const iconColor = 'text-yellow-500';
-              
+              const iconColor = 'text-orange-500';
+
               return (
-                <div key={gerador.id} className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 hover:shadow-lg transition-all duration-300">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                                              {renderGeneratorIcon(gerador.sourceType, `h-5 w-5 ${iconColor}`)}
-                      <h4 className="font-semibold text-slate-900 truncate">{gerador.ownerName}</h4>
+                <div key={gerador.id} className="bg-slate-50/50 rounded-xl p-5 border border-slate-100 hover:border-accent/30 hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
+                        {renderGeneratorIcon(gerador.sourceType, `h-5 w-5 ${iconColor}`)}
+                      </div>
+                      <h4 className="font-semibold text-slate-900 truncate font-display">{gerador.ownerName}</h4>
                     </div>
                     <button
                       onClick={() => setFilterGerador(gerador.id)}
-                      className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-lg hover:bg-green-200 transition-colors"
+                      className="text-xs bg-white text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-accent hover:text-accent transition-colors font-medium shadow-sm"
                     >
                       Filtrar
                     </button>
                   </div>
-                  
-                  <div className="space-y-2">
+
+                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Consumidores:</span>
+                      <span className="text-slate-500">Consumidores</span>
                       <span className="font-semibold text-slate-900">{gerador.consumidoresCount}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Capacidade:</span>
+                      <span className="text-slate-500">Capacidade</span>
                       <span className="font-semibold text-slate-900">{gerador.installedPower} kW</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Alocado:</span>
-                      <span className="font-semibold text-blue-600">{isNaN(gerador.percentualAlocado) ? '0.0' : gerador.percentualAlocado.toFixed(1)}%</span>
-                    </div>
-                    
-                    {/* Barra de progresso */}
-                    <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(gerador.percentualAlocado, 100)}%` }}
-                      ></div>
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Alocação</span>
+                        <span className="font-semibold text-accent">{isNaN(gerador.percentualAlocado) ? '0.0' : gerador.percentualAlocado.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div
+                          className="bg-accent h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(gerador.percentualAlocado, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -483,7 +440,7 @@ export default function ClientesConsumidores() {
         </div>
 
         {/* Filtros e Busca aprimorados */}
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200">
+        <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -492,7 +449,7 @@ export default function ClientesConsumidores() {
                 placeholder="Buscar por nome, CPF/CNPJ, cidade ou nome do gerador..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-slate-50 focus:bg-white text-lg"
+                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all duration-200 bg-slate-50/50 focus:bg-white text-base outline-none"
               />
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
@@ -501,7 +458,7 @@ export default function ClientesConsumidores() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50 min-w-[140px]"
+                  className="border border-slate-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent/10 focus:border-accent bg-slate-50/50 focus:bg-white min-w-[140px] outline-none transition-all"
                 >
                   <option value="todos">Todos os Status</option>
                   <option value="AVAILABLE">Disponível</option>
@@ -511,7 +468,7 @@ export default function ClientesConsumidores() {
               <select
                 value={filterTipo}
                 onChange={(e) => setFilterTipo(e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50 min-w-[140px]"
+                className="border border-slate-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent/10 focus:border-accent bg-slate-50/50 focus:bg-white min-w-[140px] outline-none transition-all"
               >
                 <option value="todos">Todos os Tipos</option>
                 <option value="RESIDENTIAL">Residencial</option>
@@ -520,12 +477,12 @@ export default function ClientesConsumidores() {
                 <option value="INDUSTRIAL">Industrial</option>
                 <option value="PUBLIC_POWER">Poder Público</option>
               </select>
-              
+
               {/* Novo filtro por gerador */}
               <select
                 value={filterGerador}
                 onChange={(e) => setFilterGerador(e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50 min-w-[160px]"
+                className="border border-slate-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent/10 focus:border-accent bg-slate-50/50 focus:bg-white min-w-[160px] outline-none transition-all"
               >
                 <option value="todos">Todos os Geradores</option>
                 {geradores.map(gerador => (
@@ -534,302 +491,93 @@ export default function ClientesConsumidores() {
                   </option>
                 ))}
               </select>
-              
+
               {filterGerador !== 'todos' && (
                 <button
                   onClick={() => setFilterGerador('todos')}
-                  className="px-3 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                   title="Limpar filtro de gerador"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
-              <button
-                onClick={exportConsumidores}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-              >
-                <Download className="h-5 w-5" />
-                <span>Exportar</span>
-              </button>
-              <button
-                onClick={handleClearFilters}
-                className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-4 rounded-xl transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-              >
-                <X className="h-5 w-5" />
-                <span>Limpar</span>
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={exportConsumidores}
+                  className="bg-white border border-slate-200 hover:border-accent text-slate-600 hover:text-accent px-4 py-3 rounded-xl transition-all duration-200 flex items-center shadow-sm"
+                  title="Exportar CSV"
+                >
+                  <Download className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={handleClearFilters}
+                  className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-3 rounded-xl transition-all duration-200 flex items-center shadow-sm"
+                  title="Limpar filtros"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tabela redesenhada com layout mais amplo */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full" style={{ minWidth: '1200px', tableLayout: 'fixed' }}>
-              <thead>
-                <tr className="bg-gradient-to-r from-slate-100 to-slate-200 border-b border-slate-300">
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '200px' }}>Cliente</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '180px' }}>Contato</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '150px' }}>Tipo/Consumo</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '200px' }}>Endereço</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '180px' }}>Representante</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '200px' }}>Gerador Vinculado</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '150px' }}>Desconto/Alocação</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '120px' }}>Status</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '100px' }}>Fatura</th>
-                  <th className="px-8 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider" style={{ width: '250px' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredClientes.map((cliente) => {
-                  const tipoConfig = getTipoIcon(cliente.consumerType);
-                  const geradorDetails = getGeneratorDetails(cliente.generatorId || '');
-                  
-                  return (
-                    <tr key={cliente.id} className="hover:bg-slate-50 transition-all duration-200 group">
-                      <td className="px-6 py-6">
-                        <div className="flex items-center">
-                          <div className={`flex-shrink-0 h-12 w-12 rounded-xl ${tipoConfig.color} flex items-center justify-center text-lg shadow-sm`}>
-                            {tipoConfig.icon}
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-bold text-slate-900 group-hover:text-green-600 transition-colors">
-                              {cliente.name}
-                            </div>
-                            <div className="text-xs text-slate-500 font-mono">{cliente.cpfCnpj}</div>
-                            <div className="text-xs text-slate-400">
-                              {cliente.documentType === DocumentType.CPF ? 'CPF' : 'CNPJ'}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-900 flex items-center">
-                            <Phone className="h-3 w-3 mr-1 text-slate-400" />
-                            {cliente.phone || 'Não informado'}
-                          </div>
-                          <div className="text-xs text-slate-600 flex items-center">
-                            <Mail className="h-3 w-3 mr-1 text-slate-400" />
-                            {cliente.email || 'Não informado'}
-                          </div>
-                          {cliente.receiveWhatsapp && (
-                            <div className="text-xs text-green-600 flex items-center">
-                              <MessageSquare className="h-3 w-3 mr-1" />
-                              WhatsApp ativo
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-900 capitalize flex items-center">
-                            <Building className="h-3 w-3 mr-1 text-slate-400" />
-                            {cliente.consumerType.replace('_', ' ')}
-                          </div>
-                          <div className="text-xs text-slate-600 flex items-center">
-                            <Activity className="h-3 w-3 mr-1 text-slate-400" />
-                            <span className="font-semibold">{cliente.averageMonthlyConsumption.toLocaleString()}</span>
-                            <span className="ml-1">kW/h</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-900 flex items-center">
-                            <MapPin className="h-3 w-3 mr-1 text-slate-400" />
-                            {cliente.city}, {cliente.state}
-                          </div>
-                          <div className="text-xs text-slate-600">
-                            {cliente.street && cliente.number && (
-                              <span>{cliente.street}, {cliente.number}</span>
-                            )}
-                            {cliente.neighborhood && (
-                              <span className="block">{cliente.neighborhood}</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-500 font-mono">{cliente.ucNumber}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        {cliente.representativeId ? (
-                          <div className="space-y-2">
-                            <div className="space-y-1">
-                              <div className="text-xs text-slate-900 flex items-center">
-                                <UserCheck className="h-3 w-3 mr-1 text-blue-600" />
-                                <span className="font-medium">
-                                  {representantes.find(rep => rep.id === cliente.representativeId)?.name || 'Representante não encontrado'}
-                                </span>
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                {representantes.find(rep => rep.id === cliente.representativeId)?.city}, {representantes.find(rep => rep.id === cliente.representativeId)?.state}
-                              </div>
-                              {cliente.representativeName && (
-                                <div className="text-xs text-slate-600">
-                                  Nome: {cliente.representativeName}
-                                </div>
-                              )}
-                              {cliente.arrivalDate && (
-                                <div className="text-xs text-slate-500">
-                                  Chegada: {new Date(cliente.arrivalDate).toLocaleDateString('pt-BR')}
-                                </div>
-                              )}
-                            </div>
-                            {hasCommission(cliente.id) ? (
-                              <div className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>Comissão Gerada</span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => handleGenerateCommissionForConsumer(cliente.id)}
-                                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-medium flex items-center space-x-1 transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg"
-                              >
-                                <RefreshCw className="h-3 w-3" />
-                                <span>Gerar Comissão</span>
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-400 italic">
-                            Sem representante
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-6">
-                        {cliente.generatorId && geradorDetails ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              {renderGeneratorIcon(geradorDetails.sourceType, 'h-4 w-4 text-yellow-500')}
-                              <span className="text-xs font-semibold text-slate-900 truncate max-w-[100px]">
-                                {geradorDetails.ownerName}
-                              </span>
-                              <button
-                                onClick={() => setShowGeneratorDetails(showGeneratorDetails === cliente.id ? null : cliente.id)}
-                                className="p-1 hover:bg-slate-100 rounded transition-colors"
-                                title="Ver detalhes do gerador"
-                              >
-                                <Eye className="h-3 w-3 text-slate-400" />
-                              </button>
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {geradorDetails.city}, {geradorDetails.state}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {geradorDetails.installedPower} kW instalados
-                            </div>
-                            
-                            {/* Detalhes expandidos do gerador */}
-                            {showGeneratorDetails === cliente.id && (
-                              <div className="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
-                                <div className="space-y-1 text-xs">
-                                  <div className="flex justify-between">
-                                    <span className="text-slate-600">Tipo:</span>
-                                    <span className="font-medium">{geradorDetails.sourceType}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-slate-600">Potência:</span>
-                                    <span className="font-medium">{geradorDetails.installedPower} kW</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-slate-600">Localização:</span>
-                                    <span className="font-medium">{geradorDetails.city}/{geradorDetails.state}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-400 italic">
-                            Nenhum gerador vinculado
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <TrendingDown className="h-3 w-3 mr-1 text-green-600" />
-                            <span className="text-xs font-bold text-green-600">{cliente.discountOffered}%</span>
-                            <span className="text-xs text-slate-500 ml-1">desconto</span>
-                          </div>
-                          {cliente.status === ConsumerStatus.ALLOCATED && (
-                            <div className="flex items-center">
-                              <div className="w-full bg-slate-200 rounded-full h-2 mr-2">
-                                <div 
-                                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${Math.min(cliente.allocatedPercentage || 0, 100)}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-xs text-slate-600 font-semibold min-w-[40px]">
-                                {cliente.allocatedPercentage ? cliente.allocatedPercentage.toFixed(1) : '0.0'}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-2">
-                          {getStatusBadge(cliente.status)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        {hasValidInvoice(cliente) ? (
-                          <button
-                            onClick={() => setInvoiceModal({ isOpen: true, consumer: cliente })}
-                            className="flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200"
-                            title="Ver fatura"
-                          >
-                            <FileText className="h-4 w-4" />
-                            <span className="text-xs font-medium">Ver Fatura</span>
-                          </button>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">Sem fatura</span>
-                        )}
-                      </td>
-                      <td className="px-8 py-6" style={{ width: '250px' }}>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleEdit(cliente)}
-                            className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-                            title="Editar cliente"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          {cliente.representativeId && (
-                            <button
-                              onClick={() => handleApproveConsumer(cliente)}
-                              className="px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-1"
-                              title="Aprovar consumidor"
-                            >
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Aprovar</span>
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(cliente.id)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Excluir cliente"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
 
-          {filteredClientes.length === 0 && !loading && (
+
+        {/* Lista de Consumidores Responsiva */}
+        <div className="space-y-6">
+          <ConsumerList
+            consumers={currentItems}
+            generators={geradores}
+            representatives={representantes}
+            onEdit={handleEdit}
+            onApprove={handleApproveConsumer}
+            onViewInvoice={(consumer) => setInvoiceModal({ isOpen: true, consumer })}
+            onGenerateCommission={handleGenerateCommissionForConsumer}
+            hasCommission={hasCommission}
+          />
+
+          {/* Pagination Controls */}
+          {filteredClientes.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+              <div className="text-sm text-slate-500">
+                Mostrando <span className="font-medium text-slate-900">{Math.min(startIndex + 1, filteredClientes.length)}</span> até <span className="font-medium text-slate-900">{Math.min(endIndex, filteredClientes.length)}</span> de <span className="font-medium text-slate-900">{filteredClientes.length}</span> resultados
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                <span className="text-sm font-medium text-slate-700 px-2">
+                  Página {currentPage} de {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {
+          filteredClientes.length === 0 && !loading && (
             <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
                 <Users className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum cliente encontrado</h3>
+              <h3 className="text-lg font-medium text-slate-900 mb-2 font-display">Nenhum cliente encontrado</h3>
               <p className="text-slate-500 mb-6 max-w-sm mx-auto">
                 {searchTerm || filterStatus !== 'todos' || filterTipo !== 'todos' || filterGerador !== 'todos'
-                  ? 'Tente ajustar os filtros de busca para encontrar os clientes desejados.' 
+                  ? 'Tente ajustar os filtros de busca para encontrar os clientes desejados.'
                   : 'Comece adicionando um novo cliente consumidor ao sistema.'}
               </p>
               {!searchTerm && filterStatus === 'todos' && filterTipo === 'todos' && filterGerador === 'todos' && (
@@ -842,12 +590,15 @@ export default function ClientesConsumidores() {
                 </button>
               )}
             </div>
-          )}
-        </div>
+          )
+        }
+
+
+
       </div>
 
       {/* Modal de Fatura */}
-      <InvoiceModal
+      < InvoiceModal
         isOpen={invoiceModal.isOpen}
         onClose={() => setInvoiceModal({ isOpen: false, consumer: null })}
         consumerId={invoiceModal.consumer?.id}
@@ -859,78 +610,80 @@ export default function ClientesConsumidores() {
       />
 
       {/* Modal aprimorado */}
-      {showModal && (
-        <ConsumidorModal
-          cliente={editingClient}
-          onClose={() => setShowModal(false)}
-          onSave={async (data, action) => {
-            try {
-              let successMessage = '';
+      {
+        showModal && (
+          <ConsumidorModal
+            cliente={editingClient}
+            onClose={() => setShowModal(false)}
+            onSave={async (data, action) => {
+              try {
+                let successMessage = '';
 
-              if (action === 'create') {
-                const newClient = await createCliente(data.formData);
-                if (newClient && newClient.id && data.formData.generatorId) {
-                  await allocateToGenerator(newClient.id, data.formData.generatorId, data.formData.allocatedPercentage);
-                  successMessage = 'Cliente cadastrado e alocado com sucesso!';
-                } else {
-                  successMessage = 'Cliente cadastrado com sucesso!';
+                if (action === 'create') {
+                  const newClient = await createCliente(data.formData);
+                  if (newClient && newClient.id && data.formData.generatorId) {
+                    await allocateToGenerator(newClient.id, data.formData.generatorId, data.formData.allocatedPercentage);
+                    successMessage = 'Cliente cadastrado e alocado com sucesso!';
+                  } else {
+                    successMessage = 'Cliente cadastrado com sucesso!';
+                  }
+                } else if (action === 'update') {
+                  // Remover propriedades internas antes de enviar para a API
+                  const { _generateCommissions, ...dataForApi } = data;
+
+                  await updateCliente(dataForApi);
+
+                  // Se um representante foi anexado, informar sobre geração de comissões
+                  if (_generateCommissions) {
+                    // Por enquanto, apenas informar que o representante foi anexado
+                    // O usuário pode gerar comissões manualmente na seção de Gestão de Comissões
+                    successMessage = 'Cliente atualizado com sucesso! Representante anexado. Para gerar comissões, acesse a seção "Gestão de Comissões" e clique no botão azul "Gerar Comissões".';
+                  } else {
+                    successMessage = 'Cliente atualizado com sucesso!';
+                  }
+                } else if (action === 'reallocate') {
+                  await deallocateFromGenerator(data.id);
+                  await allocateToGenerator(data.id, data.generatorId, data.allocatedPercentage);
+                  successMessage = 'Cliente realocado com sucesso!';
+                } else if (action === 'allocate') {
+                  await allocateToGenerator(data.id, data.generatorId, data.allocatedPercentage);
+                  successMessage = 'Cliente alocado com sucesso!';
+                } else if (action === 'deallocate') {
+                  await deallocateFromGenerator(data.id);
+                  await updateCliente({ id: data.id, ...data.formData });
+                  successMessage = 'Cliente desalocado e atualizado com sucesso!';
                 }
-              } else if (action === 'update') {
-                // Remover propriedades internas antes de enviar para a API
-                const { _generateCommissions, ...dataForApi } = data;
-                
-                await updateCliente(dataForApi);
-                
-                // Se um representante foi anexado, informar sobre geração de comissões
-                if (_generateCommissions) {
-                  // Por enquanto, apenas informar que o representante foi anexado
-                  // O usuário pode gerar comissões manualmente na seção de Gestão de Comissões
-                  successMessage = 'Cliente atualizado com sucesso! Representante anexado. Para gerar comissões, acesse a seção "Gestão de Comissões" e clique no botão azul "Gerar Comissões".';
-                } else {
-                  successMessage = 'Cliente atualizado com sucesso!';
-                }
-              } else if (action === 'reallocate') {
-                await deallocateFromGenerator(data.id);
-                await allocateToGenerator(data.id, data.generatorId, data.allocatedPercentage);
-                successMessage = 'Cliente realocado com sucesso!';
-              } else if (action === 'allocate') {
-                await allocateToGenerator(data.id, data.generatorId, data.allocatedPercentage);
-                successMessage = 'Cliente alocado com sucesso!';
-              } else if (action === 'deallocate') {
-                await deallocateFromGenerator(data.id);
-                await updateCliente({ id: data.id, ...data.formData });
-                successMessage = 'Cliente desalocado e atualizado com sucesso!';
+
+                toast.showSuccess(successMessage);
+                setShowModal(false);
+                setEditingClient(null);
+
+              } catch (error) {
+                toast.showError('Erro ao salvar cliente consumidor.');
               }
-              
-              toast.showSuccess(successMessage);
-              setShowModal(false);
-              setEditingClient(null);
-
-            } catch (error) {
-              toast.showError('Erro ao salvar cliente consumidor.');
-            }
-          }}
-        />
-      )}
-    </div>
+            }}
+          />
+        )
+      }
+    </div >
   );
 }
 
 // Modal Component aprimorado (mantém a mesma estrutura, mas com design atualizado)
-function ConsumidorModal({ 
-  cliente, 
-  onClose, 
-  onSave 
-}: { 
-          cliente: Consumer | null; 
-  onClose: () => void; 
+function ConsumidorModal({
+  cliente,
+  onClose,
+  onSave
+}: {
+  cliente: Consumer | null;
+  onClose: () => void;
   onSave: (data: any, action: 'create' | 'update' | 'allocate' | 'deallocate' | 'reallocate') => void;
 }) {
   const { clientes: geradores, loading: loadingGeradores, error } = useClientesGeradores();
   const { clientes: todosConsumidores } = useClientesConsumidores();
   const { representantes, loading: loadingRepresentantes } = useRepresentantesComerciais();
   const toast = useToast();
-  
+
   // Helper function to convert ISO date to yyyy-MM-dd format
   const formatDateForInput = (dateString: string | undefined): string => {
     if (!dateString) return '';
@@ -1187,13 +940,13 @@ function ConsumidorModal({
 
     return errors;
   };
-  
+
   const calcularCapacidadeDisponivel = (geradorId: string) => {
     let totalAlocado = 0;
     todosConsumidores.forEach(consumidor => {
-              if (consumidor.status === ConsumerStatus.ALLOCATED && 
-          consumidor.generatorId === geradorId &&
-          consumidor.id !== cliente?.id) {
+      if (consumidor.status === ConsumerStatus.ALLOCATED &&
+        consumidor.generatorId === geradorId &&
+        consumidor.id !== cliente?.id) {
         totalAlocado += consumidor.allocatedPercentage || 0;
       }
     });
@@ -1254,669 +1007,481 @@ function ConsumidorModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header do Modal */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6">
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <h2 className="text-2xl font-bold">
-                {cliente ? 'Editar Cliente Consumidor' : 'Novo Cliente Consumidor'}
-              </h2>
-              <p className="text-green-100 mt-1">
-                {cliente ? 'Atualize as informações do cliente' : 'Cadastre um novo cliente consumidor'}
-              </p>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={cliente ? 'Editar Cliente Consumidor' : 'Novo Cliente Consumidor'}
+      description={cliente ? 'Atualize as informações do cliente abaixo. Campos obrigatórios marcados com *' : 'Preencha os dados para cadastrar um novo cliente consumidor.'}
+      size="xl"
+      headerVariant="brand"
+    >
+      <div className="space-y-6 py-2">
+        {/* Informações Básicas */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <Users className="h-5 w-5" />
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors duration-200"
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Informações Básicas</h3>
+              <p className="text-xs text-slate-500">Dados pessoais e de contato</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="md:col-span-2">
+              <Input
+                label="Nome do Cliente *"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  clearFieldError('name');
+                }}
+                error={fieldErrors.name ? 'Nome é obrigatório' : undefined}
+                placeholder="Digite o nome completo"
+                icon={<Users className="h-4 w-4" />}
+              />
+            </div>
+
+            <Select
+              label="Tipo do Documento *"
+              value={formData.documentType}
+              onChange={(e) => {
+                setFormData({ ...formData, documentType: e.target.value as DocumentType, cpfCnpj: '' });
+              }}
             >
-              <X className="h-6 w-6" />
-            </button>
+              <option value={DocumentType.CPF}>CPF</option>
+              <option value={DocumentType.CNPJ}>CNPJ</option>
+            </Select>
+
+            <Input
+              label={`${formData.documentType === DocumentType.CPF ? 'CPF' : 'CNPJ'} *`}
+              value={formData.cpfCnpj}
+              onChange={(e) => {
+                handleDocumentChange(e.target.value);
+                clearFieldError('cpfCnpj');
+              }}
+              error={fieldErrors.cpfCnpj ? (formData.documentType === DocumentType.CPF ? 'CPF inválido' : 'CNPJ inválido') : undefined}
+              placeholder={formData.documentType === DocumentType.CPF ? "000.000.000-00" : "00.000.000/0000-00"}
+              icon={<FileText className="h-4 w-4" />}
+            />
+
+            <Input
+              label="Telefone *"
+              value={formData.phone}
+              onChange={(e) => {
+                handlePhoneChange(e.target.value);
+                clearFieldError('phone');
+              }}
+              error={fieldErrors.phone ? 'Telefone inválido' : undefined}
+              placeholder="(48) 99999-9999"
+              type="tel"
+              icon={<Phone className="h-4 w-4" />}
+            />
+
+            <Input
+              label="E-mail *"
+              value={formData.email}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                clearFieldError('email');
+              }}
+              error={fieldErrors.email ? 'E-mail inválido' : undefined}
+              placeholder="joao@email.com"
+              type="email"
+              icon={<Mail className="h-4 w-4" />}
+            />
+
+            <Input
+              label="Data de Nascimento"
+              type="date"
+              value={formData.birthDate}
+              onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+            />
+
+            <Input
+              label="número da UC *"
+              value={formData.ucNumber}
+              onChange={(e) => {
+                setFormData({ ...formData, ucNumber: e.target.value });
+                clearFieldError('ucNumber');
+              }}
+              error={fieldErrors.ucNumber ? 'Número da UC é obrigatório' : undefined}
+              placeholder="Número da unidade consumidora"
+              icon={<Activity className="h-4 w-4" />}
+            />
+
+            <Select
+              label="Concessionária *"
+              value={formData.concessionaire}
+              onChange={(e) => {
+                setFormData({ ...formData, concessionaire: e.target.value });
+                clearFieldError('concessionaire');
+              }}
+              error={fieldErrors.concessionaire ? 'Concessionária é obrigatória' : undefined}
+            >
+              <option value="">Selecione uma concessionária</option>
+              <optgroup label="Região Sul">
+                <option value="CELESC">CELESC - Santa Catarina</option>
+                <option value="COPEL">COPEL - Paraná</option>
+                <option value="CEEE">CEEE - Rio Grande do Sul</option>
+                <option value="RGE">RGE - Rio Grande do Sul</option>
+              </optgroup>
+            </Select>
           </div>
         </div>
-        
-        <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
-          <div className="p-6 space-y-6">
-            {/* Informações Básicas */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Users className="h-5 w-5 mr-2 text-green-600" />
-                Informações Básicas
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome do Cliente *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({...formData, name: e.target.value});
-                      clearFieldError('name');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="Digite o nome completo"
-                  />
-                  {fieldErrors.name && (
-                    <p className="text-red-500 text-sm mt-1">Nome é obrigatório</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo do Documento *
-                  </label>
-                  <select
-                    value={formData.documentType}
-                    onChange={(e) => {
-                      setFormData({...formData, documentType: e.target.value as DocumentType, cpfCnpj: ''});
-                    }}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value={DocumentType.CPF}>CPF</option>
-                    <option value={DocumentType.CNPJ}>CNPJ</option>
-                  </select>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {formData.documentType === DocumentType.CPF ? 'CPF' : 'CNPJ'} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.cpfCnpj}
-                    onChange={(e) => {
-                      handleDocumentChange(e.target.value);
-                      clearFieldError('cpfCnpj');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.cpfCnpj ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder={formData.documentType === DocumentType.CPF ? "000.000.000-00" : "00.000.000/0000-00"}
-                  />
-                  {fieldErrors.cpfCnpj && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formData.documentType === DocumentType.CPF ? 'CPF inválido' : 'CNPJ inválido'}
-                    </p>
-                  )}
-                </div>
+        {/* Endereço */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <Home className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Endereço</h3>
+              <p className="text-xs text-slate-500">Localização da unidade consumidora</p>
+            </div>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Telefone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => {
-                      handlePhoneChange(e.target.value);
-                      clearFieldError('phone');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="(48) 99999-9999"
-                  />
-                  {fieldErrors.phone && (
-                    <p className="text-red-500 text-sm mt-1">Telefone inválido</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    E-mail *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => {
-                      setFormData({...formData, email: e.target.value});
-                      clearFieldError('email');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="joao@email.com"
-                  />
-                  {fieldErrors.email && (
-                    <p className="text-red-500 text-sm mt-1">E-mail inválido</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data de Nascimento
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.birthDate}
-                    onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número da UC
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.ucNumber}
-                    onChange={(e) => {
-                      setFormData({...formData, ucNumber: e.target.value});
-                      clearFieldError('ucNumber');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.ucNumber ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="Número da unidade consumidora"
-                  />
-                  {fieldErrors.ucNumber && (
-                    <p className="text-red-500 text-sm mt-1">Número da UC é obrigatório</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Concessionária
-                  </label>
-                  <select
-                    value={formData.concessionaire}
-                    onChange={(e) => {
-                      setFormData({...formData, concessionaire: e.target.value});
-                      clearFieldError('concessionaire');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.concessionaire ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    required
-                  >
-                    <option value="">Selecione uma concessionária</option>
-                    <optgroup label="Região Sul">
-                      <option value="CELESC">CELESC - Santa Catarina</option>
-                      <option value="COPEL">COPEL - Paraná</option>
-                      <option value="CEEE">CEEE - Rio Grande do Sul</option>
-                      <option value="RGE">RGE - Rio Grande do Sul</option>
-                    </optgroup>
-                    {/* Outras regiões... */}
-                  </select>
-                  {fieldErrors.concessionaire && (
-                    <p className="text-red-500 text-sm mt-1">Concessionária é obrigatória</p>
-                  )}
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="md:col-span-2">
+              <Input
+                label="Rua *"
+                value={formData.street}
+                onChange={(e) => {
+                  setFormData({ ...formData, street: e.target.value });
+                  clearFieldError('street');
+                }}
+                error={fieldErrors.street ? 'Rua é obrigatória' : undefined}
+                placeholder="Rua das Flores"
+                icon={<MapPin className="h-4 w-4" />}
+              />
             </div>
 
-            {/* Endereço */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Home className="h-5 w-5 mr-2 text-green-600" />
-                Endereço
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rua *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.street}
-                    onChange={(e) => {
-                      setFormData({...formData, street: e.target.value});
-                      clearFieldError('street');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.street ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="Rua das Flores"
-                  />
-                  {fieldErrors.street && (
-                    <p className="text-red-500 text-sm mt-1">Rua é obrigatória</p>
-                  )}
-                </div>
+            <Input
+              label="Número *"
+              value={formData.number}
+              onChange={(e) => {
+                setFormData({ ...formData, number: e.target.value });
+                clearFieldError('number');
+              }}
+              error={fieldErrors.number ? 'Número é obrigatório' : undefined}
+              placeholder="123"
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.number}
-                    onChange={(e) => {
-                      setFormData({...formData, number: e.target.value});
-                      clearFieldError('number');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.number ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="123"
-                  />
-                  {fieldErrors.number && (
-                    <p className="text-red-500 text-sm mt-1">Número é obrigatório</p>
-                  )}
-                </div>
+            <Input
+              label="Complemento"
+              value={formData.complement}
+              onChange={(e) => setFormData({ ...formData, complement: e.target.value })}
+              placeholder="Apto 101"
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Complemento
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.complement}
-                    onChange={(e) => setFormData({...formData, complement: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Apto 101"
-                  />
-                </div>
+            <Input
+              label="Bairro *"
+              value={formData.neighborhood}
+              onChange={(e) => {
+                setFormData({ ...formData, neighborhood: e.target.value });
+                clearFieldError('neighborhood');
+              }}
+              error={fieldErrors.neighborhood ? 'Bairro é obrigatório' : undefined}
+              placeholder="Centro"
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bairro *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.neighborhood}
-                    onChange={(e) => {
-                      setFormData({...formData, neighborhood: e.target.value});
-                      clearFieldError('neighborhood');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.neighborhood ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="Centro"
-                  />
-                  {fieldErrors.neighborhood && (
-                    <p className="text-red-500 text-sm mt-1">Bairro é obrigatório</p>
-                  )}
-                </div>
+            <Input
+              label="CEP *"
+              value={formData.zipCode}
+              onChange={(e) => {
+                handleCepChange(e.target.value);
+                clearFieldError('zipCode');
+              }}
+              error={fieldErrors.zipCode ? 'CEP inválido' : undefined}
+              placeholder="88010-000"
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CEP *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.zipCode}
-                    onChange={(e) => {
-                      handleCepChange(e.target.value);
-                      clearFieldError('zipCode');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.zipCode ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="88010-000"
-                  />
-                  {fieldErrors.zipCode && (
-                    <p className="text-red-500 text-sm mt-1">CEP inválido</p>
-                  )}
-                </div>
+            <Input
+              label="Cidade *"
+              value={formData.city}
+              onChange={(e) => {
+                setFormData({ ...formData, city: e.target.value });
+                clearFieldError('city');
+              }}
+              error={fieldErrors.city ? 'Cidade é obrigatória' : undefined}
+              placeholder="Nome da cidade"
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cidade *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => {
-                      setFormData({...formData, city: e.target.value});
-                      clearFieldError('city');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.city ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="Nome da cidade"
-                  />
-                  {fieldErrors.city && (
-                    <p className="text-red-500 text-sm mt-1">Cidade é obrigatória</p>
-                  )}
-                </div>
+            <Input
+              label="Estado (UF) *"
+              value={formData.state}
+              onChange={(e) => {
+                setFormData({ ...formData, state: e.target.value.toUpperCase() });
+                clearFieldError('state');
+              }}
+              maxLength={2}
+              error={fieldErrors.state ? 'Estado é obrigatório' : undefined}
+              placeholder="SC"
+            />
+          </div>
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estado (UF) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={2}
-                    value={formData.state}
-                    onChange={(e) => {
-                      setFormData({...formData, state: e.target.value.toUpperCase()});
-                      clearFieldError('state');
-                    }}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
-                      fieldErrors.state ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                    }`}
-                    placeholder="SC"
-                  />
-                  {fieldErrors.state && (
-                    <p className="text-red-500 text-sm mt-1">Estado é obrigatório</p>
-                  )}
-                </div>
-              </div>
+        {/* Características Técnicas */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <Activity className="h-5 w-5" />
             </div>
-
-            {/* Características Técnicas */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Activity className="h-5 w-5 mr-2 text-green-600" />
-                Características Técnicas
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Consumidor
-                  </label>
-                  <select
-                    value={formData.consumerType}
-                    onChange={(e) => setFormData({...formData, consumerType: e.target.value as any})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="RESIDENTIAL">🏠 Residencial</option>
-                    <option value="COMMERCIAL">🏢 Comercial</option>
-                    <option value="RURAL">🌾 Rural</option>
-                    <option value="INDUSTRIAL">🏭 Industrial</option>
-                    <option value="PUBLIC_POWER">🏛️ Poder Público</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fase
-                  </label>
-                  <select
-                    value={formData.phase}
-                    onChange={(e) => setFormData({...formData, phase: e.target.value as any})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="SINGLE">Monofásico</option>
-                    <option value="TWO">Bifásico</option>
-                    <option value="THREE">Trifásico</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Consumo Médio Mensal (kW/h)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.averageMonthlyConsumption}
-                    onChange={(e) => setFormData({...formData, averageMonthlyConsumption: parseFloat(e.target.value) || 0})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Desconto Oferecido (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    required
-                    value={formData.discountOffered}
-                    onChange={(e) => setFormData({...formData, discountOffered: parseInt(e.target.value) || 0})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Características Técnicas</h3>
+              <p className="text-xs text-slate-500">Dados técnicos de energia</p>
             </div>
+          </div>
 
-            {/* Informações do Representante (Opcional) */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <UserCheck className="h-5 w-5 mr-2 text-green-600" />
-                Informações do Representante (Opcional)
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome do Representante
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.representativeName}
-                    onChange={(e) => setFormData({...formData, representativeName: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Maria Representante"
-                  />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Select
+              label="Tipo de Consumidor"
+              value={formData.consumerType}
+              onChange={(e) => setFormData({ ...formData, consumerType: e.target.value as any })}
+            >
+              <option value="RESIDENTIAL">🏠 Residencial</option>
+              <option value="COMMERCIAL">🏢 Comercial</option>
+              <option value="RURAL">🌾 Rural</option>
+              <option value="INDUSTRIAL">🏭 Industrial</option>
+              <option value="PUBLIC_POWER">🏛️ Poder Público</option>
+            </Select>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    RG do Representante
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.representativeRg}
-                    onChange={(e) => handleRgChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                    placeholder="12.345.678-9"
-                  />
-                </div>
+            <Select
+              label="Fase"
+              value={formData.phase}
+              onChange={(e) => setFormData({ ...formData, phase: e.target.value as any })}
+            >
+              <option value="SINGLE">Monofásico</option>
+              <option value="TWO">Bifásico</option>
+              <option value="THREE">Trifásico</option>
+            </Select>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data de Chegada
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.arrivalDate}
-                    onChange={(e) => setFormData({...formData, arrivalDate: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  />
-                </div>
+            <Input
+              label="Consumo Médio Mensal (kW/h)"
+              type="number"
+              value={formData.averageMonthlyConsumption}
+              onChange={(e) => setFormData({ ...formData, averageMonthlyConsumption: parseFloat(e.target.value) || 0 })}
+              placeholder="0"
+              icon={<Activity className="h-4 w-4" />}
+            />
 
-                <div className="flex items-center">
+            <Input
+              label="Desconto Oferecido (%)"
+              type="number"
+              min={0}
+              max={100}
+              value={formData.discountOffered}
+              onChange={(e) => setFormData({ ...formData, discountOffered: parseInt(e.target.value) || 0 })}
+              placeholder="0"
+              icon={<TrendingDown className="h-4 w-4" />}
+            />
+          </div>
+        </div>
+
+        {/* Informações do Representante */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <UserCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Informações do Representante</h3>
+              <p className="text-xs text-slate-500">Dados opcionais do representante</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Input
+              label="Nome do Representante"
+              value={formData.representativeName}
+              onChange={(e) => setFormData({ ...formData, representativeName: e.target.value })}
+              placeholder="Maria Representante"
+            />
+
+            <Input
+              label="RG do Representante"
+              value={formData.representativeRg}
+              onChange={(e) => handleRgChange(e.target.value)}
+              placeholder="12.345.678-9"
+            />
+
+            <Input
+              label="Data de Chegada"
+              type="date"
+              value={formData.arrivalDate}
+              onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+            />
+
+            <div className="flex items-center h-12 pt-6">
+              <label className="flex items-center cursor-pointer group">
+                <div className="relative">
                   <input
                     type="checkbox"
-                    id="receiveWhatsapp"
+                    className="sr-only peer"
                     checked={formData.receiveWhatsapp}
-                    onChange={(e) => setFormData({...formData, receiveWhatsapp: e.target.checked})}
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                    onChange={(e) => setFormData({ ...formData, receiveWhatsapp: e.target.checked })}
                   />
-                  <label htmlFor="receiveWhatsapp" className="ml-2 block text-sm text-gray-700">
-                    Receber WhatsApp
-                  </label>
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
                 </div>
-              </div>
+                <span className="ml-3 text-sm font-medium text-slate-700 group-hover:text-slate-900">Receber WhatsApp</span>
+              </label>
             </div>
+          </div>
+        </div>
 
-            {/* Fatura (apenas visualização) */}
-            {cliente && (cliente.invoiceUrl && cliente.invoiceUrl.trim() !== '') && (
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-green-600" />
-                  Fatura Anexada
-                </h3>
-                <InvoiceView
-                  consumerId={cliente.id}
-                  invoiceUrl={cliente.invoiceUrl}
-                  invoiceFileName={cliente.invoiceFileName}
-                  invoiceUploadedAt={cliente.invoiceUploadedAt}
-                  invoiceScannedData={cliente.invoiceScannedData}
-                />
+        {/* Fatura */}
+        {cliente && (cliente.invoiceUrl && cliente.invoiceUrl.trim() !== '') && (
+          <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+                <FileText className="h-5 w-5" />
               </div>
-            )}
-
-            {/* Observações */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
-                Observações
-              </h3>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Observações
-                </label>
-                <textarea
-                  value={formData.observations}
-                  onChange={(e) => setFormData({...formData, observations: e.target.value})}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Cliente preferencial, observações especiais..."
-                />
+                <h3 className="font-display font-bold text-lg text-slate-900">Fatura Anexada</h3>
+                <p className="text-xs text-slate-500">Documento de fatura do cliente</p>
               </div>
             </div>
+            <div className="bg-white rounded-xl p-4 border border-slate-200">
+              <InvoiceView
+                consumerId={cliente.id}
+                invoiceUrl={cliente.invoiceUrl}
+                invoiceFileName={cliente.invoiceFileName}
+                invoiceUploadedAt={cliente.invoiceUploadedAt}
+                invoiceScannedData={cliente.invoiceScannedData}
+              />
+            </div>
+          </div>
+        )}
 
-            {/* Status e Alocação */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                Status e Alocação
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="AVAILABLE">✅ Disponível</option>
-                    <option value="ALLOCATED">🔗 Alocado</option>
-                  </select>
-                </div>
+        {/* Observações */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Observações</h3>
+              <p className="text-xs text-slate-500">Anotações internas sobre o cliente</p>
+            </div>
+          </div>
+          <textarea
+            value={formData.observations}
+            onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+            rows={3}
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 bg-white text-slate-900 placeholder:text-slate-400 resize-none outline-none"
+            placeholder="Cliente preferencial, observações especiais..."
+          />
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Representante Comercial</label>
-                  <select
-                                      value={formData.representativeId}
-                  onChange={(e) => setFormData({ ...formData, representativeId: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="">Sem representante</option>
-                    {loadingRepresentantes && (
-                      <option value="">Carregando representantes...</option>
-                    )}
-                    {!loadingRepresentantes && representantes.length > 0 && (
-                      representantes
-                        .filter(rep => rep.status === 'ACTIVE')
-                        .map((representante) => (
-                          <option key={representante.id} value={representante.id}>
-                            {representante.name} - {representante.city}/{representante.state}
-                          </option>
-                        ))
-                    )}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Opcional: Vincule um representante comercial ativo
-                  </p>
-                </div>
+        {/* Status e Alocação */}
+        <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-accent shadow-sm">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg text-slate-900">Status e Alocação</h3>
+              <p className="text-xs text-slate-500">Gestão de vínculo e status</p>
+            </div>
+          </div>
 
-                {formData.status === ConsumerStatus.ALLOCATED && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Gerador Vinculado</label>
-                      <select
-                        value={formData.generatorId}
-                        onChange={(e) => setFormData({ ...formData, generatorId: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                        disabled={loadingGeradores || geradores.length === 0}
-                        required
-                      >
-                        {loadingGeradores && (
-                          <option value="">Carregando geradores...</option>
-                        )}
-                        {!loadingGeradores && geradores.length === 0 && (
-                          <option value="">Nenhum gerador encontrado</option>
-                        )}
-                        {!loadingGeradores && geradores.length > 0 && (
-                          <>
-                            <option value="">Selecione um gerador</option>
-                            {geradores.map((gerador) => {
-                              const name = gerador.ownerName || gerador.ownerName;
-                              const location = gerador.city || gerador.state;
-                              const capacity = gerador.installedPower || gerador.installedPower;
-                              const capacidadeDisponivel = calcularCapacidadeDisponivel(gerador.id);
-                              
-                              return (
-                                <option key={gerador.id} value={gerador.id}>
-                                  {name} - {location} ({capacity} kW) - {isNaN(capacidadeDisponivel) ? '0.0' : capacidadeDisponivel.toFixed(1)}% disponível
-                                </option>
-                              );
-                            })}
-                          </>
-                        )}
-                      </select>
-                      {error && <p className="text-xs text-red-600 mt-1">Erro ao carregar geradores.</p>}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Select
+              label="Status"
+              value={formData.status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              <option value="AVAILABLE">✅ Disponível</option>
+              <option value="ALLOCATED">🔗 Alocado</option>
+            </Select>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">% da Energia Alocada</label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={formData.allocatedPercentage}
-                          className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-100 cursor-not-allowed transition-all duration-200"
-                          readOnly
-                          disabled
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                          <span className="text-gray-500 text-sm bg-green-100 px-2 py-1 rounded-lg">Automático</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs text-blue-700">
-                          <span className="font-medium">Cálculo automático:</span> (Consumo ÷ Capacidade do Gerador) × 100
-                        </p>
-                        {formData.allocatedPercentage > 100 && (
-                          <p className="text-xs text-red-600 mt-1 flex items-center">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            <span>Atenção: O consumo excede a capacidade do gerador!</span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
+            <div className="space-y-1">
+              <Select
+                label="Representante Comercial"
+                value={formData.representativeId}
+                onChange={(e) => setFormData({ ...formData, representativeId: e.target.value })}
+              >
+                <option value="">Sem representante</option>
+                {loadingRepresentantes ? (
+                  <option value="" disabled>Carregando representantes...</option>
+                ) : (
+                  representantes
+                    .filter(rep => rep.status === 'ACTIVE')
+                    .map((representante) => (
+                      <option key={representante.id} value={representante.id}>
+                        {representante.name} - {representante.city}/{representante.state}
+                      </option>
+                    ))
                 )}
-              </div>
+              </Select>
             </div>
 
-            {/* Botões de Ação */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center space-x-2"
-              >
-                <span>{cliente ? 'Atualizar Cliente' : 'Cadastrar Cliente'}</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
+            {formData.status === ConsumerStatus.ALLOCATED && (
+              <>
+                <Select
+                  label="Gerador Vinculado"
+                  value={formData.generatorId}
+                  onChange={(e) => setFormData({ ...formData, generatorId: e.target.value })}
+                  disabled={loadingGeradores || geradores.length === 0}
+                  error={error ? 'Erro ao carregar geradores' : undefined}
+                >
+                  {loadingGeradores && <option value="">Carregando geradores...</option>}
+                  {!loadingGeradores && geradores.length === 0 && <option value="">Nenhum gerador encontrado</option>}
+                  {!loadingGeradores && geradores.length > 0 && (
+                    <>
+                      <option value="">Selecione um gerador</option>
+                      {geradores.map((gerador) => {
+                        const capacidadeDisponivel = calcularCapacidadeDisponivel(gerador.id);
+                        return (
+                          <option key={gerador.id} value={gerador.id}>
+                            {gerador.ownerName} - {gerador.city || gerador.state} ({gerador.installedPower} kW) - {isNaN(capacidadeDisponivel) ? '0.0' : capacidadeDisponivel.toFixed(1)}% disponível
+                          </option>
+                        );
+                      })}
+                    </>
+                  )}
+                </Select>
+
+                <div className="md:col-span-2">
+                  <Input
+                    label="% da Energia Alocada"
+                    type="number"
+                    value={formData.allocatedPercentage}
+                    readOnly
+                    disabled
+                    className="bg-slate-100 cursor-not-allowed"
+                    icon={<Activity className="h-4 w-4" />}
+                  />
+
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      <span className="font-medium">Cálculo automático:</span> (Consumo ÷ Capacidade do Gerador) × 100
+                    </p>
+                    {formData.allocatedPercentage > 100 && (
+                      <p className="text-xs text-red-600 mt-1 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        <span>Atenção: O consumo excede a capacidade do gerador!</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
-    </div>
+
+      <ModalFooter>
+        <Button variant="secondary" onClick={onClose} className="rounded-full">
+          Cancelar
+        </Button>
+        <Button onClick={handleSubmit} showArrow className="rounded-full">
+          {cliente ? 'Atualizar Cliente' : 'Cadastrar Cliente'}
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }
 

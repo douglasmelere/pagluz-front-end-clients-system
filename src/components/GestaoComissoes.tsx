@@ -22,17 +22,22 @@ import { useCommissions } from '../hooks/useCommissions';
 import { useRepresentantesComerciais } from '../hooks/useRepresentantesComerciais';
 import { useToast } from '../hooks/useToast';
 import { Commission, CommissionStatus } from '../types';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Modal, { ModalFooter } from './ui/Modal';
+import LoadingSpinner from './common/LoadingSpinner';
 
 export default function GestaoComissoes() {
-  const { 
-    commissions, 
-    loading, 
-    error, 
-    updateFilters, 
-    clearFilters, 
-    markAsPaid, 
+  const {
+    commissions,
+    loading,
+    error,
+    updateFilters,
+    clearFilters,
+    markAsPaid,
     generateCommissionsForExisting,
-    refetch 
+    refetch
   } = useCommissions();
   const { representantes } = useRepresentantesComerciais();
   const toast = useToast();
@@ -82,8 +87,7 @@ export default function GestaoComissoes() {
     try {
       setGenerating(true);
       const result = await generateCommissionsForExisting();
-      
-      // Verificar se foram processados consumidores
+
       if (result.totalProcessed === 0) {
         toast.showError('Nenhum consumidor elegível encontrado para gerar comissões. Verifique se há consumidores aprovados com representantes vinculados.');
       } else if (result.successful > 0) {
@@ -91,9 +95,8 @@ export default function GestaoComissoes() {
       } else {
         toast.showError('Erro ao gerar comissões. Verifique os logs para mais detalhes.');
       }
-      
+
       setShowGenerateModal(false);
-      // Recarregar a lista de comissões
       refetch();
     } catch (error) {
       toast.showError('Erro ao gerar comissões');
@@ -133,7 +136,7 @@ export default function GestaoComissoes() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.showSuccess('Comissões exportadas com sucesso!');
   };
 
@@ -150,329 +153,291 @@ export default function GestaoComissoes() {
 
   if (loading && commissions.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-slate-600">Carregando comissões...</p>
-        </div>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingSpinner />
       </div>
     );
   }
 
-  // Se há erro, mostrar mensagem de erro
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <XCircle className="h-8 w-8 text-red-600" />
+      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center max-w-md">
+          <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <XCircle className="h-8 w-8 text-red-500" />
           </div>
           <h3 className="text-lg font-medium text-slate-900 mb-2">Erro ao carregar comissões</h3>
           <p className="text-slate-500 mb-6">{error}</p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
+          <Button onClick={() => refetch()}>
             Tentar novamente
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-slate-50/50 pb-12">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-emerald-600 shadow-2xl rounded-b-3xl overflow-hidden">
-        <div className="w-full px-4 md:px-6 py-6 md:py-8">
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                  <DollarSign className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold">Gestão de Comissões</h1>
-                  <p className="text-slate-200 text-lg mt-1">Gerencie comissões de representantes</p>
-                </div>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-x-4">
+              <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
+                <DollarSign className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold text-slate-900">
+                  Gestão de Comissões
+                </h1>
+                <p className="text-slate-500 font-medium text-sm font-display">
+                  Gerencie comissões de representantes
+                </p>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <button
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
                 onClick={() => setShowGenerateModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center space-x-3 transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/20"
+                className="bg-white text-slate-700 hover:text-slate-900"
               >
-                <RefreshCw className="h-5 w-5" />
-                <span className="font-semibold">Gerar Comissões</span>
-              </button>
-              <button
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Gerar Comissões
+              </Button>
+              <Button
                 onClick={exportCommissions}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-2xl flex items-center space-x-3 transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/20"
+                showArrow
               >
-                <Download className="h-5 w-5" />
-                <span className="font-semibold">Exportar</span>
-              </button>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Total de Comissões</p>
-                <p className="text-4xl font-bold text-slate-900">{stats.total}</p>
-              </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <BarChart3 className="h-8 w-8 text-white" />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500 font-display">Total</p>
+              <p className="text-3xl font-bold text-slate-900 font-display mt-1">{stats.total}</p>
+            </div>
+            <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+              <BarChart3 className="h-6 w-6" />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Pendentes</p>
-                <p className="text-4xl font-bold text-orange-600">{stats.pending}</p>
-              </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Clock className="h-8 w-8 text-white" />
-              </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500 font-display">Pendentes</p>
+              <p className="text-3xl font-bold text-amber-500 font-display mt-1">{stats.pending}</p>
+            </div>
+            <div className="h-12 w-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+              <Clock className="h-6 w-6" />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Pagas</p>
-                <p className="text-4xl font-bold text-green-600">{stats.paid}</p>
-              </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <CheckCircle className="h-8 w-8 text-white" />
-              </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500 font-display">Pagas</p>
+              <p className="text-3xl font-bold text-emerald-600 font-display mt-1">{stats.paid}</p>
+            </div>
+            <div className="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+              <CheckCircle className="h-6 w-6" />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 hover:shadow-2xl transition-all duration-300 group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-600 mb-2">Valor Total</p>
-                <p className="text-4xl font-bold text-purple-600">R$ {stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                <p className="text-xs text-slate-500">R$ {stats.pendingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} pendentes</p>
-              </div>
-              <div className="h-16 w-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="h-8 w-8 text-white" />
-              </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500 font-display">Valor Total</p>
+              <p className="text-2xl font-bold text-purple-600 font-display mt-1">
+                R$ {stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                R$ {stats.pendingValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} pendentes
+              </p>
+            </div>
+            <div className="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+              <TrendingUp className="h-6 w-6" />
             </div>
           </div>
         </div>
 
         {/* Filtros */}
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200">
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar por representante ou consumidor..."
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div className="md:col-span-2">
+              <Input
+                label="Buscar"
+                placeholder="Representante ou consumidor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-slate-50 focus:bg-white text-lg"
+                icon={<Search className="h-5 w-5" />}
               />
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-slate-400" />
-                <select
-                  value={filterRepresentative}
-                  onChange={(e) => setFilterRepresentative(e.target.value)}
-                  className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50 min-w-[180px]"
-                >
-                  <option value="">Todos os Representantes</option>
-                  {representantes.map(rep => (
-                    <option key={rep.id} value={rep.id}>
-                      {rep.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50 min-w-[140px]"
-              >
-                <option value="">Todos os Status</option>
-                <option value={CommissionStatus.PENDING}>Pendente</option>
-                <option value={CommissionStatus.CALCULATED}>Calculada</option>
-                <option value={CommissionStatus.PAID}>Pago</option>
-                <option value={CommissionStatus.CANCELLED}>Cancelado</option>
-              </select>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50"
-                placeholder="Data inicial"
-              />
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-                className="border border-slate-200 rounded-xl px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-slate-50"
-                placeholder="Data final"
-              />
-              <button
-                onClick={handleClearFilters}
-                className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-4 rounded-xl transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-              >
-                <X className="h-5 w-5" />
-                <span>Limpar</span>
-              </button>
-            </div>
+
+            <Select
+              label="Representante"
+              value={filterRepresentative}
+              onChange={(e) => setFilterRepresentative(e.target.value)}
+            >
+              <option value="">Todos</option>
+              {representantes.map(rep => (
+                <option key={rep.id} value={rep.id}>{rep.name}</option>
+              ))}
+            </Select>
+
+            <Select
+              label="Status"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">Todos</option>
+              <option value={CommissionStatus.PENDING}>Pendente</option>
+              <option value={CommissionStatus.CALCULATED}>Calculada</option>
+              <option value={CommissionStatus.PAID}>Pago</option>
+              <option value={CommissionStatus.CANCELLED}>Cancelado</option>
+            </Select>
+
+            <Input
+              label="Data Inicial"
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+            />
+
+            <Input
+              label="Data Final"
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => setFilterEndDate(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <Button
+              onClick={handleClearFilters}
+              variant="secondary"
+              className="bg-slate-100 text-slate-600 hover:bg-slate-200"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Limpar Filtros
+            </Button>
           </div>
         </div>
 
-
         {/* Tabela de Comissões */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-slate-100 to-slate-200 border-b border-slate-300">
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Representante</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Consumidor</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">kWh</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Valor</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Data</th>
-                  <th className="px-8 py-5 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Ações</th>
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 font-medium font-display border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 whitespace-nowrap">Representante</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Consumidor</th>
+                  <th className="px-6 py-4 whitespace-nowrap">kWh</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Valor</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Data</th>
+                  <th className="px-6 py-4 whitespace-nowrap text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-100">
                 {filteredCommissions.map((commission) => (
-                  <tr key={commission.id} className="hover:bg-slate-50 transition-all duration-200 group">
-                    <td className="px-6 py-6">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">
+                  <tr key={commission.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm ring-2 ring-white">
                           {commission.representative.name.charAt(0)}
                         </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                            {commission.representative.name}
-                          </div>
-                          <div className="text-xs text-slate-500">{commission.representative.email}</div>
+                        <div>
+                          <p className="font-medium text-slate-900 font-display">{commission.representative.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{commission.representative.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">
+
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-sm ring-2 ring-white">
                           {commission.consumer.name.charAt(0)}
                         </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-bold text-slate-900 group-hover:text-green-600 transition-colors">
-                            {commission.consumer.name}
-                          </div>
-                          <div className="text-xs text-slate-500">{commission.consumer.email}</div>
+                        <div>
+                          <p className="font-medium text-slate-900 font-display">{commission.consumer.name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{commission.consumer.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="flex items-center">
-                        <Zap className="h-4 w-4 mr-2 text-yellow-500" />
+
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="h-4 w-4 text-yellow-500" />
                         <span className="text-sm font-semibold text-slate-900">
                           {(() => {
-                            // Se kwh é 0, null ou undefined, tentar usar averageMonthlyConsumption do consumer
-                            const kwhValue = commission.kwh || 
-                              commission.consumer.averageMonthlyConsumption || 
-                              0;
-                            
+                            const kwhValue = commission.kwh || commission.consumer.averageMonthlyConsumption || 0;
                             return kwhValue > 0 ? kwhValue.toLocaleString() : '0';
                           })()}
                         </span>
-                        <span className="text-xs text-slate-500 ml-1">kWh</span>
+                        <span className="text-xs text-slate-500">kWh</span>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="text-sm font-bold text-slate-900">
-                        R$ {commission.commissionValue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        R$ {commission.kwhPrice.toFixed(2)}/kWh
+
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">
+                          R$ {commission.commissionValue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                        </p>
+                        <p className="text-xs text-slate-500">R$ {commission.kwhPrice.toFixed(2)}/kWh</p>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
+
+                    <td className="px-6 py-4">
                       {(() => {
-                        if (commission.status === CommissionStatus.PENDING) {
-                          return (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
-                              <Clock className="h-3 w-3" />
-                              <span>Pendente</span>
-                            </span>
-                          );
-                        } else if (commission.status === CommissionStatus.PAID) {
-                          return (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Pago</span>
-                            </span>
-                          );
-                        } else if (commission.status === CommissionStatus.CANCELLED) {
-                          return (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                              <X className="h-3 w-3" />
-                              <span>Cancelado</span>
-                            </span>
-                          );
-                        } else if (commission.status === CommissionStatus.CALCULATED) {
-                          return (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                              <TrendingUp className="h-3 w-3" />
-                              <span>Calculada</span>
-                            </span>
-                          );
-                        } else {
-                          // Status desconhecido - mostrar o valor real
-                          return (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                              <AlertCircle className="h-3 w-3" />
-                              <span>{commission.status || 'Desconhecido'}</span>
-                            </span>
-                          );
-                        }
+                        const statusConfig = {
+                          [CommissionStatus.PENDING]: { label: 'Pendente', color: 'amber', icon: Clock },
+                          [CommissionStatus.PAID]: { label: 'Pago', color: 'emerald', icon: CheckCircle },
+                          [CommissionStatus.CANCELLED]: { label: 'Cancelado', color: 'red', icon: X },
+                          [CommissionStatus.CALCULATED]: { label: 'Calculada', color: 'blue', icon: TrendingUp }
+                        };
+
+                        const config = statusConfig[commission.status] || { label: commission.status || 'Desconhecido', color: 'slate', icon: AlertCircle };
+                        const Icon = config.icon;
+
+                        return (
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-${config.color}-50 text-${config.color}-700 border-${config.color}-200`}>
+                            <Icon className="h-3 w-3" />
+                            {config.label}
+                          </span>
+                        );
                       })()}
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4 text-slate-400" />
                         <span className="text-sm text-slate-900">
                           {new Date(commission.createdAt).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      {(() => {
-                        if (commission.status === CommissionStatus.PENDING || commission.status === CommissionStatus.CALCULATED) {
-                          return (
-                            <button
-                              onClick={() => handleMarkAsPaid(commission.id)}
-                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                              <span>Marcar Pago</span>
-                            </button>
-                          );
-                        } else {
-                          return (
-                            <span className="text-sm text-gray-500">
-                              {commission.status === CommissionStatus.PAID ? 'Já paga' : 'Ação não disponível'}
-                            </span>
-                          );
-                        }
-                      })()}
+
+                    <td className="px-6 py-4 text-right">
+                      {(commission.status === CommissionStatus.PENDING || commission.status === CommissionStatus.CALCULATED) ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkAsPaid(commission.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Marcar Pago
+                        </Button>
+                      ) : (
+                        <span className="text-sm text-slate-400">
+                          {commission.status === CommissionStatus.PAID ? 'Já paga' : '-'}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -482,13 +447,13 @@ export default function GestaoComissoes() {
 
           {filteredCommissions.length === 0 && !loading && (
             <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+              <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <DollarSign className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma comissão encontrada</h3>
-              <p className="text-slate-500 mb-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-medium text-slate-900 mb-2 font-display">Nenhuma comissão encontrada</h3>
+              <p className="text-slate-500 max-w-sm mx-auto font-display">
                 {searchTerm || filterRepresentative || filterStatus || filterStartDate || filterEndDate
-                  ? 'Tente ajustar os filtros de busca para encontrar as comissões desejadas.' 
+                  ? 'Tente ajustar os filtros de busca para encontrar as comissões desejadas.'
                   : 'Nenhuma comissão foi gerada ainda.'}
               </p>
             </div>
@@ -497,68 +462,54 @@ export default function GestaoComissoes() {
       </div>
 
       {/* Modal de Geração de Comissões */}
-      {showGenerateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="text-white">
-                  <h2 className="text-xl font-bold">Gerar Comissões</h2>
-                  <p className="text-blue-100 mt-1">Gerar comissões para consumidores existentes</p>
-                </div>
-                <button
-                  onClick={() => setShowGenerateModal(false)}
-                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
-                  <div>
-                    <h4 className="text-sm font-semibold text-yellow-800">Atenção</h4>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Esta ação irá gerar comissões para todos os consumidores que possuem representantes vinculados e ainda não possuem comissões geradas.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowGenerateModal(false)}
-                  className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleGenerateCommissions}
-                  disabled={generating}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-xl transition-all duration-200 font-medium flex items-center space-x-2"
-                >
-                  {generating ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                  <span>{generating ? 'Gerando...' : 'Gerar Comissões'}</span>
-                </button>
-              </div>
+      <Modal
+        isOpen={showGenerateModal}
+        onClose={() => setShowGenerateModal(false)}
+        title="Gerar Comissões"
+        description="Gerar comissões para consumidores existentes"
+        size="md"
+        headerVariant="brand"
+      >
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="text-sm font-semibold text-yellow-800 font-display">Atenção</h4>
+              <p className="text-sm text-yellow-700 mt-1 font-display">
+                Esta ação irá gerar comissões para todos os consumidores que possuem representantes vinculados e ainda não possuem comissões geradas.
+              </p>
             </div>
           </div>
         </div>
-      )}
 
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center space-x-2 shadow-lg">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <span className="text-red-700">{error}</span>
-        </div>
-      )}
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            onClick={() => setShowGenerateModal(false)}
+            className="rounded-full"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleGenerateCommissions}
+            disabled={generating}
+            showArrow
+            className="rounded-full"
+          >
+            {generating ? (
+              <>
+                <Loader className="h-4 w-4 mr-2 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Gerar Comissões
+              </>
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

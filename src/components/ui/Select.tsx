@@ -21,17 +21,18 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             {label}
           </label>
         )}
-        
+
         <div className="relative">
           <select
             id={selectId}
             ref={ref}
             className={`
-              w-full h-12 px-4 pr-10
+              w-full h-12 px-5 pr-10
               bg-transparent
-              border border-border rounded-xl
+              border border-border rounded-full
               text-foreground
               appearance-none
+              font-display
               transition-all duration-200
               focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background
               focus:border-accent
@@ -47,12 +48,12 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             )) : children}
           </select>
-          
+
           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
             <ChevronDown className="h-5 w-5" />
           </div>
         </div>
-        
+
         {error && (
           <p className="text-sm text-error">{error}</p>
         )}

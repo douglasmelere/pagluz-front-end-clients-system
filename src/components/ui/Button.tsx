@@ -27,6 +27,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       btn-base
       relative overflow-hidden
       active:scale-[0.98]
+      rounded-full
+      font-display font-medium tracking-wide
     `;
 
     const variantStyles = {
@@ -79,7 +81,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {variant === 'primary' && (
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
         )}
-        
+
         {/* Content */}
         <span className="relative flex items-center gap-2">
           {isLoading ? (

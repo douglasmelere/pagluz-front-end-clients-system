@@ -38,11 +38,11 @@ export default function Dashboard() {
   // Funções para gerar dados de distribuição a partir dos dados locais
   const gerarDistribuicaoPorFonte = () => {
     if (!geradores || geradores.length === 0) return [];
-    
+
     const distribuicao = geradores.reduce((acc, gerador) => {
       const sourceType = gerador.sourceType || 'NÃO_INFORMADO';
       const existing = acc.find(item => item.sourceType === sourceType);
-      
+
       if (existing) {
         existing.count += 1;
         existing.totalPower += gerador.installedPower || 0;
@@ -53,20 +53,20 @@ export default function Dashboard() {
           totalPower: gerador.installedPower || 0
         });
       }
-      
+
       return acc;
-    }, [] as Array<{sourceType: string, count: number, totalPower: number}>);
-    
+    }, [] as Array<{ sourceType: string, count: number, totalPower: number }>);
+
     return distribuicao.sort((a, b) => b.count - a.count);
   };
 
   const gerarDistribuicaoPorTipo = () => {
     if (!clientesConsumidores || clientesConsumidores.length === 0) return [];
-    
+
     const distribuicao = clientesConsumidores.reduce((acc, consumidor) => {
       const consumerType = consumidor.consumerType || 'NÃO_INFORMADO';
       const existing = acc.find(item => item.consumerType === consumerType);
-      
+
       if (existing) {
         existing.count += 1;
         existing.totalConsumption += consumidor.averageMonthlyConsumption || 0;
@@ -77,20 +77,20 @@ export default function Dashboard() {
           totalConsumption: consumidor.averageMonthlyConsumption || 0
         });
       }
-      
+
       return acc;
-    }, [] as Array<{consumerType: string, count: number, totalConsumption: number}>);
-    
+    }, [] as Array<{ consumerType: string, count: number, totalConsumption: number }>);
+
     return distribuicao.sort((a, b) => b.count - a.count);
   };
 
   // Usar dados da API se disponíveis, senão usar dados locais
-  const dadosFonteEnergia = dashboardData?.generatorsBySource && dashboardData.generatorsBySource.length > 0 
-    ? dashboardData.generatorsBySource 
+  const dadosFonteEnergia = dashboardData?.generatorsBySource && dashboardData.generatorsBySource.length > 0
+    ? dashboardData.generatorsBySource
     : gerarDistribuicaoPorFonte();
-    
-  const dadosTipoConsumidor = dashboardData?.consumersByType && dashboardData.consumersByType.length > 0 
-    ? dashboardData.consumersByType 
+
+  const dadosTipoConsumidor = dashboardData?.consumersByType && dashboardData.consumersByType.length > 0
+    ? dashboardData.consumersByType
     : gerarDistribuicaoPorTipo();
 
   // Removido useEffect que causava loop infinito
@@ -108,10 +108,10 @@ export default function Dashboard() {
         if (filters.startDate) queryParams.append('startDate', filters.startDate);
         if (filters.endDate) queryParams.append('endDate', filters.endDate);
         if (filters.period && filters.period !== 'month') queryParams.append('period', filters.period);
-        
+
         const endpoint = `/dashboard/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await api.get(endpoint);
-        
+
         // Criar e baixar arquivo CSV
         const csvContent = response.csvContent || '';
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -123,14 +123,14 @@ export default function Dashboard() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast.showSuccess('Dashboard exportado com sucesso!');
         return;
       } catch (apiError) {
         // Se a API falhar, fazer exportação local
 
       }
-      
+
       // Exportação local como fallback
       const dashboardData = {
         estatisticas: {
@@ -158,7 +158,7 @@ export default function Dashboard() {
           porcentagemAlocada: c.allocatedPercentage || 0
         }))
       };
-      
+
       // Criar CSV localmente
       const headers = ['Categoria', 'Item', 'Valor', 'Detalhes'];
       const csvRows = [
@@ -176,7 +176,7 @@ export default function Dashboard() {
         // Consumidores
         ...dashboardData.consumidores.map(c => ['Consumidores', c.nome, c.consumo, `${c.tipo} - ${c.status} - ${c.geradorVinculado}`])
       ].map(row => Array.isArray(row) ? row.join(',') : row);
-      
+
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -187,7 +187,7 @@ export default function Dashboard() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.showSuccess('Dashboard exportado localmente com sucesso!');
     } catch (error) {
       toast.showError('Erro ao exportar dashboard');
@@ -196,9 +196,9 @@ export default function Dashboard() {
 
   // Função para formatar números com separadores de milhares
   const formatarNumero = (numero: number) => {
-    return numero.toLocaleString('pt-BR', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
+    return numero.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   };
 
@@ -213,7 +213,7 @@ export default function Dashboard() {
   const calcularCapacidadeNaoAlocada = () => {
     // 1. Calcular capacidade total de todos os geradores
     const capacidadeTotal = calcularCapacidadeTotalGeradores();
-    
+
     // 2. Calcular total alocado
     let totalAlocado = 0;
     clientesConsumidores.forEach(cliente => {
@@ -226,7 +226,7 @@ export default function Dashboard() {
         }
       }
     });
-    
+
     // 3. Capacidade não alocada = Total - Alocado
     return capacidadeTotal - totalAlocado;
   };
@@ -246,13 +246,13 @@ export default function Dashboard() {
     const consumidoresNaoAlocados = clientesConsumidores.filter(
       cliente => cliente.status !== ConsumerStatus.ALLOCATED
     );
-    
+
     const quantidade = consumidoresNaoAlocados.length;
-    
+
     const totalKwhNaoAlocado = consumidoresNaoAlocados.reduce((total, cliente) => {
       return total + (cliente.averageMonthlyConsumption || 0);
     }, 0);
-    
+
     return {
       quantidade,
       totalKwh: totalKwhNaoAlocado
@@ -312,7 +312,7 @@ export default function Dashboard() {
       trend: 'up'
     },
     {
-      title: 'Clientes Consumidores', 
+      title: 'Clientes Consumidores',
       value: dashboardData.totalConsumers || clientesConsumidores.length || 0,
       icon: Users,
       color: 'green',
@@ -343,23 +343,23 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-slate-50/50">
+      <div className="sticky top-0 z-30 border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm">
+        <div className="mx-auto max-w-[1600px] px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Visao geral do sistema</p>
+            <h1 className="text-3xl font-display font-semibold text-slate-900">Dashboard</h1>
+            <p className="text-sm text-slate-500 font-medium">Visão geral do sistema</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="h-10 rounded-xl border border-border px-4 text-sm hover:bg-muted"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <Filter className="h-4 w-4 inline mr-2" />Filtros
             </button>
             <button
               onClick={exportDashboard}
-              className="h-10 rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-4 text-sm text-white"
+              className="h-10 rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-6 text-sm font-medium text-white shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               <Download className="h-4 w-4 inline mr-2" />Exportar
             </button>
@@ -367,98 +367,104 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-full lg:max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 lg:py-8 space-y-6 lg:space-y-8">
+      <div className="mx-auto max-w-[1600px] px-6 py-8 space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => {
             const Icon = stat.icon;
-            
 
             return (
-              <div key={stat.title} className="rounded-2xl border border-border bg-card p-6 shadow-md">
-                <div className="mb-4 flex items-center justify-between">
-                      <div className="rounded-xl bg-gradient-to-r from-accent to-accent-secondary p-3 text-slate-900 shadow-lg ring-1 ring-white/10">
-                        <Icon className="h-6 w-6" strokeWidth={2.2} />
+              <div key={stat.title} className="group relative overflow-hidden rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-xl bg-accent/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-3 text-accent ring-1 ring-slate-200 group-hover:from-accent group-hover:to-accent-secondary group-hover:text-white group-hover:ring-accent transition-all duration-300">
+                      <Icon className="h-6 w-6" strokeWidth={2.2} />
+                    </div>
                   </div>
+                  {stat.change && (
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${stat.trend === 'up'
+                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'
+                      : 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
+                      }`}>
+                      {stat.trend === 'up' ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
+                      {stat.change}
+                    </span>
+                  )}
                 </div>
-                <div className="text-3xl font-semibold">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.title}</div>
+                <div>
+                  <div className="text-3xl font-bold text-slate-900 tracking-tight font-display group-hover:text-accent transition-colors duration-300">
+                    {stat.value}
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-slate-500">{stat.title}</div>
+                </div>
               </div>
             );
           })}
         </div>
 
         {/* Notificações */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl shadow-lg mr-4">
-                <Bell className="h-6 w-6 text-white" />
+              <div className="p-3 bg-gradient-to-r from-accent to-accent-secondary rounded-xl shadow-lg shadow-accent/20 mr-4 text-white">
+                <Bell className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Notificações</h2>
-                <p className="text-slate-600">Ações pendentes que requerem sua atenção</p>
+                <h2 className="text-xl font-display font-semibold text-slate-900">Notificações</h2>
+                <p className="text-sm text-slate-500">Ações pendentes que requerem sua atenção</p>
               </div>
             </div>
           </div>
 
           {/* Verificar se há notificações */}
           {(() => {
-             const pendingChanges = dashboardData.summary?.pendingChangeRequests ?? 0;
-             const pendingConsumers = dashboardData.summary?.pendingConsumers ?? 0;
-            const hasNotifications = pendingChanges > 0 || pendingConsumers > 0 || 
+            const pendingChanges = dashboardData.summary?.pendingChangeRequests ?? 0;
+            const pendingConsumers = dashboardData.summary?.pendingConsumers ?? 0;
+            const hasNotifications = pendingChanges > 0 || pendingConsumers > 0 ||
               (dashboardData?.notifications?.pendingChangeRequests && dashboardData.notifications.pendingChangeRequests.length > 0);
-            
+
             if (!hasNotifications) {
               return (
-                /* Estado quando não há notificações - Design melhorado */
-                <div className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-2xl p-12 border-2 border-emerald-200/50 shadow-lg">
+                /* Estado quando não há notificações - Design modernizado */
+                <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-white rounded-2xl p-12 border border-blue-100/50 shadow-sm">
                   {/* Decoração de fundo */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-                  
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
                   <div className="relative flex flex-col items-center justify-center text-center">
                     {/* Ícone principal com animação */}
                     <div className="relative mb-8">
-                      <div className="absolute inset-0 bg-emerald-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>
-                      <div className="relative p-8 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 rounded-full shadow-2xl transform hover:scale-105 transition-transform duration-300">
-                        <CheckCircle className="h-20 w-20 text-white" strokeWidth={2.5} />
+                      <div className="absolute inset-0 bg-accent rounded-full blur-2xl opacity-20 animate-pulse"></div>
+                      <div className="relative p-6 bg-gradient-to-br from-accent to-accent-secondary rounded-full shadow-xl shadow-accent/20 transform hover:scale-105 transition-transform duration-300">
+                        <CheckCircle className="h-16 w-16 text-white" strokeWidth={2} />
                       </div>
-                      {/* Círculos decorativos */}
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full animate-ping"></div>
-                      <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-teal-400 rounded-full animate-ping delay-300"></div>
                     </div>
-                    
+
                     {/* Texto principal */}
-                    <h3 className="text-3xl font-bold text-slate-900 mb-3 bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                    <h3 className="text-2xl font-display font-semibold text-slate-900 mb-3">
                       Tudo em dia!
                     </h3>
-                    <p className="text-lg text-slate-700 mb-6 max-w-md leading-relaxed">
-                      Não há notificações pendentes no momento. Todas as ações foram concluídas com sucesso.
+                    <p className="text-base text-slate-500 mb-8 max-w-md leading-relaxed">
+                      Não há notificações pendentes no momento. O sistema está operando normalmente.
                     </p>
-                    
-                    {/* Badge informativo */}
-                    <div className="flex items-center space-x-2 text-sm font-medium text-emerald-700 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-emerald-200 shadow-md">
-                      <Bell className="h-5 w-5 text-emerald-600" />
-                      <span>Você será notificado automaticamente quando houver novas pendências</span>
-                    </div>
-                    
+
                     {/* Estatísticas rápidas */}
-                    <div className="mt-8 grid grid-cols-2 gap-4 w-full max-w-md">
-                      <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/50">
-                        <div className="text-2xl font-bold text-emerald-600 mb-1">0</div>
-                        <div className="text-xs text-slate-600 font-medium">Mudanças Pendentes</div>
+                    <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-100 shadow-sm">
+                        <div className="text-xl font-display font-bold text-accent mb-0.5">0</div>
+                        <div className="text-xs text-slate-500 font-medium">Mudanças</div>
                       </div>
-                      <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/50">
-                        <div className="text-2xl font-bold text-emerald-600 mb-1">0</div>
-                        <div className="text-xs text-slate-600 font-medium">Consumidores Pendentes</div>
+                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-100 shadow-sm">
+                        <div className="text-xl font-display font-bold text-accent mb-0.5">0</div>
+                        <div className="text-xs text-slate-500 font-medium">Consumidores</div>
                       </div>
                     </div>
                   </div>
                 </div>
               );
             }
-            
+
             return (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -471,7 +477,7 @@ export default function Dashboard() {
                             <AlertCircle className="h-6 w-6 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900">Mudanças Pendentes</h3>
+                            <h3 className="text-lg font-display font-bold text-slate-900">Mudanças Pendentes</h3>
                             <p className="text-sm text-slate-600">Aguardando aprovação</p>
                           </div>
                         </div>
@@ -498,7 +504,7 @@ export default function Dashboard() {
                             <Users className="h-6 w-6 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900">Consumidores Pendentes</h3>
+                            <h3 className="text-lg font-display font-bold text-slate-900">Consumidores Pendentes</h3>
                             <p className="text-sm text-slate-600">Aguardando aprovação</p>
                           </div>
                         </div>
@@ -522,7 +528,7 @@ export default function Dashboard() {
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">Últimas Mudanças Solicitadas</h3>
                     <div className="space-y-3">
-                       {dashboardData.notifications.pendingChangeRequests.slice(0, 5).map((request: any) => (
+                      {dashboardData.notifications.pendingChangeRequests.slice(0, 5).map((request: any) => (
                         <div
                           key={request.id}
                           className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
@@ -549,17 +555,17 @@ export default function Dashboard() {
         </div>
 
         {/* Histórico de Ações Recentes */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex items-center mb-6">
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg mr-4">
-              <Activity className="h-6 w-6 text-white" />
+            <div className="p-3 bg-gradient-to-r from-slate-700 to-slate-800 rounded-xl shadow-lg shadow-slate-900/10 mr-4 text-white">
+              <Activity className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Histórico de Ações Recentes</h2>
-              <p className="text-slate-600">Últimas atividades do sistema</p>
+              <h2 className="text-xl font-display font-semibold text-slate-900">Histórico Recente</h2>
+              <p className="text-sm text-slate-500">Últimas atividades do sistema</p>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             {/* Ações dos Geradores */}
             {geradores.slice(0, 5).map((gerador) => (
@@ -570,10 +576,10 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <p className="font-medium text-slate-900">{gerador.ownerName}</p>
                   <p className="text-sm text-slate-600">
-                    {gerador.status === 'ACTIVE' ? 'Ativo' : 
-                     gerador.status === 'UNDER_ANALYSIS' ? 'Em Análise' : 
-                     gerador.status === 'AWAITING_ALLOCATION' ? 'Aguardando Alocação' : 
-                     gerador.status}
+                    {gerador.status === 'ACTIVE' ? 'Ativo' :
+                      gerador.status === 'UNDER_ANALYSIS' ? 'Em Análise' :
+                        gerador.status === 'AWAITING_ALLOCATION' ? 'Aguardando Alocação' :
+                          gerador.status}
                   </p>
                 </div>
                 <div className="text-right">
@@ -582,7 +588,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
-            
+
             {/* Ações dos Consumidores */}
             {clientesConsumidores.slice(0, 5).map((consumidor) => (
               <div key={consumidor.id} className="flex items-center space-x-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -592,9 +598,9 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <p className="font-medium text-slate-900">{consumidor.name}</p>
                   <p className="text-sm text-slate-600">
-                    {consumidor.status === 'ALLOCATED' ? 'Alocado' : 
-                     consumidor.status === 'AVAILABLE' ? 'Disponível' : 
-                     consumidor.status}
+                    {consumidor.status === 'ALLOCATED' ? 'Alocado' :
+                      consumidor.status === 'AVAILABLE' ? 'Disponível' :
+                        consumidor.status}
                   </p>
                 </div>
                 <div className="text-right">
@@ -603,7 +609,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
-            
+
             {geradores.length === 0 && clientesConsumidores.length === 0 && (
               <div className="text-center py-8 text-slate-500">
                 <Activity className="h-12 w-12 mx-auto mb-4 text-slate-300" />
@@ -615,7 +621,7 @@ export default function Dashboard() {
 
         {/* Filtros */}
         {showFilters && (
-          <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 mb-8">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-900">Filtros do Dashboard</h3>
               <button
@@ -637,7 +643,7 @@ export default function Dashboard() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Data Fim
@@ -649,7 +655,7 @@ export default function Dashboard() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Período
@@ -669,17 +675,17 @@ export default function Dashboard() {
         )}
 
         {/* Estatísticas de Representantes */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+        <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex items-center mb-6">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl shadow-lg mr-4">
-              <Users className="h-6 w-6 text-white" />
+            <div className="p-3 bg-gradient-to-r from-accent to-accent-secondary rounded-xl shadow-lg shadow-accent/20 mr-4 text-white">
+              <Users className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Representantes Comerciais</h2>
-              <p className="text-slate-600">Visão geral da equipe comercial</p>
+              <h2 className="text-xl font-display font-semibold text-slate-900">Representantes Comerciais</h2>
+              <p className="text-sm text-slate-500">Visão geral da equipe comercial</p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
               <div className="text-3xl font-bold text-blue-600 mb-2">
@@ -687,21 +693,21 @@ export default function Dashboard() {
               </div>
               <div className="text-sm font-medium text-blue-700">Total</div>
             </div>
-            
+
             <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
               <div className="text-3xl font-bold text-green-600 mb-2">
                 {representantes?.filter(rep => rep.status === 'ACTIVE').length || 0}
               </div>
               <div className="text-sm font-medium text-green-700">Ativos</div>
             </div>
-            
+
             <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
               <div className="text-3xl font-bold text-yellow-600 mb-2">
                 {representantes?.filter(rep => rep.status === 'PENDING_APPROVAL').length || 0}
               </div>
               <div className="text-sm font-medium text-yellow-700">Pendentes</div>
             </div>
-            
+
             {typeof dashboardData?.representatives?.averageCommissionRate === 'number' && (
               <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
                 <div className="text-3xl font-bold text-purple-600 mb-2">
@@ -711,11 +717,11 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          
+
           {/* Representantes por Estado */}
           {representantes && representantes.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Distribuição por Estado</h3>
+              <h3 className="text-lg font-display font-semibold text-slate-800 mb-4">Distribuição por Estado</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Array.from(new Set(representantes.map(rep => rep.state))).slice(0, 8).map(state => {
                   const count = representantes.filter(rep => rep.state === state).length;
@@ -733,11 +739,11 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Distribuição por Fonte de Energia */}
-          <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+          <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-                <Zap className="h-6 w-6 mr-3 text-green-600" />
-                Distribuição por Fonte de Energia
+              <h2 className="text-xl font-display font-semibold text-slate-900 flex items-center">
+                <Zap className="h-5 w-5 mr-3 text-accent" />
+                Fonte de Energia
               </h2>
             </div>
             <div className="space-y-4">
@@ -745,11 +751,16 @@ export default function Dashboard() {
                 dadosFonteEnergia.map((source) => {
                   const totalGeradores = dashboardData?.totalGenerators || geradores.length;
                   const percentage = totalGeradores > 0 ? ((source.count / totalGeradores) * 100).toFixed(0) : '0';
-                  
+
                   return (
                     <div key={source.sourceType} className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-slate-900">{source.sourceType}</span>
+                        <span className="text-lg font-bold text-slate-900">
+                          {source.sourceType === 'SOLAR' ? 'Solar' :
+                            source.sourceType === 'WIND' ? 'Eólica' :
+                              source.sourceType === 'HYDRO' ? 'Hidrelétrica' :
+                                source.sourceType === 'BIOMASS' ? 'Biomassa' : source.sourceType}
+                        </span>
                         <span className="text-lg font-bold text-slate-900">{percentage}%</span>
                       </div>
                       <div className="flex items-center space-x-6 text-sm text-slate-600 mb-3">
@@ -763,8 +774,8 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500" 
+                        <div
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
@@ -780,11 +791,11 @@ export default function Dashboard() {
           </div>
 
           {/* Distribuição por Tipo de Consumidor */}
-          <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+          <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-                <Users className="h-6 w-6 mr-3 text-green-600" />
-                Distribuição por Tipo de Consumidor
+              <h2 className="text-xl font-display font-semibold text-slate-900 flex items-center">
+                <Users className="h-5 w-5 mr-3 text-accent" />
+                Tipo de Consumidor
               </h2>
             </div>
             <div className="space-y-4">
@@ -792,11 +803,16 @@ export default function Dashboard() {
                 dadosTipoConsumidor.map((consumerType) => {
                   const totalConsumidores = dashboardData?.totalConsumers || clientesConsumidores.length;
                   const percentage = totalConsumidores > 0 ? ((consumerType.count / totalConsumidores) * 100).toFixed(0) : '0';
-                  
+
                   return (
                     <div key={consumerType.consumerType} className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-slate-900">{consumerType.consumerType}</span>
+                        <span className="text-lg font-bold text-slate-900">
+                          {consumerType.consumerType === 'COMMERCIAL' ? 'Comercial' :
+                            consumerType.consumerType === 'RESIDENTIAL' ? 'Residencial' :
+                              consumerType.consumerType === 'INDUSTRIAL' ? 'Industrial' :
+                                consumerType.consumerType === 'RURAL' ? 'Rural' : consumerType.consumerType}
+                        </span>
                         <span className="text-lg font-bold text-slate-900">{percentage}%</span>
                       </div>
                       <div className="flex items-center space-x-6 text-sm text-slate-600 mb-3">
@@ -810,8 +826,8 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-500" 
+                        <div
+                          className="bg-gradient-to-r from-accent to-accent-secondary h-3 rounded-full transition-all duration-500"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
@@ -828,85 +844,97 @@ export default function Dashboard() {
         </div>
 
         {/* Insights Rápidos */}
-        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-green-600 rounded-2xl p-8 shadow-2xl border border-slate-200 text-white">
-          <div className="flex items-center mb-8">
-            <Target className="h-8 w-8 text-white mr-4" />
-            <h2 className="text-3xl font-bold">Insights do Sistema</h2>
-          </div>
-          
-          {/* Métricas principais */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <h3 className="text-lg font-semibold text-slate-200 mb-3">Média da Porcentagem de Desconto</h3>
-              <div className="flex items-center space-x-3">
-                <TrendingDown className="h-8 w-8 text-green-400" />
-                <p className="text-4xl font-bold text-white">
-                  {formatarNumero(mediaDesconto)}%
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-accent rounded-2xl p-8 shadow-2xl shadow-accent/20 border border-white/10 text-white relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center mb-8">
+              <div className="p-3 bg-white/10 rounded-xl mr-4 backdrop-blur-sm border border-white/10">
+                <Target className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold font-display text-white">Insights do Sistema</h2>
+            </div>
+
+            {/* Métricas principais */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
+                <h3 className="text-lg font-semibold text-white mb-3 font-display">Média da Porcentagem de Desconto</h3>
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-emerald-500/20 text-emerald-300">
+                    <TrendingDown className="h-8 w-8" />
+                  </div>
+                  <p className="text-5xl font-bold text-white tracking-tight font-display">
+                    {formatarNumero(mediaDesconto)}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
+                <h3 className="text-lg font-semibold text-white mb-3 font-display">Eficiência de Alocação</h3>
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-full bg-accent/30 text-white">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <p className="text-5xl font-bold text-white tracking-tight font-display">
+                    {totalCapacity > 0 ? ((totalCapacity - capacidadeNaoAlocada) / totalCapacity * 100).toFixed(1) : '0.0'}%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Utilização da Capacidade */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                <h4 className="text-xs uppercase tracking-wider font-semibold font-display text-blue-100 mb-2">Capacidade Total</h4>
+                <p className="text-2xl font-bold text-white font-display">
+                  {formatarNumero(totalCapacity)} <span className="text-sm font-normal text-white/60">kW</span>
+                </p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                <h4 className="text-xs uppercase tracking-wider font-semibold font-display text-blue-100 mb-2">Disponível</h4>
+                <p className="text-2xl font-bold text-white font-display">
+                  {formatarNumero(capacidadeNaoAlocada)} <span className="text-sm font-normal text-white/60">kW</span>
+                </p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                <h4 className="text-xs uppercase tracking-wider font-semibold font-display text-blue-100 mb-2">Consumo Total</h4>
+                <p className="text-2xl font-bold text-white font-display">
+                  {formatarNumero(consumoTotalConsumidores)} <span className="text-sm font-normal text-white/60">kW/h</span>
+                </p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
+                <h4 className="text-xs uppercase tracking-wider font-semibold font-display text-blue-100 mb-2">Demanda Pendente</h4>
+                <p className="text-2xl font-bold text-white font-display">
+                  {formatarNumero(dadosConsumidoresNaoAlocados.totalKwh)} <span className="text-sm font-normal text-white/60">kW/h</span>
+                </p>
+                <p className="text-xs text-blue-100 mt-1 flex items-center">
+                  <Users className="h-3 w-3 mr-1" />
+                  {dadosConsumidoresNaoAlocados.quantidade} consumidores
                 </p>
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <h3 className="text-lg font-semibold text-slate-200 mb-3">Eficiência de Alocação</h3>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-8 w-8 text-green-400" />
-                <p className="text-4xl font-bold text-white">
-                  {totalCapacity > 0 ? ((totalCapacity - capacidadeNaoAlocada) / totalCapacity * 100).toFixed(1) : '0.0'}%
-                </p>
+            {/* Status dos Geradores */}
+            <div className="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-8 text-sm">
+              <div className="flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.5)]"></div>
+                <span className="text-white font-medium">
+                  {geradores.filter(g => g.status === 'UNDER_ANALYSIS').length} em análise
+                </span>
               </div>
-            </div>
-          </div>
-
-          {/* Utilização da Capacidade */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <h4 className="text-sm font-semibold text-slate-300 mb-2">Capacidade Total de Geradores</h4>
-              <p className="text-2xl font-bold text-white">
-                {formatarNumero(totalCapacity)} kW
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <h4 className="text-sm font-semibold text-slate-300 mb-2">Capacidade Não Alocada</h4>
-              <p className="text-2xl font-bold text-white">
-                {formatarNumero(capacidadeNaoAlocada)} kW
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <h4 className="text-sm font-semibold text-slate-300 mb-2">Consumo Total</h4>
-              <p className="text-2xl font-bold text-white">
-                {formatarNumero(consumoTotalConsumidores)} kW/h
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <h4 className="text-sm font-semibold text-slate-300 mb-2">Demanda Não Alocada</h4>
-              <p className="text-2xl font-bold text-white">
-                {formatarNumero(dadosConsumidoresNaoAlocados.totalKwh)} kW/h
-              </p>
-              <p className="text-xs text-slate-300 mt-1">
-                {dadosConsumidoresNaoAlocados.quantidade} consumidores
-              </p>
-            </div>
-          </div>
-
-          {/* Status dos Geradores */}
-          <div className="mt-8 flex items-center justify-center space-x-8 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-yellow-400 rounded-full shadow-lg"></div>
-              <span className="text-slate-200 font-medium">
-                {geradores.filter(g => g.status === 'UNDER_ANALYSIS').length} em análise
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-400 rounded-full shadow-lg"></div>
-              <span className="text-slate-200 font-medium">
-                {geradores.filter(g => g.status === 'AWAITING_ALLOCATION').length} aguardando alocação
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-400 rounded-full shadow-lg"></div>
-              <span className="text-slate-200 font-medium">
-                {geradores.filter(g => g.status === 'ACTIVE').length} totalmente alocados
-              </span>
+              <div className="flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                <div className="w-2.5 h-2.5 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"></div>
+                <span className="text-white font-medium">
+                  {geradores.filter(g => g.status === 'AWAITING_ALLOCATION').length} aguardando alocação
+                </span>
+              </div>
+              <div className="flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                <span className="text-white font-medium">
+                  {geradores.filter(g => g.status === 'ACTIVE').length} totalmente alocados
+                </span>
+              </div>
             </div>
           </div>
         </div>

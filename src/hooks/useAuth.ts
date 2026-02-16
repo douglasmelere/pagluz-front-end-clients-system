@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { authService } from '../types/services/authService';
-import { User, LoginRequest, LoginResponse } from '../types';
+import { User, LoginRequest } from '../types';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,7 +13,7 @@ export function useAuth() {
 
   const validateStoredToken = async () => {
     const token = authService.getStoredToken();
-    
+
     if (!token) {
       setLoading(false);
       return;
@@ -21,14 +21,14 @@ export function useAuth() {
 
     try {
       const userData = await authService.validateToken();
-      
+
       // Mapear a resposta para incluir campos obrigatórios
       const userWithDefaults = {
         ...userData,
         createdAt: userData.createdAt || new Date().toISOString(),
         updatedAt: userData.updatedAt || new Date().toISOString()
       };
-      
+
       setUser(userWithDefaults);
     } catch (error) {
       authService.clearToken();
@@ -44,21 +44,21 @@ export function useAuth() {
 
     try {
       const response = await authService.login(credentials);
-      
+
       // Mapear a resposta para incluir campos obrigatórios
       const userWithDefaults = {
         ...response.user,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      
+
       // Definir usuário imediatamente após login bem-sucedido
       setUser(userWithDefaults);
-      
+
       return response;
     } catch (error: any) {
       let errorMessage = 'Erro ao fazer login';
-      
+
       // Verificar se é erro 401 (credenciais inválidas)
       if (error.message.includes('401') || error.message.toLowerCase().includes('unauthorized')) {
         errorMessage = 'Credenciais incorretas. Verifique seu email e senha.';
@@ -71,7 +71,7 @@ export function useAuth() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -80,17 +80,18 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      // Limpar estado imediatamente para feedback visual
-      setUser(null);
-      setLoading(true);
-      
       // Tentar fazer logout na API
       await authService.logout();
     } catch (error) {
       // Mesmo com erro, garantir que o token seja limpo
       authService.clearToken();
     } finally {
+      // Limpar estado imediatamente
+      setUser(null);
       setLoading(false);
+
+      // Forçar reload da página para garantir estado limpo
+      window.location.reload();
     }
   }, []);
 

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { User, Plus, Edit, Trash2, Shield, UserCheck, UserX } from 'lucide-react';
+import { User, Plus, Edit, Trash2, Shield, UserCheck, UserX, Users } from 'lucide-react';
 import { UserRole, CreateUserRequest, User as UserType } from '../types';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../types/services/api';
-import Card from './common/Card';
-import Button from './common/Button';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Modal, { ModalFooter } from './ui/Modal';
+import LoadingSpinner from './common/LoadingSpinner';
 
 export default function UsuariosSistema() {
   const [users, setUsers] = useState<UserType[]>([]);
@@ -28,18 +31,18 @@ export default function UsuariosSistema() {
     if (authLoading) {
       return;
     }
-    
+
     // Verificar se o usuário existe e tem a role correta
     if (!user) {
       showError('Usuário não autenticado. Faça login novamente.');
       return;
     }
-    
+
     if (user.role !== 'SUPER_ADMIN') {
       showError('Acesso negado. Apenas Super Administradores podem acessar esta área.');
       return;
     }
-    
+
     fetchUsers();
   }, [user, authLoading, showError]);
 
@@ -57,7 +60,7 @@ export default function UsuariosSistema() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingUser) {
         await api.patch(`/users/${editingUser.id}`, formData);
@@ -66,7 +69,7 @@ export default function UsuariosSistema() {
         await api.post('/users', formData);
         showSuccess('Usuário criado com sucesso!');
       }
-      
+
       setShowModal(false);
       setEditingUser(null);
       resetForm();
@@ -89,7 +92,7 @@ export default function UsuariosSistema() {
 
   const handleDelete = async (userId: string) => {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-    
+
     try {
       await api.delete(`/users/${userId}`);
       showSuccess('Usuário excluído com sucesso!');
@@ -138,16 +141,26 @@ export default function UsuariosSistema() {
     }
   };
 
+  const getRoleBadgeColor = (role: UserRole) => {
+    switch (role) {
+      case UserRole.SUPER_ADMIN:
+        return 'bg-red-50 text-red-700 border-red-200';
+      case UserRole.ADMIN:
+        return 'bg-orange-50 text-orange-700 border-orange-200';
+      case UserRole.MANAGER:
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case UserRole.OPERATOR:
+        return 'bg-green-50 text-green-700 border-green-200';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  };
+
   // Mostrar loading enquanto a autenticação está sendo verificada
   if (authLoading) {
     return (
-      <div className="p-6">
-        <Card>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="mt-2 text-gray-600">Verificando permissões...</p>
-          </div>
-        </Card>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -155,207 +168,222 @@ export default function UsuariosSistema() {
   // Verificar se o usuário existe e tem a role correta
   if (!user || user.role !== 'SUPER_ADMIN') {
     return (
-      <div className="p-6">
-        <Card>
-          <div className="text-center py-8">
-            <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
-            <p className="text-gray-600">Apenas Super Administradores podem acessar esta área.</p>
+      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center max-w-md">
+          <div className="h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Shield className="h-8 w-8 text-red-500" />
           </div>
-        </Card>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2 font-display">Acesso Negado</h2>
+          <p className="text-slate-600 font-display">Apenas Super Administradores podem acessar esta área.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Usuários do Sistema</h1>
-        <p className="text-gray-600">Gerencie os usuários com acesso ao sistema</p>
-      </div>
+    <div className="min-h-screen bg-slate-50/50 pb-12">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-x-4">
+              <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 text-white">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold text-slate-900">
+                  Usuários do Sistema
+                </h1>
+                <p className="text-slate-500 font-medium text-sm font-display">
+                  Gerencie os usuários com acesso ao sistema
+                </p>
+              </div>
+            </div>
 
-      <div className="mb-6">
-        <Button
-          onClick={() => {
-            setEditingUser(null);
-            resetForm();
-            setShowModal(true);
-          }}
-          className="flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Novo Usuário</span>
-        </Button>
-      </div>
-
-      <Card>
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Carregando usuários...</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Usuário</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Função</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Criado em</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center space-x-2">
-                        {getRoleIcon(user.role)}
-                        <span className="text-sm font-medium text-gray-700">
-                          {getRoleLabel(user.role)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.isActive === true || user.isActive === undefined
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {(user.isActive === true || user.isActive === undefined) ? (
-                          <>
-                            <UserCheck className="h-3 w-3 mr-1" />
-                            Ativo
-                          </>
-                        ) : (
-                          <>
-                            <UserX className="h-3 w-3 mr-1" />
-                            Inativo
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(user)}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-
-      {/* Modal de Criação/Edição */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold mb-4">
-              {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha {editingUser && '(deixe em branco para manter)'}
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required={!editingUser}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Função
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="ADMIN">Administrador</option>
-                  <option value="MANAGER">Gerente</option>
-                  <option value="OPERATOR">Operador</option>
-                </select>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditingUser(null);
-                    resetForm();
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingUser ? 'Atualizar' : 'Criar'}
-                </Button>
-              </div>
-            </form>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => {
+                  setEditingUser(null);
+                  resetForm();
+                  setShowModal(true);
+                }}
+                showArrow
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Usuário
+              </Button>
+            </div>
           </div>
         </div>
-      )}
+      </header>
+
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Tabela de Usuários */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-500 font-medium font-display border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 whitespace-nowrap">Usuário</th>
+                    <th className="px-6 py-4 whitespace-nowrap">Função</th>
+                    <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                    <th className="px-6 py-4 whitespace-nowrap">Criado em</th>
+                    <th className="px-6 py-4 whitespace-nowrap text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((userItem) => (
+                    <tr key={userItem.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm ring-2 ring-white">
+                            {userItem.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900 font-display">{userItem.name}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{userItem.email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(userItem.role)}`}>
+                          {getRoleIcon(userItem.role)}
+                          {getRoleLabel(userItem.role)}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${userItem.isActive === true || userItem.isActive === undefined
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}>
+                          {(userItem.isActive === true || userItem.isActive === undefined) ? (
+                            <>
+                              <UserCheck className="h-3 w-3" />
+                              Ativo
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="h-3 w-3" />
+                              Inativo
+                            </>
+                          )}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-slate-600">
+                        {new Date(userItem.createdAt).toLocaleDateString('pt-BR')}
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(userItem)}
+                            className="text-slate-600 hover:text-accent hover:bg-slate-50"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(userItem.id)}
+                            className="text-slate-600 hover:text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de Criação/Edição */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingUser(null);
+          resetForm();
+        }}
+        title={editingUser ? 'Editar Usuário' : 'Novo Usuário'}
+        description={editingUser ? 'Atualize as informações do usuário.' : 'Preencha os dados para criar um novo usuário.'}
+        size="md"
+        headerVariant="brand"
+      >
+        <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label="Nome"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Nome completo do usuário"
+          />
+
+          <Input
+            label="Email"
+            type="email"
+            required
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="email@exemplo.com"
+          />
+
+          <Input
+            label={`Senha ${editingUser ? '(deixe em branco para manter)' : '*'}`}
+            type="password"
+            required={!editingUser}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            placeholder={editingUser ? "Deixe em branco para manter..." : "Mín. 6 caracteres"}
+          />
+
+          <Select
+            label="Função"
+            required
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+          >
+            <option value="ADMIN">Administrador</option>
+            <option value="MANAGER">Gerente</option>
+            <option value="OPERATOR">Operador</option>
+          </Select>
+        </form>
+
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowModal(false);
+              setEditingUser(null);
+              resetForm();
+            }}
+            className="rounded-full"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="user-form"
+            showArrow
+            className="rounded-full"
+          >
+            {editingUser ? 'Atualizar Usuário' : 'Criar Usuário'}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

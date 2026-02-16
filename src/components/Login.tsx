@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../hooks/useToast';
 import LoadingSpinner from './common/LoadingSpinner';
-import { Eye, EyeOff, User, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
-import { validateEmail, validatePassword, sanitizeInput } from '../utils/security';
+import { validateEmail, sanitizeInput } from '../utils/security';
 
 export default function Login() {
   const { login, loading: authLoading } = useApp();
@@ -13,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,28 +24,22 @@ export default function Login() {
     const sanitizedPassword = sanitizeInput(password);
 
     if (!sanitizedEmail || !sanitizedPassword) {
-      toast.showError('Por favor, preencha todos os campos.');
+      toast.showError('Por favor, preencha todos os campos para continuar.');
       return;
     }
 
     // Validação de email
     if (!validateEmail(sanitizedEmail)) {
-      toast.showError('Por favor, insira um email válido.');
-      return;
-    }
-
-    // Validação básica de senha
-    if (sanitizedPassword.length === 0) {
-      toast.showError('Por favor, insira sua senha.');
+      toast.showError('O endereço de email informado não é válido.');
       return;
     }
 
     try {
       setIsSubmitting(true);
       await login({ email: sanitizedEmail, password: sanitizedPassword });
-      toast.showSuccess('Login realizado com sucesso!');
+      toast.showSuccess('Bem-vindo de volta! Login realizado com sucesso.');
     } catch (error: any) {
-      const errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
+      const errorMessage = error?.message || 'Falha ao autenticar. Verifique suas credenciais.';
       toast.showError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -52,74 +47,122 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-2xl bg-slate-900">
-              <PagluzLogo className="h-16 w-16 drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)]" />
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-slate-50">
+      {/* Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-50 to-transparent" />
+        <div className="absolute -top-[20%] -right-[10%] h-[600px] w-[600px] rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute top-[40%] -left-[10%] h-[400px] w-[400px] rounded-full bg-blue-400/5 blur-3xl" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-[420px] px-4">
+        {/* Main Card */}
+        <div className="group overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+
+          {/* Full Width Header */}
+          <div className="relative bg-gradient-to-br from-accent to-accent-secondary h-48 flex items-center justify-center overflow-hidden">
+            <div className="flex justify-center w-full">
+              <PagluzLogo className="h-48 w-auto text-white drop-shadow-lg scale-[1.8]" />
             </div>
-            <h1 className="mt-4 text-3xl font-display">Bem-vindo de volta</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Acesse o sistema para continuar
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            
-            {/* Email Input */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Email</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  disabled={authLoading || isSubmitting}
-                  className="h-12 w-full rounded-xl border border-border bg-transparent pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                />
-              </div>
-            </div>
+          <div className="relative bg-white/60 p-8 sm:p-10 backdrop-blur-md">
+            <form onSubmit={handleSubmit} className="space-y-5">
 
-            {/* Senha Input */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={authLoading || isSubmitting}
-                  className="h-12 w-full rounded-xl border border-border bg-transparent pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+              {/* Email Input */}
+              <div className="group/input space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 group-focus-within/input:text-accent transition-colors">
+                  Email
+                </label>
+                <div className={`relative flex items-center rounded-full border transition-all duration-300 ${focusedField === 'email' ? 'border-accent ring-4 ring-accent/10 bg-white' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-white'}`}>
+                  <div className="flex h-12 w-12 items-center justify-center text-slate-400">
+                    <User className={`h-5 w-5 transition-colors ${focusedField === 'email' ? 'text-accent' : ''}`} />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="exemplo@empresa.com"
+                    disabled={authLoading || isSubmitting}
+                    className="h-12 w-full bg-transparent pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-60 font-display"
+                  />
+                  {validateEmail(email) && (
+                    <div className="absolute right-4 text-emerald-500 animate-in fade-in zoom-in duration-300">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Botão Submit */}
-            <button
-              type="submit"
-              disabled={authLoading || isSubmitting || !email || !password}
-              className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-accent-secondary text-white transition-all hover:-translate-y-0.5 hover:shadow-accent-lg disabled:opacity-50"
-            >
-              {authLoading || isSubmitting ? 'Autenticando…' : 'Entrar'}
-              {!authLoading && !isSubmitting && <ArrowRight className="h-4 w-4" />}
-            </button>
-          </form>
+              {/* Password Input */}
+              <div className="group/input space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 group-focus-within/input:text-accent transition-colors">
+                    Senha
+                  </label>
+                  <a href="#" className="text-xs font-medium text-slate-500 hover:text-accent transition-colors">
+                    Esqueceu?
+                  </a>
+                </div>
+                <div className={`relative flex items-center rounded-full border transition-all duration-300 ${focusedField === 'password' ? 'border-accent ring-4 ring-accent/10 bg-white' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-white'}`}>
+                  <div className="flex h-12 w-12 items-center justify-center text-slate-400">
+                    <Lock className={`h-5 w-5 transition-colors ${focusedField === 'password' ? 'text-accent' : ''}`} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="••••••••"
+                    disabled={authLoading || isSubmitting}
+                    className="h-12 w-full bg-transparent pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 flex h-12 w-12 items-center justify-center text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={authLoading || isSubmitting || !email || !password}
+                className="group relative mt-2 flex h-12 w-full items-center justify-center overflow-hidden rounded-full bg-accent p-[1px] text-white shadow-lg shadow-accent/20 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-accent/30 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100 font-display"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-accent to-accent-secondary opacity-100 transition-opacity group-hover:opacity-90" />
+
+                <span className="relative flex items-center gap-2 text-sm font-semibold tracking-wide">
+                  {authLoading || isSubmitting ? (
+                    'Autenticando...'
+                  ) : (
+                    <>
+                      Entrar no Sistema
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </>
+                  )}
+                </span>
+              </button>
+            </form>
+          </div>
+
+          {/* Footer Decoration */}
+          <div className="h-1 w-full bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         </div>
+
+        <p className="mt-8 text-center text-xs text-slate-400">
+          &copy; {new Date().getFullYear()} Pagluz. Todos os direitos reservados.
+        </p>
       </div>
+
       {authLoading && <LoadingSpinner />}
     </div>
   );
 }
-

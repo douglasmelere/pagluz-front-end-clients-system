@@ -20,23 +20,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        
+
         <div className="relative">
           {icon && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               {icon}
             </div>
           )}
-          
+
           <input
             id={inputId}
             ref={ref}
             type={type}
             className={`
-              w-full h-12 px-4 ${icon ? 'pl-12' : ''}
+              w-full h-12 px-5 ${icon ? 'pl-12' : ''}
               bg-transparent
-              border border-border rounded-xl
+              border border-border rounded-full
               text-foreground placeholder:text-muted-foreground/50
+              font-display
               transition-all duration-200
               focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background
               focus:border-accent
@@ -47,7 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        
+
         {error && (
           <p className="text-sm text-error">{error}</p>
         )}

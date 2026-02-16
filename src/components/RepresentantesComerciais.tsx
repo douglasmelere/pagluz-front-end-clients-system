@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  Filter, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Filter,
+  Edit,
+  Trash2,
   Percent,
   Users,
   CheckCircle,
   XCircle,
   Clock,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { useRepresentantesComerciais } from '../hooks/useRepresentantesComerciais';
 import { Representative, RepresentativeStatus } from '../types';
@@ -18,10 +19,15 @@ import LoadingSpinner from './common/LoadingSpinner';
 import ErrorMessage from './common/ErrorMessage';
 import { useToast } from '../hooks/useToast';
 import { api } from '../types/services/api';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Select from './ui/Select';
+import Badge from './ui/Badge';
+import Modal, { ModalFooter } from './ui/Modal';
 
 export default function RepresentantesComerciais() {
   const {
-    representantes,
+    representantes: representativesData,
     loading,
     error,
     statistics,
@@ -29,11 +35,11 @@ export default function RepresentantesComerciais() {
     updateRepresentante,
     deleteRepresentante,
     updateStatus,
-    applyFilters,
-    clearFilters
+    fetchRepresentantes,
+    clearFilters: hookClearFilters
   } = useRepresentantesComerciais();
-  
-  const toast = useToast();
+
+  const { showError, showSuccess } = useToast();
 
   const [showModal, setShowModal] = useState(false);
   const [editingRepresentante, setEditingRepresentante] = useState<Representative | null>(null);
@@ -69,14 +75,29 @@ export default function RepresentantesComerciais() {
   ];
 
   const statusOptions = [
-    { value: 'ACTIVE', label: 'Ativo', icon: CheckCircle, color: 'text-green-500' },
-    { value: 'INACTIVE', label: 'Inativo', icon: XCircle, color: 'text-red-500' },
-    { value: 'PENDING_APPROVAL', label: 'Pendente', icon: Clock, color: 'text-yellow-500' }
+    { value: 'ACTIVE', label: 'Ativo', icon: CheckCircle, color: 'success' },
+    { value: 'INACTIVE', label: 'Inativo', icon: XCircle, color: 'error' },
+    { value: 'PENDING_APPROVAL', label: 'Pendente', icon: Clock, color: 'warning' }
   ];
+
+  // Client-side filtering logic
+  const filteredRepresentantes = representativesData.filter(rep => {
+    const searchLower = filters.search.toLowerCase();
+    const searchMatch = !filters.search ||
+      rep.name.toLowerCase().includes(searchLower) ||
+      rep.email.toLowerCase().includes(searchLower) ||
+      (rep.cpfCnpj && rep.cpfCnpj.includes(searchLower));
+
+    const statusMatch = !filters.status || rep.status === filters.status;
+    const stateMatch = !filters.state || rep.state === filters.state;
+    const specMatch = !filters.specialization || (rep.specializations && rep.specializations.includes(filters.specialization));
+
+    return searchMatch && statusMatch && stateMatch && specMatch;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validação da senha
     if (!editingRepresentante) {
       if (!formData.password || formData.password.trim() === '') {
@@ -88,7 +109,7 @@ export default function RepresentantesComerciais() {
         return;
       }
     }
-    
+
     try {
       if (editingRepresentante) {
         await updateRepresentante(editingRepresentante.id, formData);
@@ -137,25 +158,22 @@ export default function RepresentantesComerciais() {
   };
 
   const handleFilters = () => {
-    const activeFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, value]) => value !== '')
-    );
-    applyFilters(activeFilters);
+    // Just re-fetch base data to ensure freshness 
+    fetchRepresentantes();
   };
 
   const exportRepresentantes = async () => {
     try {
-      // Tentar exportação via API primeiro
       try {
         const queryParams = new URLSearchParams();
         Object.entries(filters).forEach(([key, value]) => {
+          // For export via API, we still attempt to send params
           if (value) queryParams.append(key, value.toString());
         });
-        
+
         const endpoint = `/representatives/export${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
         const response = await api.get(endpoint);
-        
-        // Criar e baixar arquivo CSV
+
         const csvContent = response.csvContent || '';
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -166,27 +184,16 @@ export default function RepresentantesComerciais() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        toast.showSuccess('Representantes exportados com sucesso!');
+
+        showSuccess('Representantes exportados com sucesso!');
         return;
       } catch (apiError) {
-        // Se a API falhar, fazer exportação local
-
+        // Fallback handled below
       }
-      
-      // Exportação local como fallback
-      const representantesParaExportar = filters && Object.keys(filters).length > 0 
-        ? representantes.filter(rep => {
-            // Aplicar filtros localmente
-            if (filters.search && !rep.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
-            if (filters.status && rep.status !== filters.status) return false;
-            if (filters.state && rep.state !== filters.state) return false;
-            if (filters.specialization && !rep.specializations.includes(filters.specialization)) return false;
-            return true;
-          })
-        : representantes;
-      
-      // Criar CSV localmente
+
+      // Use the already filtered list for local export
+      const representantesParaExportar = filteredRepresentantes;
+
       const headers = ['Nome', 'Email', 'CPF/CNPJ', 'Telefone', 'Cidade', 'Estado', 'Especializações', 'Status', 'Data de Criação'];
       const csvRows = [
         headers.join(','),
@@ -202,7 +209,7 @@ export default function RepresentantesComerciais() {
           rep.createdAt
         ].join(','))
       ];
-      
+
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -213,10 +220,10 @@ export default function RepresentantesComerciais() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast.showSuccess(`Representantes exportados localmente (${representantesParaExportar.length} registros)`);
+
+      showSuccess(`Representantes exportados localmente (${representantesParaExportar.length} registros)`);
     } catch (error) {
-      toast.showError('Erro ao exportar representantes');
+      showError('Erro ao exportar representantes');
     }
   };
 
@@ -250,257 +257,250 @@ export default function RepresentantesComerciais() {
     }));
   };
 
-  if (loading && representantes.length === 0) {
-    return <LoadingSpinner />;
+  if (loading && representativesData.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (error) {
-    return <ErrorMessage message={error} />;
+    return (
+      <div className="p-6">
+        <ErrorMessage message={error} />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="w-full px-4 md:px-6 py-6 md:py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                Representantes Comerciais
-              </h1>
-              <p className="text-slate-600">
-                Gerencie os representantes comerciais do sistema
-              </p>
+    <div className="min-h-screen bg-slate-50/50 pb-12">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-x-4">
+              <div className="h-12 w-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold text-slate-900">
+                  Representantes Comerciais
+                </h1>
+                <p className="text-slate-500 font-medium text-sm font-display">
+                  Gerencie os representantes comerciais do sistema
+                </p>
+              </div>
             </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl"
-            >
-              <Plus className="h-5 w-5" />
-              Novo Representante
-            </button>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={exportRepresentantes}
+                className="bg-white text-slate-700 hover:text-slate-900"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+              <Button
+                onClick={() => setShowModal(true)}
+                showArrow
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Representante
+              </Button>
+            </div>
           </div>
+        </div>
+      </header>
 
-          {/* Estatísticas */}
-          {statistics && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-600">Total</p>
-                    <p className="text-2xl font-bold text-slate-900">{statistics.total}</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <Users className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Estatísticas */}
+        {statistics && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 font-display">Total</p>
+                <p className="text-3xl font-bold text-slate-900 font-display mt-1">{statistics.total}</p>
               </div>
-              
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-600">Ativos</p>
-                    <p className="text-2xl font-bold text-green-600">{statistics.byStatus?.[RepresentativeStatus.ACTIVE] || 0}</p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              {typeof statistics.averageCommissionRate === 'number' && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">Taxa Média</p>
-                      <p className="text-2xl font-bold text-purple-600">
-                        {statistics.averageCommissionRate.toFixed(2)}%
-                      </p>
-                    </div>
-                    <div className="p-3 bg-purple-100 rounded-xl">
-                      <Percent className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-600">Pendentes</p>
-                    <p className="text-2xl font-bold text-yellow-600">{statistics.byStatus?.[RepresentativeStatus.PENDING_APPROVAL] || 0}</p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-xl">
-                    <Clock className="h-6 w-6 text-yellow-600" />
-                  </div>
-                </div>
+              <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                <Users className="h-6 w-6" />
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 font-display">Ativos</p>
+                <p className="text-3xl font-bold text-emerald-600 font-display mt-1">{statistics.byStatus?.[RepresentativeStatus.ACTIVE] || 0}</p>
+              </div>
+              <div className="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                <CheckCircle className="h-6 w-6" />
+              </div>
+            </div>
+
+            {typeof statistics.averageCommissionRate === 'number' && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 font-display">Taxa Média</p>
+                  <p className="text-3xl font-bold text-purple-600 font-display mt-1">
+                    {statistics.averageCommissionRate.toFixed(2)}%
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                  <Percent className="h-6 w-6" />
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 font-display">Pendentes</p>
+                <p className="text-3xl font-bold text-amber-500 font-display mt-1">{statistics.byStatus?.[RepresentativeStatus.PENDING_APPROVAL] || 0}</p>
+              </div>
+              <div className="h-12 w-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                <Clock className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filtros */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Filtros</h3>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <Filter className="h-4 w-4" />
-              {showFilters ? 'Ocultar' : 'Mostrar'}
-            </button>
-          </div>
-
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                type="text"
-                placeholder="Buscar por nome, email ou CPF/CNPJ"
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-1">
+              <Input
+                label="Buscar"
+                placeholder="Nome, email ou CPF/CNPJ..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
-              
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">Todos os status</option>
-                {statusOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              
-              <select
-                value={filters.state}
-                onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">Todos os estados</option>
-                {estados.map(estado => (
-                  <option key={estado} value={estado}>{estado}</option>
-                ))}
-              </select>
             </div>
-          )}
 
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={handleFilters}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            <Select
+              label="Status"
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
             >
-              Aplicar Filtros
-            </button>
-            <button
-              onClick={exportRepresentantes}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              <option value="">Todos os status</option>
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </Select>
+
+            <Select
+              label="Estado"
+              value={filters.state}
+              onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
             >
-              <Download className="h-4 w-4" />
-              Exportar
-            </button>
-            <button
-              onClick={() => {
-                setFilters({ search: '', status: '', city: '', state: '', specialization: '' });
-                clearFilters();
-              }}
-              className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
-            >
-              Limpar
-            </button>
+              <option value="">Todos os estados</option>
+              {estados.map(estado => (
+                <option key={estado} value={estado}>{estado}</option>
+              ))}
+            </Select>
+
+            <div className="flex items-end gap-2">
+              <Button
+                onClick={handleFilters}
+                className="w-full"
+                variant="secondary"
+              >
+                Filtrar
+              </Button>
+              <Button
+                onClick={() => {
+                  setFilters({ search: '', status: '', city: '', state: '', specialization: '' });
+                  hookClearFilters();
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+              >
+                Limpar
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Lista de Representantes */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 font-medium font-display border-b border-slate-200">
                 <tr>
-                  <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Representante
-                  </th>
-                  <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Contato
-                  </th>
-                  <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Localização
-                  </th>
-                  <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Comissão
-                  </th>
-                  <th className="px-8 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-10 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Ações
-                  </th>
+                  <th className="px-6 py-4 whitespace-nowrap">Representante</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Contato</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Localização</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Comissão</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 whitespace-nowrap text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {representantes.map((representante) => (
-                  <tr key={representante.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-8 py-4">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-semibold">
+              <tbody className="divide-y divide-slate-100">
+                {filteredRepresentantes.map((representante) => (
+                  <tr key={representante.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm ring-2 ring-white">
                           {representante.name.charAt(0)}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900">{representante.name}</div>
-                          <div className="text-sm text-slate-500">{representante.cpfCnpj}</div>
+                        <div>
+                          <p className="font-medium text-slate-900 font-display">{representante.name}</p>
+                          <p className="text-xs text-slate-500 font-mono mt-0.5">{representante.cpfCnpj}</p>
                         </div>
                       </div>
                     </td>
-                    
-                    <td className="px-8 py-4">
-                      <div className="text-sm text-slate-900">{representante.email}</div>
-                      <div className="text-sm text-slate-500">{representante.phone}</div>
-                    </td>
-                    
-                    <td className="px-8 py-4">
-                      <div className="text-sm text-slate-900">{representante.city}</div>
-                      <div className="text-sm text-slate-500">{representante.state}</div>
-                    </td>
-                    
-                    <td className="px-8 py-4">
-                      <div className="text-sm font-medium text-slate-900">
-                        N/A
+
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col text-sm">
+                        <span className="text-slate-900">{representante.email}</span>
+                        <span className="text-slate-500 text-xs mt-0.5">{representante.phone}</span>
                       </div>
                     </td>
-                    
-                    <td className="px-8 py-4">
+
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                        {representante.city} - {representante.state}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="text-slate-400 text-xs italic">N/A</span>
+                    </td>
+
+                    <td className="px-6 py-4">
                       <select
                         value={representante.status}
                         onChange={(e) => handleStatusChange(representante.id, e.target.value as any)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-green-500 ${
-                                          representante.status === RepresentativeStatus.ACTIVE
-                  ? 'bg-green-100 text-green-800'
-                  : representante.status === RepresentativeStatus.INACTIVE
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
+                        className="text-xs font-medium rounded-full border-0 focus:ring-2 focus:ring-offset-1 focus:ring-accent bg-transparent cursor-pointer"
+                        style={{
+                          color: representante.status === 'ACTIVE' ? '#059669' :
+                            representante.status === 'INACTIVE' ? '#DC2626' : '#D97706',
+                          backgroundColor: representante.status === 'ACTIVE' ? '#ECFDF5' :
+                            representante.status === 'INACTIVE' ? '#FEF2F2' : '#FFFBEB',
+                          padding: '4px 12px'
+                        }}
                       >
-                        {statusOptions.map(option => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
+                        {statusOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
                     </td>
-                    
-                    <td className="px-10 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button
+
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleEdit(representante)}
-                          className="p-2 text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          className="text-slate-600 hover:text-accent hover:bg-slate-50"
                         >
                           <Edit className="h-4 w-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleDelete(representante.id)}
-                          className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-slate-600 hover:text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -512,165 +512,119 @@ export default function RepresentantesComerciais() {
       </div>
 
       {/* Modal de Criação/Edição */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900">
-                {editingRepresentante ? 'Editar Representante' : 'Novo Representante'}
-              </h2>
-            </div>
+      <Modal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        title={editingRepresentante ? 'Editar Representante' : 'Novo Representante'}
+        description={editingRepresentante ? 'Atualize as informações do representante.' : 'Preencha os dados para cadastrar um novo representante.'}
+        size="lg"
+        headerVariant="brand"
+      >
+        <form id="representative-form" onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Nome Completo"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            />
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Nome Completo *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+            <Input
+              label="Email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+            <Input
+              label={`Senha ${editingRepresentante ? '(Opcional)' : '*'}`}
+              type="password"
+              required={!editingRepresentante}
+              value={formData.password}
+              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              placeholder={editingRepresentante ? "Deixe em branco para manter..." : "Mín. 6 caracteres"}
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Senha {editingRepresentante ? '(deixe em branco para manter)' : '*'}
-                  </label>
-                  <input
-                    type="password"
-                    required={!editingRepresentante}
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder={editingRepresentante ? "Deixe em branco para manter a senha atual" : "Digite a senha (mín. 6 caracteres)"}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+            <Input
+              label="CPF/CNPJ"
+              required
+              value={formData.cpfCnpj}
+              onChange={(e) => setFormData(prev => ({ ...prev, cpfCnpj: e.target.value }))}
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    CPF/CNPJ *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.cpfCnpj}
-                    onChange={(e) => setFormData(prev => ({ ...prev, cpfCnpj: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+            <Input
+              label="Telefone"
+              type="tel"
+              required
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Telefone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+            <Input
+              label="Cidade"
+              required
+              value={formData.city}
+              onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            />
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Cidade *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Estado *
-                  </label>
-                  <select
-                    required
-                    value={formData.state}
-                    onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">Selecione um estado</option>
-                    {estados.map(estado => (
-                      <option key={estado} value={estado}>{estado}</option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Especializações
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {especializacoes.map(spec => (
-                    <label key={spec} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.specializations.includes(spec)}
-                        onChange={() => toggleSpecialization(spec)}
-                        className="rounded border-slate-300 text-green-600 focus:ring-green-500"
-                      />
-                      <span className="text-sm text-slate-700">{spec}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Observações
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  {editingRepresentante ? 'Atualizar' : 'Criar'}
-                </button>
-              </div>
-            </form>
+            <Select
+              label="Estado"
+              required
+              value={formData.state}
+              onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+            >
+              <option value="">Selecione...</option>
+              {estados.map(estado => (
+                <option key={estado} value={estado}>{estado}</option>
+              ))}
+            </Select>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3 font-display">
+              Especializações
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {especializacoes.map(spec => (
+                <label key={spec} className="relative flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all duration-200 hover:bg-slate-50 group">
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={formData.specializations.includes(spec)}
+                    onChange={() => toggleSpecialization(spec)}
+                  />
+                  <div className="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-accent peer-checked:bg-accent/5 transition-all"></div>
+                  <span className="relative z-10 text-sm font-medium text-slate-600 peer-checked:text-accent transition-colors">
+                    {spec}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2 font-display">
+              Observações
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              rows={3}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent text-slate-900 placeholder:text-slate-400 transition-all outline-none resize-none"
+              placeholder="Observações adicionais..."
+            />
+          </div>
+        </form>
+        <ModalFooter>
+          <Button variant="secondary" onClick={handleCloseModal} className="rounded-full">
+            Cancelar
+          </Button>
+          <Button type="submit" form="representative-form" showArrow className="rounded-full">
+            {editingRepresentante ? 'Salvar Alterações' : 'Cadastrar Representante'}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

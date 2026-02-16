@@ -354,6 +354,9 @@ export interface AdminDashboard {
     count: number;
     totalConsumption: number;
   }>;
+  representatives?: {
+    averageCommissionRate: number;
+  };
 }
 
 export interface RepresentativeDashboard {

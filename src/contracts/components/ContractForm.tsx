@@ -210,20 +210,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
       <>
         <FormSection title="Dados do Gerador" description="Informações da pessoa/empresa que aluga a capacidade de geração" icon={<User className="h-6 w-6" />}>
           {!showGeradorSelector && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+            <div className="mb-6 p-4 bg-slate-50/50 rounded-xl border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">{selectedGerador ? 'Gerador Selecionado' : 'Selecionar Gerador'}</h4>
+                  <h4 className="font-semibold text-slate-900 mb-1 font-display">{selectedGerador ? 'Gerador Selecionado' : 'Selecionar Gerador'}</h4>
                   {selectedGerador ? (
-                    <p className="text-sm text-gray-600">{selectedGerador.nome} - {selectedGerador.cpf_cnpj}</p>
+                    <p className="text-sm text-slate-500 font-medium">{selectedGerador.nome} - {selectedGerador.cpf_cnpj}</p>
                   ) : (
-                    <p className="text-sm text-gray-600">Escolha um gerador existente ou crie um novo</p>
+                    <p className="text-sm text-slate-500 font-medium">Escolha um gerador existente ou crie um novo</p>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setShowGeradorSelector(true)} className="px-4 py-2 bg-white border border-emerald-300 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors duration-200 font-medium">{selectedGerador ? 'Alterar' : 'Selecionar'}</button>
+                  <button type="button" onClick={() => setShowGeradorSelector(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors duration-200 font-medium shadow-sm">{selectedGerador ? 'Alterar' : 'Selecionar'}</button>
                   {selectedGerador && (
-                    <button type="button" onClick={handleNewGerador} className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg hover:from-emerald-600 hover:to-green-600 transition-all duration-200 font-medium">Novo</button>
+                    <button type="button" onClick={handleNewGerador} className="px-4 py-2 bg-gradient-to-r from-accent to-accent-secondary text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium shadow-md">Novo</button>
                   )}
                 </div>
               </div>
@@ -251,9 +251,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
           <FormField label="Agência" name="agenciaGerador" value={data.agenciaGerador || ''} onChange={updateField('agenciaGerador')} required />
           <FormField label="Número da Conta" name="contaGerador" value={data.contaGerador || ''} onChange={updateField('contaGerador')} required />
           {!selectedGerador && (
-            <div className="md:col-span-2 mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <label className="flex items-center cursor-pointer"><input type="checkbox" checked={saveGeradorAfterSubmit} onChange={(e) => setSaveGeradorAfterSubmit(e.target.checked)} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /><span className="ml-3 text-sm text-blue-800 font-medium">Salvar dados deste gerador para uso futuro</span></label>
-              <p className="mt-2 text-xs text-blue-600">Os dados do gerador serão salvos e poderão ser selecionados automaticamente em futuros contratos.</p>
+            <div className="md:col-span-2 mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+              <label className="flex items-center cursor-pointer"><input type="checkbox" checked={saveGeradorAfterSubmit} onChange={(e) => setSaveGeradorAfterSubmit(e.target.checked)} className="h-4 w-4 text-accent focus:ring-accent border-slate-300 rounded" /><span className="ml-3 text-sm text-blue-700 font-medium">Salvar dados deste gerador para uso futuro</span></label>
+              <p className="mt-2 text-xs text-blue-500 font-medium">Os dados do gerador serão salvos e poderão ser selecionados automaticamente em futuros contratos.</p>
             </div>
           )}
         </FormSection>
@@ -302,8 +302,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
         </FormSection>
 
         <FormSection title="Dados da Contratada" description="Informações da PagLuz (dados fixos)" icon={<Building className="h-6 w-6" />}>
-          <div className="md:col-span-2 bg-gray-50 p-6 rounded-xl border-2 border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Dados Fixos da Contratada:</h4>
+          <div className="md:col-span-2 bg-slate-50/50 p-6 rounded-xl border border-slate-200">
+            <h4 className="font-semibold text-slate-900 mb-4 font-display">Dados Fixos da Contratada:</h4>
             <div className="space-y-2 text-sm text-gray-700">
               <p><strong>Nome:</strong> PagLuz</p>
               <p><strong>CNPJ:</strong> 57.087.593/0001-92</p>
@@ -359,9 +359,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
 
   if (!documentType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen bg-slate-50/50">
         <Header />
-        <div className="max-w-5xl mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto px-4 py-8">
           <DocumentTypeSelector selectedType={documentType} onTypeSelect={setDocumentType} />
         </div>
       </div>
@@ -370,10 +370,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
 
   if (documentType === 'procuracao' && !procuracaoType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen bg-slate-50/50">
         <Header />
-        <div className="max-w-5xl mx-auto px-4 py-12">
-          <button onClick={() => setDocumentType(null)} className="mb-6 px-4 py-2 text-emerald-600 hover:text-emerald-700 font-medium">← Voltar para seleção de documento</button>
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <button onClick={() => setDocumentType(null)} className="mb-6 px-4 py-2 text-slate-500 hover:text-slate-900 font-medium flex items-center transition-colors"><span className="mr-2">←</span> Voltar para seleção de documento</button>
           <ProcuracaoTypeSelector selectedType={procuracaoType} onTypeSelect={(type: ProcuracaoType) => { setProcuracaoType(type); setFormData(prev => ({ ...prev, procuracaoType: type })); }} />
         </div>
       </div>
@@ -381,13 +381,13 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-slate-50/50">
       <Header />
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <button onClick={() => { if (documentType === 'procuracao' && procuracaoType) { setProcuracaoType(null); } else { setDocumentType(null); } }} className="mb-6 px-4 py-2 text-emerald-600 hover:text-emerald-700 font-medium">← Voltar</button>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <button onClick={() => { if (documentType === 'procuracao' && procuracaoType) { setProcuracaoType(null); } else { setDocumentType(null); } }} className="mb-6 px-4 py-2 text-slate-500 hover:text-slate-900 font-medium flex items-center transition-colors"><span className="mr-2">←</span> Voltar</button>
         <div className="flex justify-between items-center mb-6">
           <div></div>
-          <button onClick={onLogout} className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 flex items-center font-medium">
+          <button onClick={onLogout} className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors duration-200 flex items-center font-medium shadow-sm border border-transparent hover:border-red-100">
             <LogOut className="h-4 w-4 mr-2" />
             Sair
           </button>
@@ -403,24 +403,24 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
             <FormField label="Data da assinatura" name="data" type="date" value={formData.data || getCurrentDate()} onChange={updateField('data')} required />
           </FormSection>
           {message && (
-            <div className={`rounded-2xl p-6 flex items-center shadow-lg ${message.type === 'success' ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'}`}>
-              {message.type === 'success' ? (<CheckCircle className="h-6 w-6 text-green-600 mr-4" />) : (<XCircle className="h-6 w-6 text-red-600 mr-4" />)}
-              <span className={`font-medium ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{message.text}</span>
+            <div className={`rounded-xl p-6 flex items-center shadow-sm border ${message.type === 'success' ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+              {message.type === 'success' ? (<CheckCircle className="h-6 w-6 text-emerald-600 mr-4" />) : (<XCircle className="h-6 w-6 text-red-600 mr-4" />)}
+              <span className={`font-medium ${message.type === 'success' ? 'text-emerald-800' : 'text-red-800'}`}>{message.text}</span>
             </div>
           )}
           <div className="flex flex-col sm:flex-row gap-4">
-      <button type="button" onClick={() => setShowPreview(!showPreview)} className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 font-semibold flex items-center justify-center">
+            <button type="button" onClick={() => setShowPreview(!showPreview)} className="flex-1 px-8 py-4 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 font-semibold flex items-center justify-center shadow-sm">
               {showPreview ? (<><EyeOff className="h-5 w-5 mr-2" />Ocultar Dados</>) : (<><Eye className="h-5 w-5 mr-2" />Visualizar Dados</>)}
             </button>
-            <button type="submit" disabled={isLoading} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-8 py-4 rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all duration-200 font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <button type="submit" disabled={isLoading} className="flex-1 bg-gradient-to-r from-accent to-accent-secondary text-white px-8 py-4 rounded-xl hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 transition-all duration-200 font-semibold flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
               {isLoading ? (<LoadingSpinner />) : (<><Sparkles className="h-5 w-5 mr-2" />Gerar Documento</>)}
             </button>
           </div>
           {showPreview && (
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-slate-200 p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center"><Eye className="h-6 w-6 mr-3 text-emerald-600" />Preview dos Dados do Documento</h3>
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap overflow-auto font-mono">{JSON.stringify(formData, null, 2)}</pre>
+            <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 p-8">
+              <h3 className="text-xl font-bold font-display text-slate-900 mb-6 flex items-center"><Eye className="h-6 w-6 mr-3 text-accent" />Preview dos Dados do Documento</h3>
+              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <pre className="text-sm text-slate-600 whitespace-pre-wrap overflow-auto font-mono">{JSON.stringify(formData, null, 2)}</pre>
               </div>
             </div>
           )}

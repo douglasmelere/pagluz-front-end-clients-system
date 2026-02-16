@@ -99,7 +99,7 @@ POST /consumers/:id/generate-commission
 ### 1. **Teste Manual no Backend**
 ```bash
 # Testar o endpoint diretamente:
-curl -X POST https://supabase-pagluz-backend-new.ztdny5.easypanel.host/consumers/generate-commissions \
+curl -X POST http://localhost:3000/consumers/generate-commissions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
