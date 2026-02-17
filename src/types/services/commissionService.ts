@@ -4,7 +4,7 @@ import { Commission, CommissionFilters, CreateCommissionRequest } from '../index
 export const commissionService = {
   async getAll(filters?: CommissionFilters): Promise<Commission[]> {
     const queryParams = new URLSearchParams();
-    
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -12,7 +12,7 @@ export const commissionService = {
         }
       });
     }
-    
+
     const endpoint = `/commissions${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return api.get(endpoint);
   },
@@ -81,9 +81,9 @@ export const commissionService = {
         consumerId: consumerId,
         consumerData: consumerData
       };
-      
+
       const result = await api.post('/consumers/generate-commissions-all', requestData);
-      
+
       // Se o endpoint retornou dados específicos para este consumidor
       if (result && result.results && result.results.length > 0) {
         const consumerResult = result.results.find((r: any) => r.consumerId === consumerId);
@@ -91,7 +91,7 @@ export const commissionService = {
           return consumerResult;
         }
       }
-      
+
       // Se não encontrou comissão específica, retornar status de não gerado
       return {
         consumerId,
@@ -104,5 +104,38 @@ export const commissionService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  // Upload de comprovante de pagamento
+  async uploadPaymentProof(id: string, file: File): Promise<Commission> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`${api.baseURL}/commissions/${id}/payment-proof`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao fazer upload do comprovante');
+    }
+
+    return response.json();
+  },
+
+  // Visualizar comprovante de pagamento
+  getPaymentProofUrl(id: string): string {
+    const token = localStorage.getItem('accessToken');
+    return `${api.baseURL}/commissions/${id}/payment-proof?token=${token}`;
+  },
+
+  // Deletar comprovante de pagamento
+  async deletePaymentProof(id: string): Promise<Commission> {
+    return api.delete(`/commissions/${id}/payment-proof`);
   }
 };

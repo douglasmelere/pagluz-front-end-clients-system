@@ -16,7 +16,11 @@ import {
   Zap,
   Calendar,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  FileText,
+  Upload,
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { useCommissions } from '../hooks/useCommissions';
 import { useRepresentantesComerciais } from '../hooks/useRepresentantesComerciais';
@@ -27,6 +31,8 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import Modal, { ModalFooter } from './ui/Modal';
 import LoadingSpinner from './common/LoadingSpinner';
+import UploadPaymentProofModal from './UploadPaymentProofModal';
+import { commissionService } from '../types/services/commissionService';
 
 export default function GestaoComissoes() {
   const {
@@ -37,6 +43,8 @@ export default function GestaoComissoes() {
     clearFilters,
     markAsPaid,
     generateCommissionsForExisting,
+    uploadPaymentProof,
+    deletePaymentProof,
     refetch
   } = useCommissions();
   const { representantes } = useRepresentantesComerciais();
@@ -49,6 +57,15 @@ export default function GestaoComissoes() {
   const [filterEndDate, setFilterEndDate] = useState('');
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+
+  // Estados para upload de comprovante
+  const [uploadModal, setUploadModal] = useState<{
+    isOpen: boolean;
+    commission: Commission | null;
+  }>({
+    isOpen: false,
+    commission: null
+  });
 
   // Aplicar filtros
   useEffect(() => {
@@ -138,6 +155,38 @@ export default function GestaoComissoes() {
     document.body.removeChild(link);
 
     toast.showSuccess('Comissões exportadas com sucesso!');
+  };
+
+  // Funções de gerenciamento de comprovantes
+  const handleUploadProof = async (file: File) => {
+    if (!uploadModal.commission) return;
+
+    try {
+      await uploadPaymentProof(uploadModal.commission.id, file);
+      toast.showSuccess('Comprovante anexado e comissão marcada como paga!');
+      setUploadModal({ isOpen: false, commission: null });
+    } catch (error: any) {
+      toast.showError(error.message || 'Erro ao anexar comprovante');
+      throw error;
+    }
+  };
+
+  const handleViewProof = (commissionId: string) => {
+    const url = commissionService.getPaymentProofUrl(commissionId);
+    window.open(url, '_blank');
+  };
+
+  const handleDeleteProof = async (commissionId: string) => {
+    if (!confirm('Tem certeza que deseja remover o comprovante de pagamento?')) {
+      return;
+    }
+
+    try {
+      await deletePaymentProof(commissionId);
+      toast.showSuccess('Comprovante removido com sucesso!');
+    } catch (error: any) {
+      toast.showError(error.message || 'Erro ao remover comprovante');
+    }
   };
 
   // Estatísticas
@@ -340,6 +389,7 @@ export default function GestaoComissoes() {
                   <th className="px-6 py-4 whitespace-nowrap">kWh</th>
                   <th className="px-6 py-4 whitespace-nowrap">Valor</th>
                   <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 whitespace-nowrap text-center">Comprovante</th>
                   <th className="px-6 py-4 whitespace-nowrap">Data</th>
                   <th className="px-6 py-4 whitespace-nowrap text-right">Ações</th>
                 </tr>
@@ -350,11 +400,10 @@ export default function GestaoComissoes() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm ring-2 ring-white">
-                          {commission.representative.name.charAt(0)}
+                          {commission.representative?.name?.charAt(0) || 'R'}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900 font-display">{commission.representative.name}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{commission.representative.email}</p>
+                          <p className="font-medium text-slate-900 font-display">{commission.representative?.name || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
@@ -362,11 +411,10 @@ export default function GestaoComissoes() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-sm ring-2 ring-white">
-                          {commission.consumer.name.charAt(0)}
+                          {commission.consumer?.name?.charAt(0) || 'C'}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900 font-display">{commission.consumer.name}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{commission.consumer.email}</p>
+                          <p className="font-medium text-slate-900 font-display">{commission.consumer?.name || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
@@ -376,7 +424,7 @@ export default function GestaoComissoes() {
                         <Zap className="h-4 w-4 text-yellow-500" />
                         <span className="text-sm font-semibold text-slate-900">
                           {(() => {
-                            const kwhValue = commission.kwh || commission.consumer.averageMonthlyConsumption || 0;
+                            const kwhValue = commission.kwh || commission.consumer?.averageMonthlyConsumption || 0;
                             return kwhValue > 0 ? kwhValue.toLocaleString() : '0';
                           })()}
                         </span>
@@ -414,6 +462,30 @@ export default function GestaoComissoes() {
                       })()}
                     </td>
 
+                    {/* Coluna de Comprovante */}
+                    <td className="px-6 py-4 text-center">
+                      {commission.paymentProofUrl ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleViewProof(commission.id)}
+                            className="inline-flex items-center justify-center p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Visualizar comprovante"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProof(commission.id)}
+                            className="inline-flex items-center justify-center p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Remover comprovante"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
+
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-4 w-4 text-slate-400" />
@@ -425,18 +497,37 @@ export default function GestaoComissoes() {
 
                     <td className="px-6 py-4 text-right">
                       {(commission.status === CommissionStatus.PENDING || commission.status === CommissionStatus.CALCULATED) ? (
-                        <Button
-                          size="sm"
-                          onClick={() => handleMarkAsPaid(commission.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Marcar Pago
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setUploadModal({ isOpen: true, commission })}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Upload className="h-4 w-4 mr-1" />
+                            Anexar Comprovante
+                          </Button>
+                        </div>
+                      ) : commission.status === CommissionStatus.PAID ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle className="h-3 w-3" />
+                            Paga
+                          </span>
+                          {!commission.paymentProofUrl && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setUploadModal({ isOpen: true, commission })}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 hover:text-blue-700"
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Anexar
+                            </Button>
+                          )}
+                        </div>
                       ) : (
-                        <span className="text-sm text-slate-400">
-                          {commission.status === CommissionStatus.PAID ? 'Já paga' : '-'}
-                        </span>
+                        <span className="text-sm text-slate-400">-</span>
                       )}
                     </td>
                   </tr>
@@ -510,6 +601,18 @@ export default function GestaoComissoes() {
           </Button>
         </ModalFooter>
       </Modal>
+
+      {/* Modal de Upload de Comprovante */}
+      {uploadModal.commission && (
+        <UploadPaymentProofModal
+          isOpen={uploadModal.isOpen}
+          onClose={() => setUploadModal({ isOpen: false, commission: null })}
+          onUpload={handleUploadProof}
+          commissionId={uploadModal.commission.id}
+          commissionValue={uploadModal.commission.commissionValue}
+          representativeName={uploadModal.commission.representative.name}
+        />
+      )}
     </div>
   );
 }

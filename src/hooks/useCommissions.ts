@@ -12,7 +12,7 @@ export function useCommissions() {
 
   const fetchCommissions = useCallback(async (appliedFilters?: CommissionFilters) => {
     if (!isAuthenticated) return;
-    
+
     try {
       setLoading(true);
       setError(null);
@@ -28,7 +28,7 @@ export function useCommissions() {
 
   const fetchPendingCommissions = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     try {
       setLoading(true);
       setError(null);
@@ -88,10 +88,10 @@ export function useCommissions() {
     try {
       setLoading(true);
       const result = await commissionService.generateCommissionsForConsumer(consumerId, consumerData);
-      
+
       // Recarregar comissões após gerar
       await fetchCommissions();
-      
+
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao gerar comissões para o consumidor';
@@ -101,6 +101,37 @@ export function useCommissions() {
       setLoading(false);
     }
   }, [fetchCommissions]);
+
+
+  const uploadPaymentProof = useCallback(async (id: string, file: File) => {
+    try {
+      setLoading(true);
+      await commissionService.uploadPaymentProof(id, file);
+      // Recarregar todas as comissões para garantir dados completos
+      await fetchCommissions(filters);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao fazer upload do comprovante';
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchCommissions, filters]);
+
+  const deletePaymentProof = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await commissionService.deletePaymentProof(id);
+      // Recarregar todas as comissões para garantir dados completos
+      await fetchCommissions(filters);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao deletar comprovante';
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchCommissions, filters]);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -121,6 +152,8 @@ export function useCommissions() {
     markAsPaid,
     generateCommissionsForExisting,
     generateCommissionsForConsumer,
+    uploadPaymentProof,
+    deletePaymentProof,
     currentFilters: filters
   };
 }

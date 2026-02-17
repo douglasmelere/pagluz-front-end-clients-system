@@ -265,6 +265,10 @@ export interface Commission {
   createdAt: string;
   updatedAt: string;
   paidAt: string | null;
+  // Campos de comprovante de pagamento
+  paymentProofUrl: string | null;
+  paymentProofFileName: string | null;
+  paymentProofUploadedAt: string | null;
   representative: {
     id: string;
     name: string;

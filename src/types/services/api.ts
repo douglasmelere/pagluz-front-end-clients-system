@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.pagluz.co
 // Configuração base do fetch
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('accessToken');
-  
+
   const method = (options.method || 'GET').toUpperCase();
 
   const baseHeaders: Record<string, string> = {
@@ -29,7 +29,7 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(fullUrl, config);
-    
+
     if (!response.ok) {
       // Tentar fazer parsing da resposta de erro, mas não falhar se estiver vazia
       let errorData = {};
@@ -42,21 +42,21 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
         // Se não conseguir fazer parse, usar dados básicos
         errorData = { message: `HTTP error! status: ${response.status}` };
       }
-      
-      const message = Array.isArray((errorData as any).message) 
-        ? (errorData as any).message.join(', ') 
+
+      const message = Array.isArray((errorData as any).message)
+        ? (errorData as any).message.join(', ')
         : (errorData as any).message || `HTTP error! status: ${response.status}`;
-      
+
       throw new Error(message);
     }
-    
+
     // Verificar se há conteúdo antes de fazer parsing
     const responseText = await response.text();
     if (!responseText.trim()) {
       // Resposta vazia (comum em DELETE)
       return null;
     }
-    
+
     const data = JSON.parse(responseText);
     return data;
   } catch (error) {
@@ -65,6 +65,7 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 };
 
 export const api = {
+  baseURL: API_BASE_URL,
   get: (endpoint: string) => apiRequest(endpoint),
   post: (endpoint: string, data: any) => apiRequest(endpoint, {
     method: 'POST',
