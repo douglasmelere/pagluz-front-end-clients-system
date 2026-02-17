@@ -14,6 +14,7 @@ import Contratos from './components/Contratos';
 import ConfiguracoesSistema from './components/ConfiguracoesSistema';
 import GestaoComissoes from './components/GestaoComissoes';
 import PendingChanges from './components/admin/PendingChanges';
+import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
@@ -31,6 +32,25 @@ function AppContent() {
       window.removeEventListener('navigate', handleNavigate as EventListener);
     };
   }, []);
+
+  // Monitoramento de versão - verifica se há atualizações
+  useEffect(() => {
+    if (isAuthenticated) {
+      startVersionMonitoring(() => {
+        // Callback customizado quando nova versão é detectada
+        const shouldReload = confirm(
+          '🔄 Nova versão do sistema disponível!\n\n' +
+          'Uma atualização está pronta para ser instalada.\n' +
+          'Clique em OK para atualizar agora.\n\n' +
+          '⚠️ Recomendamos salvar qualquer trabalho em andamento antes de continuar.'
+        );
+
+        if (shouldReload) {
+          reloadWithoutCache();
+        }
+      });
+    }
+  }, [isAuthenticated]);
 
   // Aguardar o carregamento da autenticação
   if (authLoading) {
@@ -78,7 +98,7 @@ function AppContent() {
   return (
     <div className="flex h-screen relative bg-slate-50 overflow-hidden">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      
+
       {/* Main Content Area */}
       <main className="flex-1 w-full relative z-0 lg:ml-72 flex flex-col h-full overflow-hidden">
         {/* Scrollable Content */}
@@ -90,7 +110,7 @@ function AppContent() {
           </div>
         </div>
       </main>
-      
+
       <PWAInstallPrompt />
     </div>
   );

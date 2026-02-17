@@ -12,7 +12,19 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      assetsDir: 'assets'
+      assetsDir: 'assets',
+      // Gera hash único para cada build - força navegador a baixar nova versão
+      rollupOptions: {
+        output: {
+          entryFileNames: `assets/[name].[hash].js`,
+          chunkFileNames: `assets/[name].[hash].js`,
+          assetFileNames: `assets/[name].[hash].[ext]`
+        }
+      },
+      // Limpa a pasta dist antes de cada build
+      emptyOutDir: true,
+      // Gera sourcemaps para debug em produção
+      sourcemap: false
     }
   };
 });
