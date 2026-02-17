@@ -60,7 +60,6 @@ export default function PendingConsumers() {
   );
   const [confirmApprove, setConfirmApprove] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [kwhPrice, setKwhPrice] = useState<number>(0);
-  const [loadingKwhPrice, setLoadingKwhPrice] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState<{ isOpen: boolean; consumer: any | null }>({
     isOpen: false,
     consumer: null
@@ -104,13 +103,10 @@ export default function PendingConsumers() {
   useEffect(() => {
     const loadKwhPrice = async () => {
       try {
-        setLoadingKwhPrice(true);
         const price = await settingsService.getKwhPrice();
         setKwhPrice(price);
       } catch (error) {
         // Silently fail - price will default to 0
-      } finally {
-        setLoadingKwhPrice(false);
       }
     };
     loadKwhPrice();
@@ -161,13 +157,28 @@ export default function PendingConsumers() {
       return null;
     }
 
+    // kWh da fatura
     const kwh = consumer.averageMonthlyConsumption;
 
-    // Usar fórmula padrão do sistema: C = (K * 0.865 * P) / 2
-    const commissionValue = (kwh * 0.865 * kwhPrice) / 2;
+    // Determinar a taxa de comissionamento baseada nas faixas de kWh
+    let commissionRate = 0;
+    if (kwh >= 1500) {
+      commissionRate = 0.375; // 37.5%
+    } else if (kwh >= 1000) {
+      commissionRate = 0.35; // 35%
+    } else if (kwh >= 600) {
+      commissionRate = 0.30; // 30%
+    } else {
+      // Abaixo de 600 kWh não gera comissão
+      return null;
+    }
+
+    // Cálculo: kWh da fatura × Preço kWh × Taxa de comissionamento
+    const commissionValue = kwh * kwhPrice * commissionRate;
 
     return {
       kwh,
+      commissionRate: commissionRate * 100, // Converter para porcentagem para exibição
       kwhPrice,
       commissionValue: Math.round(commissionValue * 100) / 100 // Round to 2 decimal places
     };
@@ -264,12 +275,16 @@ export default function PendingConsumers() {
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-emerald-700">kWh do consumidor</span>
+                <span className="text-emerald-700">kWh da Fatura</span>
                 <span className="font-medium text-emerald-900">{commission.kwh} kWh</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-emerald-700">Valor do kWh (Sist.)</span>
+                <span className="text-emerald-700">Preço kWh (Sistema)</span>
                 <span className="font-medium text-emerald-900">R$ {commission.kwhPrice.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-emerald-700">Taxa de Comissionamento</span>
+                <span className="font-medium text-emerald-900">{commission.commissionRate}%</span>
               </div>
               <div className="h-px bg-emerald-200/50 my-2"></div>
               <div className="flex justify-between items-center">
