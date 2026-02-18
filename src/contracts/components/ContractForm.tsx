@@ -319,7 +319,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({ authData, onLogout }
         <FormSection title="Dados Operacionais" description="Informações sobre o serviço e condições" icon={<Briefcase className="h-6 w-6" />}>
           <SelectField label="Tipo de Energia ou Nome do Serviço" name="tipoEnergia" value={data.tipoEnergia || ''} onChange={updateField('tipoEnergia')} options={tiposServico} placeholder="Selecione o tipo de serviço" required />
           <FormField label="E-mail para comunicações" name="emailComunicacoes" type="email" value={data.emailComunicacoes || ''} onChange={updateField('emailComunicacoes')} required />
-          <FormField label="Prazo mínimo para multa rescisória (meses)" name="prazoMinimoMulta" type="number" value={data.prazoMinimoMulta || 12} onChange={updateField('prazoMinimoMulta')} required />
+          <FormField label="Prazo mínimo para multa rescisória (meses)" name="prazoMulta" type="number" value={data.prazoMulta || 12} onChange={updateField('prazoMulta')} required />
         </FormSection>
       </>
     );

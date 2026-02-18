@@ -59,7 +59,7 @@ export interface ServiceContractData extends DocumentData {
   cpfRepresentanteContratante: string;
   tipoEnergia: string;
   emailComunicacoes: string;
-  prazoMinimoMulta: number;
+  prazoMulta: number;
 }
 
 export interface ProcuracaoPJData extends DocumentData {
