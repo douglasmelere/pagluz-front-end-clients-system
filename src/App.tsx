@@ -13,13 +13,14 @@ import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import Contratos from './components/Contratos';
 import ConfiguracoesSistema from './components/ConfiguracoesSistema';
 import GestaoComissoes from './components/GestaoComissoes';
+import SimulacaoEconomia from './components/SimulacaoEconomia';
 import PendingChanges from './components/admin/PendingChanges';
 import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao'>('dashboard');
 
   // Listener para eventos de navegação
   useEffect(() => {
@@ -90,6 +91,8 @@ function AppContent() {
         return <GestaoComissoes />;
       case 'mudancas':
         return <PendingChanges />;
+      case 'simulacao':
+        return <SimulacaoEconomia />;
       default:
         return <Dashboard />;
     }

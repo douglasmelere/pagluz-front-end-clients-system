@@ -13,14 +13,15 @@ import {
   Settings,
   DollarSign,
   Cog,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 
 interface SidebarProps {
-  currentView: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes';
-  onViewChange: (view: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes') => void;
+  currentView: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao';
+  onViewChange: (view: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao') => void;
 }
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -52,6 +53,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     menuItems.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas' as const, description: 'Alterações' });
   }
   menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
+  menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
 
   // Menu items específicos para SUPER_ADMIN
   const superAdminMenuItems = [
