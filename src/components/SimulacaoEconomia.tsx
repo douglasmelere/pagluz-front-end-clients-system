@@ -120,7 +120,7 @@ const templateStyles = `
   .pagluz-page header { background-color: #01375a; text-align: center; overflow: hidden; }
   .pagluz-page header img.logo-img { width: 240px; height: auto; display: inline-block; margin: -80px 0 -87px 0; }
   .pagluz-page main { padding: 26px 28px 36px; }
-  .pagluz-page h1.titulo { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.45rem !important; font-weight: 900 !important; font-style: italic !important; color: #01375a !important; text-decoration: underline !important; text-decoration-color: #ffc400 !important; text-underline-offset: 4px !important; margin-bottom: 22px !important; text-align: center !important; }
+  .pagluz-page h1.titulo { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.45rem !important; font-weight: 900 !important; font-style: italic !important; color: #01375a !important; text-decoration: underline !important; text-decoration-color: #ffc400 !important; text-underline-offset: 4px !important; margin-bottom: 22px !important; text-align: center !important; -webkit-text-stroke: 1px #01375a; }
   .pagluz-page .nome-cliente { border: 2px solid #01375a; border-radius: 12px 12px 0 0; padding: 14px 16px 16px; font-size: 1.05rem; color: #01375a; margin-bottom: 8px; background: #fff; display: flex; align-items: center; }
   .pagluz-page .nome-cliente span { font-weight: 900; margin-left: 6px; font-family: 'Plus Jakarta Sans', sans-serif; }
   .pagluz-page .desconto { text-align: center; color: #008000; font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; margin-bottom: 18px; }
@@ -128,19 +128,19 @@ const templateStyles = `
   .pagluz-page .card-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; }
   .pagluz-page .tab { background-color: #01375a; color: #fff; font-size: 0.95rem; font-weight: 900; font-style: italic; text-align: center; padding: 8px 0; width: 68%; border-radius: 8px 8px 0 0; margin-bottom: -2px; position: relative; z-index: 10; }
   .pagluz-page .card { width: 100%; border-radius: 0 0 12px 12px; overflow: hidden; }
-  .pagluz-page .card-left { border: 3px solid #cc0000; }
-  .pagluz-page .card-right { border: 3px solid #008000; }
-  .pagluz-page .card-title { padding: 14px 10px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; font-size: 1.25rem; font-weight: 900; font-style: italic; color: #fff; }
+  .pagluz-page .card-left { border: 4px solid #cc0000; }
+  .pagluz-page .card-right { border: 4px solid #008000; }
+  .pagluz-page .card-title { padding: 14px 10px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; font-size: 1.25rem; font-weight: 900; font-style: italic; color: #fff; -webkit-text-stroke: 0.6px #fff; }
   .pagluz-page .card-left .card-title { background-color: #cc0000; }
   .pagluz-page .card-right .card-title { background-color: #008000; }
   .pagluz-page .card-body { background: #fff; padding: 18px 14px; text-align: center; border-radius: 0 0 9px 9px; }
   .pagluz-page .card-label { font-size: 0.85rem; color: #01375a; margin-bottom: 4px; font-weight: 500; }
   .pagluz-page .card-value { font-size: 1.9rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; color: #01375a; letter-spacing: -0.5px; }
-  .pagluz-page .card-divider { border: none; height: 2px; margin: 14px 0; }
+  .pagluz-page .card-divider { border: none; height: 3px; margin: 14px 0; }
   .pagluz-page .card-left .card-divider { background-color: #cc0000; }
   .pagluz-page .card-right .card-divider { background-color: #008000; }
-  .pagluz-page .economia-section { background-color: #01375a; border: 3px solid #01375a; border-radius: 0 0 14px 14px; }
-  .pagluz-page .economia-titulo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.35rem; font-weight: 900; font-style: italic; color: #fff; padding: 14px 20px; text-align: center; }
+  .pagluz-page .economia-section { background-color: #01375a; border: 4px solid #01375a; border-radius: 0 0 14px 14px; }
+  .pagluz-page .economia-titulo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.35rem; font-weight: 900; font-style: italic; color: #fff; padding: 14px 20px; text-align: center; -webkit-text-stroke: 0.6px #fff; }
   .pagluz-page .economia-rows { background-color: #fff; border-radius: 0 0 11px 11px; padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 12px; }
 `;
 
