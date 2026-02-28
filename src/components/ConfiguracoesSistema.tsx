@@ -12,27 +12,40 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Loader
+  Loader,
+  Percent
 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { useToast } from '../hooks/useToast';
-import { KwhPriceHistory } from '../types';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import LoadingSpinner from './common/LoadingSpinner';
 
 export default function ConfiguracoesSistema() {
-  const { kwhPrice, kwhPriceHistory, systemStats, loading, error, setKwhPriceValue, fetchKwhPriceHistory } = useSettings();
+  const { kwhPrice, kwhPriceHistory, systemStats, loading, error, setKwhPriceValue, fetchKwhPriceHistory,
+    fioBPercentage, fioBHistory, fioBError, setFioBPercentageValue, fetchFioBHistory
+  } = useSettings();
   const toast = useToast();
   const [newPrice, setNewPrice] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  // Fio B states
+  const [newFioB, setNewFioB] = useState('');
+  const [showFioBHistory, setShowFioBHistory] = useState(false);
+  const [updatingFioB, setUpdatingFioB] = useState(false);
+
   useEffect(() => {
-    if (kwhPrice !== null) {
+    if (kwhPrice != null) {
       setNewPrice(kwhPrice.toString());
     }
   }, [kwhPrice]);
+
+  useEffect(() => {
+    if (fioBPercentage != null) {
+      setNewFioB(fioBPercentage.toString());
+    }
+  }, [fioBPercentage]);
 
   const handleUpdatePrice = async () => {
     const price = parseFloat(newPrice);
@@ -49,6 +62,32 @@ export default function ConfiguracoesSistema() {
       toast.showError('Erro ao atualizar preço do kWh');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleUpdateFioB = async () => {
+    const percentage = parseFloat(newFioB);
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+      toast.showError('Por favor, insira um valor entre 0 e 100 para o Fio B');
+      return;
+    }
+    try {
+      setUpdatingFioB(true);
+      await setFioBPercentageValue(percentage);
+      toast.showSuccess('Porcentagem do Fio B atualizada com sucesso!');
+    } catch (error) {
+      toast.showError('Erro ao atualizar porcentagem do Fio B');
+    } finally {
+      setUpdatingFioB(false);
+    }
+  };
+
+  const loadFioBHistory = async () => {
+    setShowFioBHistory(true);
+    try {
+      await fetchFioBHistory();
+    } catch (error) {
+      toast.showError('Erro ao carregar histórico do Fio B');
     }
   };
 
@@ -170,6 +209,162 @@ export default function ConfiguracoesSistema() {
           </div>
         </div>
 
+        {/* Porcentagem do Fio B */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center font-display">
+            <Percent className="h-6 w-6 mr-3 text-amber-600" />
+            Porcentagem do Fio B
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Valor Atual */}
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-amber-800 font-display">Valor Atual</h4>
+                <div className="h-10 w-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                  <Percent className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div className="text-4xl font-bold text-amber-700 mb-3 font-display">
+                {fioBPercentage !== null ? `${fioBPercentage}%` : '—'}
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm text-amber-600 font-display">
+                  Utilizado no cálculo de propostas comerciais
+                </div>
+                {fioBHistory.length > 0 && (
+                  <div className="text-sm text-amber-600 font-display">
+                    Última atualização: {new Date(fioBHistory[0]?.updatedAt).toLocaleDateString('pt-BR')}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Atualizar Valor */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2 font-display">
+                  Nova Porcentagem do Fio B (0–100)
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={newFioB}
+                    onChange={(e) => setNewFioB(e.target.value)}
+                    placeholder="Ex: 33.5"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleUpdateFioB}
+                    disabled={updatingFioB || !newFioB}
+                    showArrow
+                  >
+                    {updatingFioB ? (
+                      <>
+                        <Loader className="h-4 w-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {fioBError && (
+                  <p className="text-red-600 text-xs mt-2 font-display">{fioBError}</p>
+                )}
+              </div>
+
+              <Button
+                onClick={loadFioBHistory}
+                variant="secondary"
+                className="w-full"
+              >
+                <History className="h-4 w-4 mr-2" />
+                Ver Histórico de Alterações
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Histórico do Fio B */}
+        {showFioBHistory && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center font-display">
+              <History className="h-6 w-6 mr-3 text-amber-600" />
+              Histórico de Alterações do Fio B
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-500 font-medium font-display border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 whitespace-nowrap">Data</th>
+                    <th className="px-6 py-4 whitespace-nowrap">Porcentagem</th>
+                    <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {fioBHistory && fioBHistory.length > 0 ? fioBHistory.filter(entry => entry && entry.id).map((entry) => (
+                    <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-slate-400" />
+                          <span className="text-sm text-slate-900">
+                            {entry.createdAt && !isNaN(new Date(entry.createdAt).getTime())
+                              ? new Date(entry.createdAt).toLocaleDateString('pt-BR')
+                              : 'Data inválida'
+                            }
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-amber-600">
+                          {entry.value !== null && entry.value !== undefined
+                            ? `${entry.value}%`
+                            : 'N/A'
+                          }
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${entry.isActive
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-50 text-slate-700 border-slate-200'
+                          }`}>
+                          {entry.isActive ? (
+                            <>
+                              <CheckCircle className="h-3 w-3" />
+                              Ativo
+                            </>
+                          ) : (
+                            'Inativo'
+                          )}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center">
+                            <History className="h-6 w-6 text-slate-400" />
+                          </div>
+                          <p className="text-slate-500 font-display">Nenhum histórico de alterações encontrado</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Estatísticas do Sistema */}
         {systemStats && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
@@ -276,8 +471,8 @@ export default function ConfiguracoesSistema() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${entry.isActive
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-slate-50 text-slate-700 border-slate-200'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-50 text-slate-700 border-slate-200'
                           }`}>
                           {entry.isActive ? (
                             <>

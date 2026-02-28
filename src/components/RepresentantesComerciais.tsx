@@ -74,6 +74,17 @@ export default function RepresentantesComerciais() {
     'SOLAR', 'HYDRO', 'WIND', 'BIOMASS', 'RESIDENTIAL', 'COMMERCIAL', 'RURAL', 'INDUSTRIAL'
   ];
 
+  const especializacoesTranslate: Record<string, string> = {
+    SOLAR: 'Solar',
+    HYDRO: 'Hídrica',
+    WIND: 'Eólica',
+    BIOMASS: 'Biomassa',
+    RESIDENTIAL: 'Residencial',
+    COMMERCIAL: 'Comercial',
+    RURAL: 'Rural',
+    INDUSTRIAL: 'Industrial'
+  };
+
   const statusOptions = [
     { value: 'ACTIVE', label: 'Ativo', icon: CheckCircle, color: 'success' },
     { value: 'INACTIVE', label: 'Inativo', icon: XCircle, color: 'error' },
@@ -292,31 +303,29 @@ export default function RepresentantesComerciais() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 onClick={exportRepresentantes}
                 className="bg-white text-slate-700 hover:text-slate-900"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
+                <Download className="h-4 w-4" /><span className="hidden sm:inline ml-2">Exportar</span>
               </Button>
               <Button
                 onClick={() => setShowModal(true)}
                 showArrow
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Representante
+                <Plus className="h-4 w-4" /><span className="hidden sm:inline ml-2">Novo Representante</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5 sm:space-y-6">
         {/* Estatísticas */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-500 font-display">Total</p>
@@ -365,7 +374,7 @@ export default function RepresentantesComerciais() {
 
         {/* Filtros */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="md:col-span-1">
               <Input
                 label="Buscar"
@@ -596,7 +605,7 @@ export default function RepresentantesComerciais() {
                   />
                   <div className="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-accent peer-checked:bg-accent/5 transition-all"></div>
                   <span className="relative z-10 text-sm font-medium text-slate-600 peer-checked:text-accent transition-colors">
-                    {spec}
+                    {especializacoesTranslate[spec] || spec}
                   </span>
                 </label>
               ))}

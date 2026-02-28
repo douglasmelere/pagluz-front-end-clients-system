@@ -51,13 +51,11 @@ export const checkForNewVersion = async (): Promise<boolean> => {
     const newVersion = scriptMatch ? scriptMatch[1] : null;
 
     if (newVersion && savedVersion && newVersion !== savedVersion) {
-      console.log('🔄 Nova versão detectada!', { old: savedVersion, new: newVersion });
       return true;
     }
 
     return false;
   } catch (error) {
-    console.error('Erro ao verificar nova versão:', error);
     return false;
   }
 };

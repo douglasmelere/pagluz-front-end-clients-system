@@ -345,36 +345,36 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50/50">
       <div className="sticky top-0 z-30 border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto max-w-[1600px] px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-display font-semibold text-slate-900">Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-slate-900">Dashboard</h1>
             <p className="text-sm text-slate-500 font-medium">Visão geral do sistema</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-9 sm:h-10 rounded-xl border border-slate-200 bg-white px-3 sm:px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 flex items-center gap-2"
             >
-              <Filter className="h-4 w-4 inline mr-2" />Filtros
+              <Filter className="h-4 w-4" /><span className="hidden sm:inline">Filtros</span>
             </button>
             <button
               onClick={exportDashboard}
-              className="h-10 rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-6 text-sm font-medium text-white shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-9 sm:h-10 rounded-xl bg-gradient-to-r from-accent to-accent-secondary px-3 sm:px-6 text-sm font-medium text-white shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 flex items-center gap-2"
             >
-              <Download className="h-4 w-4 inline mr-2" />Exportar
+              <Download className="h-4 w-4" /><span className="hidden sm:inline">Exportar</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-6 py-8 space-y-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-5 sm:py-8 space-y-5 sm:space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => {
             const Icon = stat.icon;
 
             return (
-              <div key={stat.title} className="group relative overflow-hidden rounded-2xl border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
+              <div key={stat.title} className="group relative overflow-hidden rounded-2xl border border-white/60 bg-white p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
                 <div className="flex items-start justify-between mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 rounded-xl bg-accent/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -555,7 +555,7 @@ export default function Dashboard() {
         </div>
 
         {/* Histórico de Ações Recentes */}
-        <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="rounded-2xl border border-white/60 bg-white p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex items-center mb-6">
             <div className="p-3 bg-gradient-to-r from-slate-700 to-slate-800 rounded-xl shadow-lg shadow-slate-900/10 mr-4 text-white">
               <Activity className="h-6 w-6" />
@@ -675,7 +675,7 @@ export default function Dashboard() {
         )}
 
         {/* Estatísticas de Representantes */}
-        <div className="rounded-2xl border border-white/60 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="rounded-2xl border border-white/60 bg-white p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           <div className="flex items-center mb-6">
             <div className="p-3 bg-gradient-to-r from-accent to-accent-secondary rounded-xl shadow-lg shadow-accent/20 mr-4 text-white">
               <Users className="h-6 w-6" />
@@ -686,7 +686,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 {representantes?.length || 0}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Eye, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import DocumentPreviewModal from '../ui/DocumentPreviewModal';
 
 interface InvoiceViewProps {
   consumerId?: string;
@@ -32,6 +33,7 @@ export default function InvoiceView({
   const [errorLoadingInvoice, setErrorLoadingInvoice] = useState(false);
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
   const [invoiceBlobUrl, setInvoiceBlobUrl] = useState<string | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   // Verificar se há invoiceUrl válido
   const hasValidInvoiceUrl = !!(invoiceUrl && invoiceUrl.trim() !== '');
@@ -41,12 +43,12 @@ export default function InvoiceView({
     if (!consumerId || !user) return null;
 
     const role = user.role;
-    
+
     // Se for REPRESENTATIVE, usar endpoint de representante
     if (role === 'REPRESENTATIVE') {
       return `/consumers/representative/${consumerId}/invoice`;
     }
-    
+
     // Para ADMIN, OPERATOR, SUPER_ADMIN, usar endpoint de admin
     return `/consumers/${consumerId}/invoice`;
   };
@@ -90,13 +92,13 @@ export default function InvoiceView({
           try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorData.error || errorMessage;
-            
+
             // Verificar se é erro de bucket
             if (
               response.status === 404 &&
               (errorData.error === 'Bucket not found' ||
-               errorData.message === 'Bucket not found' ||
-               errorData.message?.includes('Bucket not found'))
+                errorData.message === 'Bucket not found' ||
+                errorData.message?.includes('Bucket not found'))
             ) {
               setErrorLoadingInvoice(true);
               return null;
@@ -111,7 +113,7 @@ export default function InvoiceView({
 
       // Verificar se a resposta é um blob
       const contentType = response.headers.get('content-type');
-      
+
       // Se a resposta é JSON, pode ser um erro
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
@@ -123,7 +125,7 @@ export default function InvoiceView({
 
       // Obter o blob
       const blob = await response.blob();
-      
+
       // Criar URL temporária para o blob
       const blobUrl = URL.createObjectURL(blob);
       setInvoiceBlobUrl(blobUrl);
@@ -139,18 +141,14 @@ export default function InvoiceView({
   const handleInvoiceClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    // Se já temos o blob URL, abrir diretamente
     if (invoiceBlobUrl) {
-      window.open(invoiceBlobUrl, '_blank', 'noopener,noreferrer');
+      setIsPreviewModalOpen(true);
       return;
     }
 
-    // Caso contrário, buscar o blob primeiro
     const blobUrl = await fetchInvoiceBlob();
-    
-    // Se obtivemos o blob URL, abrir
     if (blobUrl) {
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      setIsPreviewModalOpen(true);
     }
   };
 
@@ -170,7 +168,7 @@ export default function InvoiceView({
 
     // Caso contrário, buscar o blob primeiro
     const blobUrl = await fetchInvoiceBlob();
-    
+
     // Se obtivemos o blob URL, fazer download
     if (blobUrl) {
       const link = document.createElement('a');
@@ -186,8 +184,8 @@ export default function InvoiceView({
     return (
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
         <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-        <p className="text-slate-600 font-medium">Nenhuma fatura anexada</p>
-        <p className="text-sm text-slate-500 mt-1">A fatura ainda não foi enviada pelo representante</p>
+        <p className="text-slate-600 font-medium font-display text-lg">Nenhuma fatura anexada</p>
+        <p className="text-sm text-slate-500 mt-1 font-display">A fatura ainda não foi enviada pelo representante</p>
       </div>
     );
   }
@@ -197,8 +195,8 @@ export default function InvoiceView({
     return (
       <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 text-center">
         <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-        <p className="text-slate-600 font-medium">Nenhuma fatura anexada</p>
-        <p className="text-sm text-slate-500 mt-1">Este consumidor não possui fatura cadastrada</p>
+        <p className="text-slate-600 font-medium font-display text-lg">Nenhuma fatura anexada</p>
+        <p className="text-sm text-slate-500 mt-1 font-display">Este consumidor não possui fatura cadastrada</p>
       </div>
     );
   }
@@ -315,7 +313,7 @@ export default function InvoiceView({
               className="flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
-              <span>Download</span>
+              <span>Baixar</span>
             </button>
           </div>
         </div>
@@ -390,9 +388,8 @@ export default function InvoiceView({
                   )}
                   <span className="text-sm font-medium text-slate-700">Confiança do OCR:</span>
                 </div>
-                <span className={`text-sm font-bold ${
-                  invoiceScannedData.confidence >= 80 ? 'text-green-600' : 'text-yellow-600'
-                }`}>
+                <span className={`text-sm font-bold ${invoiceScannedData.confidence >= 80 ? 'text-green-600' : 'text-yellow-600'
+                  }`}>
                   {invoiceScannedData.confidence.toFixed(1)}%
                 </span>
               </div>
@@ -423,6 +420,12 @@ export default function InvoiceView({
           </div>
         )}
       </div>
+      <DocumentPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        documentUrl={invoiceBlobUrl || ''}
+        documentTitle={invoiceFileName || 'Fatura do consumidor'}
+      />
     </div>
   );
 }

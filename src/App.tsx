@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
@@ -21,6 +21,7 @@ import { startVersionMonitoring, reloadWithoutCache } from './utils/versionCheck
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
   const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao'>('dashboard');
+  const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
   useEffect(() => {
@@ -100,12 +101,22 @@ function AppContent() {
 
   return (
     <div className="flex h-screen relative bg-slate-50 overflow-hidden">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+      <Sidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        onWidthChange={(w) => setSidebarWidth(w)}
+      />
 
-      {/* Main Content Area */}
-      <main className="flex-1 w-full relative z-0 lg:ml-72 flex flex-col h-full overflow-hidden">
+      {/* Main Content Area — margin sincronizada com a sidebar */}
+      <main
+        className="flex-1 w-full relative z-0 flex flex-col h-full overflow-hidden"
+        style={{
+          marginLeft: sidebarWidth,
+          transition: 'margin-left 280ms cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
           <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24">
             <div className="animate-fade-in relative">
               {renderCurrentView()}

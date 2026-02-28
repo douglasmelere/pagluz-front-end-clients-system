@@ -33,9 +33,7 @@ export async function fetchGenerators(token?: string): Promise<Generator[]> {
   });
   if (!res.ok) throw new Error('Erro ao buscar geradores');
   const data = await res.json();
-  
-  console.log('🔍 Dados brutos da API:', JSON.stringify(data, null, 2));
-  
+
   // Mapear snake_case para camelCase
   const mapped = data.map((item: any) => {
     const result = {
@@ -56,12 +54,9 @@ export async function fetchGenerators(token?: string): Promise<Generator[]> {
       numeroUcGerador: item.numero_uc || item.numeroUcGerador || '',
       tipoUsina: item.tipo_usina || item.tipoUsina || '',
     };
-    console.log('🔄 Item original:', item);
-    console.log('🔄 Item mapeado:', result);
     return result;
   });
-  
-  console.log('✅ Dados mapeados completos:', JSON.stringify(mapped, null, 2));
+
   return mapped;
 }
 
@@ -70,11 +65,7 @@ export async function generateContract(payload: any, token?: string) {
   if (!authToken) {
     throw new Error('Token não encontrado no storage');
   }
-  
-  // Debug: Verificar o payload antes de enviar
-  console.log('🔍 Payload sendo enviado:', payload);
-  console.log('📋 prazoMulta no payload:', payload.prazoMulta, 'tipo:', typeof payload.prazoMulta);
-  
+
   const res = await fetch(`${API_BASE_URL}/contracts/generate`, {
     method: 'POST',
     headers: {

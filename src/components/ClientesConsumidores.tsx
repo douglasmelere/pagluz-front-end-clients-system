@@ -137,8 +137,20 @@ export default function ClientesConsumidores() {
 
   // Removido useEffect que causava loop infinito
 
-  const filteredClientes = clientesConsumidores || [];
+  const filteredClientes = (clientesConsumidores || []).filter(cliente => {
+    const searchLower = searchTerm.toLowerCase();
+    const searchMatch = !searchTerm ||
+      cliente.name.toLowerCase().includes(searchLower) ||
+      cliente.cpfCnpj.includes(searchTerm) ||
+      cliente.city?.toLowerCase().includes(searchLower) ||
+      getGeneratorName(cliente.generatorId || '', geradores).toLowerCase().includes(searchLower);
 
+    const statusMatch = filterStatus === 'todos' || cliente.status === filterStatus;
+    const tipoMatch = filterTipo === 'todos' || cliente.consumerType === filterTipo;
+    const geradorMatch = filterGerador === 'todos' || cliente.generatorId === filterGerador;
+
+    return searchMatch && statusMatch && tipoMatch && geradorMatch;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 

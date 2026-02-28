@@ -141,7 +141,7 @@ export default function GeneratorTable({ generators, onEdit, onDelete }: Generat
           </tbody>
         </table>
         {generators.length === 0 && (
-          <div className="text-center py-16 text-slate-500">
+          <div className="text-center py-16 text-slate-500 font-display font-medium text-lg">
             Nenhum gerador encontrado.
           </div>
         )}

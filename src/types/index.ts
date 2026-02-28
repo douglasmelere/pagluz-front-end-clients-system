@@ -301,15 +301,12 @@ export interface CommissionFilters {
 // Interfaces de Configurações do Sistema
 export interface KwhPriceHistory {
   id: string;
-  price: number;
-  previousPrice: number;
-  changedBy: string;
-  changedAt: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  value: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy?: string;
+  createdBy?: string;
 }
 
 export interface SystemSettings {

@@ -6,7 +6,6 @@ import {
   RotateCcw,
   TrendingDown,
   User,
-  DollarSign,
   ChevronDown,
   ChevronUp,
   Calculator,
@@ -15,307 +14,206 @@ import {
   Check,
   Image,
   Percent,
+  Info,
+  FileText,
 } from 'lucide-react';
 import logoSvgUrl from '../assets/new-logo.svg';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { useSettings } from '../hooks/useSettings';
 
-// ─── Interfaces ────────────────────────────────────────────────
+// ─── Tipos ────────────────────────────────────────────────────
+type TipoConsumidor = 'monofasico' | 'bifasico' | 'trifasico';
+
 interface SimulationForm {
+  // Inputs do usuário (4 campos principais)
   clientName: string;
-  descontoPercent: number;
-  valorSemPagluz: number;
+  consumoFatura: number;     // kWh da fatura do cliente
+  tipoConsumidor: TipoConsumidor;
+  descontoPercent: number;   // % de desconto pretendido
+  // Dados da conta do cliente (extraídos da fatura física)
+  fioBAtualReais: number;    // R$ do componente Fio B na conta
+  valorFaturaAtual: number;  // R$ total da fatura atual do cliente
 }
 
-interface EconomyProjection {
-  label: string;
-  months: number;
-  economia: number;
-}
+// ─── Constantes por tipo de consumidor ────────────────────────
+const CONSTANTES: Record<TipoConsumidor, { cosip: number; taxaMinima: number; label: string }> = {
+  monofasico: { cosip: 30.00, taxaMinima: 30.80, label: 'Monofásico' },
+  bifasico: { cosip: 50.00, taxaMinima: 57.20, label: 'Bifásico' },
+  trifasico: { cosip: 90.00, taxaMinima: 105.60, label: 'Trifásico' },
+};
 
 // ─── Utilitários ───────────────────────────────────────────────
 function formatBRL(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-
 function formatNumber(value: number): string {
-  return value.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function calcularValorComPagluz(
-  valorSemPagluz: number,
-  descontoPercent: number
-): number {
-  // O desconto % é aplicado sobre a energia injetada (o valor sem pagluz)
-  // Valor com pagluz = valor sem pagluz - (valor sem pagluz * desconto / 100)
-  return valorSemPagluz - valorSemPagluz * (descontoPercent / 100);
+// ─── Lógica de cálculo conforme especificação ─────────────────
+//
+// Dados do backend (somente leitura):
+//   kwhPrice       = Valor do kW Atual (R$)     → /settings/kwh-price
+//   fioBPercentage = Fator de ajuste do Fio B   → /settings/fio-b-percentage
+//                    (padrão 65% = 0.65, configurável pelo admin)
+//
+// Dados extraídos da conta física do cliente (inputs):
+//   fioBAtualReais   = R$ do Fio B que aparece na fatura
+//   valorFaturaAtual = R$ total da fatura atual
+//
+// Fórmula:
+//   FioB_Percentual = (Fio B R$ / Fatura Total R$) / (fioBPercentage / 100)
+//   Ex: (966.75 / 10996.56) / 0.65 = 8.79% / 65% = 13.52%
+//
+function calcularProposta(
+  form: SimulationForm,
+  kwhPrice: number,
+  fioBFator: number   // fioBPercentage do backend como decimal (65 → 0.65)
+) {
+  const { cosip, taxaMinima } = CONSTANTES[form.tipoConsumidor];
+
+  // 1. Valor da conta Celesc simulado
+  const valorContaCelesc = form.consumoFatura * kwhPrice;
+
+  // 2. Percentual do Fio B projetado
+  //    O divisor (fioBFator) substitui o 0.65 fixo da planilha de forma dinâmica
+  const fioBPercentual = form.valorFaturaAtual > 0
+    ? (form.fioBAtualReais / form.valorFaturaAtual) / fioBFator
+    : 0;
+
+  // 3. Perdas Fio B
+  const perdasFioB = valorContaCelesc * fioBPercentual;
+
+  // 4. Base de cálculo
+  const baseCalculo = valorContaCelesc - cosip - taxaMinima - perdasFioB;
+
+  // 5. Desconto mensal
+  const descontoMensal = Math.max(0, baseCalculo * (form.descontoPercent / 100));
+
+  // 6. Nova fatura PagLuz
+  const novaFatura = valorContaCelesc - descontoMensal;
+
+  // 7. Economias
+  const economiaAnual = descontoMensal * 12;
+
+  return {
+    valorContaCelesc,
+    fioBPercentual,
+    perdasFioB,
+    baseCalculo,
+    descontoMensal,
+    novaFatura,
+    economiaAnual,
+    economia3anos: economiaAnual * 3,
+    economia5anos: economiaAnual * 5,
+    economia10anos: economiaAnual * 10,
+  };
 }
 
-function calcularEconomias(economiaMensal: number): EconomyProjection[] {
-  const periodos = [
-    { label: '1 ano', months: 12 },
-    { label: '3 anos', months: 36 },
-    { label: '5 anos', months: 60 },
-    { label: '10 anos', months: 120 },
-  ];
-
-  return periodos.map(({ label, months }) => ({
-    label,
-    months,
-    economia: economiaMensal * months,
-  }));
-}
-
-// ─── Inline styles for the faithful PAGLUZ template ────────────
+// ─── CSS do template PAGLUZ ───────────────────────────────────
 const templateStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500;1,700;1,900&display=swap');
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;0,900;1,600;1,900&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,700;0,900;1,900&display=swap');
   .pagluz-page * { margin: 0; padding: 0; box-sizing: border-box; }
-  .pagluz-page {
-    font-family: 'Inter', system-ui, sans-serif;
-    color: #333;
-    background-color: #ffffff;
-    width: 620px;
-  }
-  .pagluz-page header {
-    background-color: #01375a;
-    padding: 0;
-    text-align: center;
-    overflow: hidden;
-  }
-  .pagluz-page header img.logo-img {
-    width: 240px;
-    height: auto;
-    display: inline-block;
-    margin: -80px 0 -87px 0;
-  }
-  .pagluz-page .logo-text {
-    font-size: 2.4rem; font-weight: 900; color: #fff; letter-spacing: 1px;
-  }
-  .pagluz-page .logo-text span { color: #ffc400; }
-  .pagluz-page .logo-sub {
-    font-size: 0.65rem; color: #aac8d8; letter-spacing: 3px; margin-top: 3px;
-  }
+  .pagluz-page { font-family: 'Inter', system-ui, sans-serif; color: #333; background-color: #fff; width: 620px; }
+  .pagluz-page header { background-color: #01375a; text-align: center; overflow: hidden; }
+  .pagluz-page header img.logo-img { width: 240px; height: auto; display: inline-block; margin: -80px 0 -87px 0; }
   .pagluz-page main { padding: 26px 28px 36px; }
-  .pagluz-page h1.titulo {
-    font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif !important;
-    font-size: 1.45rem !important;
-    font-weight: 900 !important;
-    font-style: italic !important;
-    color: #01375a !important;
-    text-decoration: underline !important;
-    text-decoration-color: #ffc400 !important;
-    text-underline-offset: 4px !important;
-    margin-bottom: 22px !important;
-    line-height: 1.3 !important;
-    text-align: center !important;
-    -webkit-text-stroke: 0.5px currentColor !important;
-  }
-  .pagluz-page .nome-cliente {
-    border: 2px solid #01375a;
-    border-radius: 12px 12px 0 0;
-    padding: 14px 16px 16px;
-    font-size: 1.05rem;
-    color: #01375a;
-    margin-bottom: 8px;
-    background: #fff;
-    display: flex;
-    align-items: center;
-  }
-  .pagluz-page .nome-cliente span { font-weight: 900; margin-left: 6px; font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif; }
-  .pagluz-page .desconto {
-    text-align: center;
-    color: #008000;
-    font-size: 0.95rem;
-    font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif;
-    font-weight: 900;
-    margin-bottom: 18px;
-  }
-  .pagluz-page .cards-container {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 26px;
-  }
-  .pagluz-page .card-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .pagluz-page .tab {
-    background-color: #01375a;
-    color: #fff;
-    font-size: 0.95rem;
-    font-weight: 900;
-    font-style: italic;
-    text-align: center;
-    padding: 8px 0;
-    width: 68%;
-    border-radius: 8px 8px 0 0;
-    margin-bottom: -2px; /* Overlap border to prevent sub-pixel gaps */
-    position: relative;
-    z-index: 10;
-  }
+  .pagluz-page h1.titulo { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.45rem !important; font-weight: 900 !important; font-style: italic !important; color: #01375a !important; text-decoration: underline !important; text-decoration-color: #ffc400 !important; text-underline-offset: 4px !important; margin-bottom: 22px !important; text-align: center !important; }
+  .pagluz-page .nome-cliente { border: 2px solid #01375a; border-radius: 12px 12px 0 0; padding: 14px 16px 16px; font-size: 1.05rem; color: #01375a; margin-bottom: 8px; background: #fff; display: flex; align-items: center; }
+  .pagluz-page .nome-cliente span { font-weight: 900; margin-left: 6px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .pagluz-page .desconto { text-align: center; color: #008000; font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; margin-bottom: 18px; }
+  .pagluz-page .cards-container { display: flex; gap: 16px; margin-bottom: 26px; }
+  .pagluz-page .card-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .pagluz-page .tab { background-color: #01375a; color: #fff; font-size: 0.95rem; font-weight: 900; font-style: italic; text-align: center; padding: 8px 0; width: 68%; border-radius: 8px 8px 0 0; margin-bottom: -2px; position: relative; z-index: 10; }
   .pagluz-page .card { width: 100%; border-radius: 0 0 12px 12px; overflow: hidden; }
-  .pagluz-page .card-left  { border: 3px solid #cc0000; background-color: #cc0000; }
-  .pagluz-page .card-right { border: 3px solid #008000; background-color: #008000; }
-  .pagluz-page .card-title {
-    padding: 14px 10px;
-    font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif;
-    text-align: center;
-    font-size: 1.25rem;
-    font-weight: 900;
-    font-style: italic;
-    color: #fff;
-    -webkit-text-stroke: 0.5px currentColor;
-  }
+  .pagluz-page .card-left { border: 3px solid #cc0000; }
+  .pagluz-page .card-right { border: 3px solid #008000; }
+  .pagluz-page .card-title { padding: 14px 10px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; font-size: 1.25rem; font-weight: 900; font-style: italic; color: #fff; }
   .pagluz-page .card-left .card-title { background-color: #cc0000; }
   .pagluz-page .card-right .card-title { background-color: #008000; }
   .pagluz-page .card-body { background: #fff; padding: 18px 14px; text-align: center; border-radius: 0 0 9px 9px; }
   .pagluz-page .card-label { font-size: 0.85rem; color: #01375a; margin-bottom: 4px; font-weight: 500; }
-  .pagluz-page .card-value { font-size: 1.9rem; font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif; font-weight: 900; color: #01375a; letter-spacing: -0.5px; -webkit-text-stroke: 0.8px currentColor; }
+  .pagluz-page .card-value { font-size: 1.9rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; color: #01375a; letter-spacing: -0.5px; }
   .pagluz-page .card-divider { border: none; height: 2px; margin: 14px 0; }
   .pagluz-page .card-left .card-divider { background-color: #cc0000; }
   .pagluz-page .card-right .card-divider { background-color: #008000; }
-  .pagluz-page .economia-section {
-    background-color: #01375a;
-    border: 3px solid #01375a;
-    border-radius: 0 0 14px 14px;
-    overflow: visible;
-  }
-  .pagluz-page .economia-titulo {
-    background-color: #01375a;
-    font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif;
-    font-size: 1.35rem;
-    font-weight: 900;
-    font-style: italic;
-    color: #fff;
-    padding: 14px 20px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-text-stroke: 0.5px currentColor;
-  }
-  .pagluz-page .economia-rows {
-    background-color: #fff;
-    border-radius: 0 0 11px 11px;
-    padding: 18px 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .pagluz-page .economia-row {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    padding-right: 1rem;
-  }
-  .pagluz-page .economia-ano {
-    background-color: #079841;
-    color: #fff;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 900;
-    font-size: 1.05rem;
-    line-height: 1;
-    padding: 16px 0;
-    width: 100px;
-    text-align: center;
-    border-radius: 5px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-  }
-  .pagluz-page .economia-valor {
-    background-color: #01375a;
-    color: #fff;
-    font-family: 'Plus Jakarta Sans', 'Poppins', 'Calistoga', Georgia, serif;
-    font-size: 1.45rem;
-    font-weight: 900;
-    font-style: italic;
-    line-height: 1;
-    padding: 6px 22px 6px 40px;
-    border-radius: 8px;
-    flex: 1;
-    margin-left: -20px;
-    position: relative;
-    z-index: 1;
-    -webkit-text-stroke: 0.8px currentColor;
-    letter-spacing: -0.5px;
-  }
+  .pagluz-page .economia-section { background-color: #01375a; border: 3px solid #01375a; border-radius: 0 0 14px 14px; }
+  .pagluz-page .economia-titulo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.35rem; font-weight: 900; font-style: italic; color: #fff; padding: 14px 20px; text-align: center; }
+  .pagluz-page .economia-rows { background-color: #fff; border-radius: 0 0 11px 11px; padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 12px; }
 `;
 
 // ─── Componente Principal ──────────────────────────────────────
 export default function SimulacaoEconomia() {
+  const { kwhPrice, fioBPercentage, fioBHistory } = useSettings();
+
+  // Dados do backend (somente leitura no formulário)
+  const kwhAtual = kwhPrice ?? 0;
+  // fioBFator: divisor dinâmico (padrão 0.65, configurável pelo admin)
+  const fioBPctAdmin = fioBPercentage ?? (fioBHistory.find(h => h.isActive)?.value ?? 65);
+  const fioBFator = fioBPctAdmin / 100;   // ex: 65 → 0.65, 78 → 0.78
+
   const [form, setForm] = useState<SimulationForm>({
     clientName: '',
-    descontoPercent: 15,
-    valorSemPagluz: 0,
+    consumoFatura: 0,
+    tipoConsumidor: 'trifasico',
+    descontoPercent: 20,
+    fioBAtualReais: 0,
+    valorFaturaAtual: 0,
   });
 
   const [showPreview, setShowPreview] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [showCalcDetail, setShowCalcDetail] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [copied, setCopied] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  // ─── Cálculos automáticos ─────────────────────────────────
-  const valorComPagluz = useMemo(
-    () => calcularValorComPagluz(form.valorSemPagluz, form.descontoPercent),
-    [form.valorSemPagluz, form.descontoPercent]
-  );
+  // ─── Cálculo automático ───────────────────────────────────
+  const resultado = useMemo(() => {
+    if (
+      !form.consumoFatura ||
+      !form.fioBAtualReais ||
+      !form.valorFaturaAtual ||
+      !kwhAtual
+    ) return null;
+    return calcularProposta(form, kwhAtual, fioBFator);
+  }, [form, kwhAtual, fioBFator]);
 
-  const economiaMensal = useMemo(
-    () => Math.max(0, form.valorSemPagluz - valorComPagluz),
-    [form.valorSemPagluz, valorComPagluz]
-  );
+  const backendReady = kwhAtual > 0 && fioBPctAdmin > 0;
+  const canGenerate = backendReady && form.consumoFatura > 0 && form.fioBAtualReais > 0 && form.valorFaturaAtual > 0;
 
-  const projections = useMemo(
-    () => calcularEconomias(economiaMensal),
-    [economiaMensal]
-  );
-
-  // ─── Gerar HTML do template fiel ──────────────────────────
+  // ─── Template HTML PAGLUZ ─────────────────────────────────
   const templateHtml = useMemo(() => {
     const clientName = form.clientName || 'Nome do Cliente';
-    const valorSemMensal = formatNumber(form.valorSemPagluz);
-    const valorSemAnual = formatNumber(form.valorSemPagluz * 12);
-    const valorComMensal = formatNumber(valorComPagluz);
-    const valorComAnual = formatNumber(valorComPagluz * 12);
+    const valorSemMensal = formatNumber(resultado?.valorContaCelesc ?? 0);
+    const valorSemAnual = formatNumber((resultado?.valorContaCelesc ?? 0) * 12);
+    const valorComMensal = formatNumber(resultado?.novaFatura ?? 0);
+    const valorComAnual = formatNumber((resultado?.novaFatura ?? 0) * 12);
 
-    const projectionsHtml = projections
-      .map(
-        (p) => `
-        <div class="economia-row" style="display:flex;align-items:center;gap:0;padding-right:1rem;margin-bottom:12px;">
-          <div class="economia-ano" style="background-color:#079841;color:#fff;font-weight:900;font-size:1.05rem;display:flex;align-items:center;justify-content:center;height:52px;width:100px;min-width:100px;text-align:center;border-radius:5px;position:relative;z-index:2;">${p.label}</div>
-          <div class="economia-valor" style="background-color:#01375a;color:#fff;font-size:1.4rem;font-weight:900;font-style:italic;display:flex;align-items:center;height:42px;padding:0 22px 0 40px;border-radius:8px;flex:1;margin-left:-20px;position:relative;z-index:1;">R$ ${formatNumber(p.economia)}</div>
-        </div>
-      `
-      )
-      .join('');
+    const projections = resultado ? [
+      { label: '1 ano', valor: resultado.economiaAnual },
+      { label: '3 anos', valor: resultado.economia3anos },
+      { label: '5 anos', valor: resultado.economia5anos },
+      { label: '10 anos', valor: resultado.economia10anos },
+    ] : [];
+
+    const projectionsHtml = projections.map(p => `
+      <div style="display:flex;align-items:center;gap:0;padding-right:1rem;margin-bottom:12px;">
+        <div style="background-color:#079841;color:#fff;font-weight:900;font-size:1.05rem;display:flex;align-items:center;justify-content:center;height:52px;width:100px;min-width:100px;text-align:center;border-radius:5px;position:relative;z-index:2;">${p.label}</div>
+        <div style="background-color:#01375a;color:#fff;font-size:1.4rem;font-weight:900;font-style:italic;display:flex;align-items:center;height:42px;padding:0 22px 0 40px;border-radius:8px;flex:1;margin-left:-20px;position:relative;z-index:1;">R$ ${formatNumber(p.valor)}</div>
+      </div>
+    `).join('');
 
     return `
       <style>${templateStyles}</style>
       <div class="pagluz-page">
-        <header>
-          <img class="logo-img" src="${logoSvgUrl}" alt="PAGLUZ" />
-        </header>
-
+        <header><img class="logo-img" src="${logoSvgUrl}" alt="PAGLUZ" /></header>
         <main>
           <h1 class="titulo">Quanto você pode economizar conosco?</h1>
-
-          <div class="nome-cliente">
-            Cliente: <span>${clientName}</span>
-          </div>
-
-          <div class="desconto">Desconto na energia injetada de: <span>${form.descontoPercent}%</span></div>
-
+          <div class="nome-cliente">Cliente: <span>${clientName}</span></div>
+          <div class="desconto">Desconto pretendido de: <span>${form.descontoPercent}%</span></div>
           <div class="cards-container">
             <div class="card-wrapper">
               <div class="tab">Sem a</div>
@@ -330,7 +228,6 @@ export default function SimulacaoEconomia() {
                 </div>
               </div>
             </div>
-
             <div class="card-wrapper">
               <div class="tab">Com a</div>
               <div class="card card-right">
@@ -345,115 +242,69 @@ export default function SimulacaoEconomia() {
               </div>
             </div>
           </div>
-
           <div class="economia-section">
             <div class="economia-titulo">Economia garantida, hoje, amanhã e sempre</div>
             <div class="economia-rows">
-              ${projectionsHtml}
+              ${projectionsHtml || '<p style="color:#888;text-align:center;padding:16px;">Preencha os dados para ver as projeções</p>'}
             </div>
           </div>
         </main>
       </div>
     `;
-  }, [form.clientName, form.descontoPercent, form.valorSemPagluz, valorComPagluz, projections]);
+  }, [form, resultado]);
 
   // ─── Handlers ─────────────────────────────────────────────
-  const handleReset = () => {
-    setForm({ clientName: '', descontoPercent: 15, valorSemPagluz: 0 });
-  };
+  const updateField = (field: keyof SimulationForm, value: string | number | TipoConsumidor) =>
+    setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleReset = () =>
+    setForm({ clientName: '', consumoFatura: 0, tipoConsumidor: 'trifasico', descontoPercent: 20, fioBAtualReais: 0, valorFaturaAtual: 0 });
 
   const handleGeneratePDF = async () => {
-    setIsGenerating(true);
+    setIsGeneratingPDF(true);
     try {
-      const previewContainer = exportRef.current;
-      const root = previewContainer?.querySelector('.pagluz-page') as HTMLElement || previewContainer;
+      const root = exportRef.current?.querySelector('.pagluz-page') as HTMLElement || exportRef.current;
       if (root) {
-        // html-to-image accurately renders modern CSS and flexbox
-        const imgData = await toPng(root, {
-          cacheBust: true,
-          quality: 1,
-          pixelRatio: 3, // High quality 
-          backgroundColor: '#ffffff'
-        });
-
-        const pdfWidth = 210; // A4 width in mm
-
-        // Calculate the height proportionally 
-        // Measure real DOM node rather than trusting canvas
-        const nodeWidth = root.offsetWidth || 620;
-        const nodeHeight = root.offsetHeight || 900;
-        const pdfHeight = (nodeHeight * pdfWidth) / nodeWidth;
-
-        const doc = new jsPDF({
-          orientation: 'p',
-          unit: 'mm',
-          format: [pdfWidth, pdfHeight],
-        });
-
+        const imgData = await toPng(root, { cacheBust: true, quality: 1, pixelRatio: 3, backgroundColor: '#ffffff' });
+        const pdfWidth = 210;
+        const pdfHeight = (root.offsetHeight * pdfWidth) / (root.offsetWidth || 620);
+        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [pdfWidth, pdfHeight] });
         doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-        const safeName = (form.clientName || 'cliente')
-          .replace(/[^a-zA-Z0-9]/g, '_')
-          .toLowerCase();
-
+        const safeName = (form.clientName || 'cliente').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
         doc.save(`proposta-pagluz-${safeName}.pdf`);
       }
-    } catch (err) {
-      console.error('Erro ao gerar PDF:', err);
-    } finally {
-      setIsGenerating(false);
-    }
+    } catch (err) { }
+    finally { setIsGeneratingPDF(false); }
   };
 
   const handleGenerateImage = async () => {
-    setIsGeneratingImage(true);
+    setIsGeneratingImg(true);
     try {
-      const previewContainer = exportRef.current;
-      const root = previewContainer?.querySelector('.pagluz-page') as HTMLElement || previewContainer;
+      const root = exportRef.current?.querySelector('.pagluz-page') as HTMLElement || exportRef.current;
       if (root) {
-        // Gera a imagem PNG em alta resolução de forma semelhante ao PDF
-        const imgDataUrl = await toPng(root, {
-          cacheBust: true,
-          quality: 1,
-          pixelRatio: 3,
-          backgroundColor: '#ffffff'
-        });
-
-        const safeName = (form.clientName || 'cliente')
-          .replace(/[^a-zA-Z0-9]/g, '_')
-          .toLowerCase();
-
-        const link = document.createElement('a');
-        link.download = `proposta-pagluz-${safeName}.png`;
-        link.href = imgDataUrl;
-        link.click();
+        const url = await toPng(root, { cacheBust: true, quality: 1, pixelRatio: 3, backgroundColor: '#ffffff' });
+        const safeName = (form.clientName || 'cliente').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const a = document.createElement('a');
+        a.download = `proposta-pagluz-${safeName}.png`;
+        a.href = url;
+        a.click();
       }
-    } catch (err) {
-      console.error('Erro ao gerar Imagem:', err);
-    } finally {
-      setIsGeneratingImage(false);
-    }
+    } catch (err) { }
+    finally { setIsGeneratingImg(false); }
   };
 
-  const handleCopySummary = () => {
-    const summary = `📊 Proposta PagLuz - ${form.clientName || 'Cliente'}\n\n💡 Valor sem PagLuz: ${formatBRL(form.valorSemPagluz)}\n🟢 Valor com PagLuz: ${formatBRL(valorComPagluz)}\n📉 Desconto: ${form.descontoPercent}%\n💰 Economia mensal: ${formatBRL(economiaMensal)}\n\n📅 Projeções:\n${projections.map((p) => `  • ${p.label}: ${formatBRL(p.economia)}`).join('\n')}`;
-
-    navigator.clipboard.writeText(summary).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+  const handleCopy = () => {
+    if (!resultado) return;
+    const text = `📊 Proposta PagLuz — ${form.clientName || 'Cliente'}\n\n💡 Conta Celesc (sim.): ${formatBRL(resultado.valorContaCelesc)}\n🟢 Nova fatura PagLuz: ${formatBRL(resultado.novaFatura)}\n📉 Desconto mensal: ${formatBRL(resultado.descontoMensal)} (${form.descontoPercent}%)\n💰 Economia anual: ${formatBRL(resultado.economiaAnual)}\n\n📅 Projeções:\n  • 3 anos: ${formatBRL(resultado.economia3anos)}\n  • 5 anos: ${formatBRL(resultado.economia5anos)}\n  • 10 anos: ${formatBRL(resultado.economia10anos)}`;
+    navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   };
 
-  const updateField = (
-    field: keyof SimulationForm,
-    value: string | number
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const constantes = CONSTANTES[form.tipoConsumidor];
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
-      {/* ─── Premium Header ─────────────────────────────────── */}
+
+      {/* ─── Header ──────────────────────────────────────────── */}
       <header className="sticky top-0 z-30 border-b border-white/20 bg-white/80 backdrop-blur-xl shadow-sm mb-8">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
@@ -462,26 +313,18 @@ export default function SimulacaoEconomia() {
                 <Zap className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-display font-semibold text-slate-900">
-                  Geração de Propostas
-                </h1>
-                <p className="text-slate-500 font-medium text-sm">
-                  Gere propostas de economia de energia com o template PAGLUZ.
-                </p>
+                <h1 className="text-2xl font-display font-semibold text-slate-900">Geração de Propostas</h1>
+                <p className="text-slate-500 font-medium text-sm">Gere propostas de economia de energia com o template PAGLUZ.</p>
               </div>
             </div>
-            {economiaMensal > 0 && (
-              <div className="flex items-center gap-3 bg-green-50/80 backdrop-blur-sm rounded-xl px-5 py-3 border border-green-100 shadow-sm">
+            {resultado && resultado.descontoMensal > 0 && (
+              <div className="flex items-center gap-3 bg-green-50/80 rounded-xl px-5 py-3 border border-green-100 shadow-sm">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <TrendingDown className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-green-700 font-medium font-display">
-                    Economia mensal
-                  </p>
-                  <p className="text-xl font-bold text-green-600 font-display">
-                    {formatBRL(economiaMensal)}
-                  </p>
+                  <p className="text-xs text-green-700 font-medium font-display">Desconto mensal</p>
+                  <p className="text-xl font-bold text-green-600 font-display">{formatBRL(resultado.descontoMensal)}</p>
                 </div>
               </div>
             )}
@@ -489,26 +332,58 @@ export default function SimulacaoEconomia() {
         </div>
       </header>
 
-      {/* ─── Main Content Grid ─────────────────────────── */}
+      {/* ─── Body ────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
-          {/* ─── Form Panel ─────────────────────────────── */}
+
+          {/* ─── Painel Esquerdo ─────────────────────────────── */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Form Card */}
+
+            {/* Dados automáticos do sistema (somente leitura) */}
+            <div className={`rounded-2xl border p-4 shadow-sm ${backendReady ? 'border-blue-100 bg-blue-50/50' : 'border-amber-100 bg-amber-50/50'}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Info className={`h-4 w-4 ${backendReady ? 'text-blue-500' : 'text-amber-500'}`} />
+                <span className={`text-sm font-semibold font-display ${backendReady ? 'text-blue-700' : 'text-amber-700'}`}>
+                  Parâmetros do Sistema (automáticos)
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white border border-blue-100 p-3">
+                  <p className="text-xs text-blue-500 font-medium mb-1">Tarifa do kWh</p>
+                  <p className="text-lg font-bold text-blue-700 font-display">
+                    {kwhAtual > 0
+                      ? `R$ ${formatNumber(kwhAtual)}`
+                      : <span className="text-amber-500 text-sm animate-pulse">Carregando...</span>}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white border border-blue-100 p-3">
+                  <p className="text-xs text-blue-500 font-medium mb-1">Fator Fio B (TUSD)</p>
+                  <p className="text-lg font-bold text-blue-700 font-display">
+                    {fioBPctAdmin > 0
+                      ? `${fioBPctAdmin}% (÷${fioBPctAdmin}%)`
+                      : <span className="text-amber-500 text-sm animate-pulse">Carregando...</span>}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-blue-500 mt-2 ml-1">
+                Configurados em <strong>Configurações do Sistema</strong>. O fator Fio B substitui o padrão de 65% da planilha.
+              </p>
+            </div>
+
+            {/* Formulário */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-lg bg-accent/10">
                     <Calculator className="h-4 w-4 text-accent" />
                   </div>
-                  <h2 className="text-lg font-display font-semibold text-slate-900">
-                    Dados da Proposta
-                  </h2>
+                  <h2 className="text-lg font-display font-semibold text-slate-900">Dados da Proposta</h2>
                 </div>
               </div>
 
               <div className="p-6 space-y-5">
-                {/* Nome do Cliente */}
+
+                {/* 1 – Nome do Cliente */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
                     <User className="h-4 w-4 text-accent" />
@@ -517,265 +392,287 @@ export default function SimulacaoEconomia() {
                   <input
                     type="text"
                     value={form.clientName}
-                    onChange={(e) => updateField('clientName', e.target.value)}
+                    onChange={e => updateField('clientName', e.target.value)}
                     placeholder="Ex: João Silva"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 
-                    focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent focus:bg-white 
-                    transition-all duration-200 text-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent focus:bg-white transition-all duration-200 text-sm"
                   />
                 </div>
 
-                {/* Desconto na Energia Injetada */}
+                {/* 2 – Tipo de Consumidor */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    Tipo de Consumidor
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(Object.keys(CONSTANTES) as TipoConsumidor[]).map(tipo => (
+                      <button
+                        key={tipo}
+                        type="button"
+                        onClick={() => updateField('tipoConsumidor', tipo)}
+                        className={`py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all duration-200
+                          ${form.tipoConsumidor === tipo
+                            ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-200'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600'}`}
+                      >
+                        {CONSTANTES[tipo].label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5 ml-1">
+                    COSIP: R$ {formatNumber(constantes.cosip)} · Taxa mínima: R$ {formatNumber(constantes.taxaMinima)}
+                  </p>
+                </div>
+
+                {/* 3 – Consumo da Fatura */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
+                    <Zap className="h-4 w-4 text-blue-500" />
+                    Consumo da Fatura
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number" step="1" min="0"
+                      value={form.consumoFatura || ''}
+                      onChange={e => updateField('consumoFatura', parseFloat(e.target.value) || 0)}
+                      placeholder="Ex: 12050"
+                      className="w-full px-4 pr-16 py-3 rounded-xl border border-blue-200 bg-blue-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300/50 focus:border-blue-400 focus:bg-white transition-all duration-200 text-sm font-medium"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-blue-500 font-bold">kWh</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5 ml-1">Consumo médio mensal da fatura do cliente</p>
+                </div>
+
+                {/* 4 – Desconto Pretendido */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
                     <Percent className="h-4 w-4 text-green-500" />
-                    Desconto na Energia Injetada
+                    Desconto Pretendido
                   </label>
                   <div className="relative">
                     <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      max="100"
+                      type="number" step="0.5" min="0" max="100"
                       value={form.descontoPercent || ''}
-                      onChange={(e) =>
-                        updateField(
-                          'descontoPercent',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      placeholder="15"
-                      className="w-full px-4 pr-12 py-3 rounded-xl border border-green-200 bg-green-50/50 text-slate-800 placeholder:text-slate-400 
-                      focus:outline-none focus:ring-2 focus:ring-green-300/50 focus:border-green-400 focus:bg-white 
-                      transition-all duration-200 text-sm font-medium"
+                      onChange={e => updateField('descontoPercent', parseFloat(e.target.value) || 0)}
+                      placeholder="20"
+                      className="w-full px-4 pr-12 py-3 rounded-xl border border-green-200 bg-green-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-300/50 focus:border-green-400 focus:bg-white transition-all duration-200 text-sm font-medium"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-green-500 font-bold">
-                      %
-                    </span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-green-500 font-bold">%</span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5 ml-1">
-                    Porcentagem de desconto aplicada sobre a energia injetada
-                  </p>
+                  <p className="text-xs text-slate-400 mt-1.5 ml-1">Aplicado sobre a base de cálculo</p>
                 </div>
 
-                {/* Valor Sem PagLuz */}
+                {/* Divisor visual */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-3 text-xs text-slate-400 font-medium">Dados da conta do cliente</span>
+                  </div>
+                </div>
+
+                {/* 5 – Fio B Atual (R$) da conta */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
-                    <DollarSign className="h-4 w-4 text-red-500" />
-                    Valor Mensal{' '}
-                    <span className="text-red-500 font-bold">SEM</span> PagLuz
+                    <FileText className="h-4 w-4 text-amber-500" />
+                    Fio B na Fatura do Cliente
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-                      R$
-                    </span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">R$</span>
                     <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={form.valorSemPagluz || ''}
-                      onChange={(e) =>
-                        updateField(
-                          'valorSemPagluz',
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      placeholder="0,00"
-                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-red-200 bg-red-50/50 text-slate-800 placeholder:text-slate-400 
-                      focus:outline-none focus:ring-2 focus:ring-red-300/50 focus:border-red-400 focus:bg-white 
-                      transition-all duration-200 text-sm font-medium"
+                      type="number" step="0.01" min="0"
+                      value={form.fioBAtualReais || ''}
+                      onChange={e => updateField('fioBAtualReais', parseFloat(e.target.value) || 0)}
+                      placeholder="Ex: 966,75"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-amber-200 bg-amber-50/50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-300/50 focus:border-amber-400 focus:bg-white transition-all duration-200 text-sm font-medium"
                     />
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5 ml-1">
-                    Valor que o cliente paga atualmente na conta de energia
-                  </p>
+                  <p className="text-xs text-slate-400 mt-1.5 ml-1">Componente "Fio B" que aparece na fatura física do cliente</p>
                 </div>
 
-                {/* Valor Calculado COM PagLuz (readonly) */}
-                {form.valorSemPagluz > 0 && (
-                  <div className="rounded-xl border border-green-200 bg-green-50/30 p-4">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-green-700 flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Valor COM PagLuz (calculado)
-                      </span>
-                    </div>
-                    <p className="text-2xl font-bold font-display text-green-700">
-                      {formatBRL(valorComPagluz)}
+                {/* 6 – Valor Total da Fatura Atual */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-2">
+                    <FileText className="h-4 w-4 text-slate-500" />
+                    Valor Total da Fatura Atual
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">R$</span>
+                    <input
+                      type="number" step="0.01" min="0"
+                      value={form.valorFaturaAtual || ''}
+                      onChange={e => updateField('valorFaturaAtual', parseFloat(e.target.value) || 0)}
+                      placeholder="Ex: 10996,56"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300/50 focus:border-slate-400 focus:bg-white transition-all duration-200 text-sm font-medium"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5 ml-1">Valor total cobrado na conta de energia atual do cliente</p>
+                </div>
+
+                {/* Pré-cálculo em tempo real */}
+                {form.fioBAtualReais > 0 && form.valorFaturaAtual > 0 && (
+                  <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs">
+                    <p className="font-semibold text-amber-800 mb-1">% Fio B projetado:</p>
+                    <p className="text-amber-700 font-mono">
+                      ({formatNumber(form.fioBAtualReais)} ÷ {formatNumber(form.valorFaturaAtual)}) ÷ {fioBPctAdmin}%&nbsp;
+                      = <strong>{((form.fioBAtualReais / form.valorFaturaAtual / fioBFator) * 100).toFixed(2)}%</strong>
                     </p>
-                    <p className="text-sm font-medium text-green-600 mt-1">
-                      Economia de {formatBRL(economiaMensal)}/mês ({form.descontoPercent}% de desconto)
-                    </p>
+                  </div>
+                )}
+
+                {!backendReady && (
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700 font-medium flex items-center gap-2">
+                    <Info className="h-4 w-4 flex-shrink-0" />
+                    Configure o kWh e o fator Fio B em Configurações do Sistema para habilitar os cálculos.
                   </div>
                 )}
               </div>
 
-              {/* Action buttons */}
+              {/* Botões */}
               <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap gap-3">
                 <button
                   onClick={handleGeneratePDF}
-                  disabled={isGenerating || isGeneratingImage || !form.valorSemPagluz}
-                  className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-5 py-3 rounded-xl 
-                  bg-gradient-to-r from-accent to-accent-secondary text-white font-semibold text-sm
-                  hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 active:scale-[0.98] 
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0
-                  transition-all duration-200 font-display"
+                  disabled={isGeneratingPDF || isGeneratingImg || !canGenerate}
+                  className="flex-1 min-w-[130px] flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-accent to-accent-secondary text-white font-semibold text-sm hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-display"
                 >
-                  {isGenerating ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Gerando PDF...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Exportar PDF
-                    </>
-                  )}
+                  {isGeneratingPDF
+                    ? <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />Gerando...</>
+                    : <><Download className="h-4 w-4" />Exportar PDF</>}
                 </button>
 
                 <button
                   onClick={handleGenerateImage}
-                  disabled={isGenerating || isGeneratingImage || !form.valorSemPagluz}
-                  className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-5 py-3 rounded-xl 
-                  bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-sm
-                  hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 active:scale-[0.98] 
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0
-                  transition-all duration-200 font-display"
+                  disabled={isGeneratingPDF || isGeneratingImg || !canGenerate}
+                  className="flex-1 min-w-[130px] flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-display"
                 >
-                  {isGeneratingImage ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Gerando Imagem...
-                    </>
-                  ) : (
-                    <>
-                      <Image className="h-4 w-4" />
-                      Exportar Imagem
-                    </>
-                  )}
+                  {isGeneratingImg
+                    ? <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />Gerando...</>
+                    : <><Image className="h-4 w-4" />Exportar Imagem</>}
                 </button>
 
                 <button
-                  onClick={handleCopySummary}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl 
-                  border border-slate-200 bg-white text-slate-700 font-medium text-sm
-                  hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] shadow-sm
-                  transition-all duration-200"
+                  onClick={handleCopy}
+                  disabled={!resultado}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:bg-slate-50 hover:-translate-y-0.5 active:scale-[0.98] shadow-sm transition-all duration-200 disabled:opacity-40"
                 >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4 text-green-500" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      Copiar
-                    </>
-                  )}
+                  {copied ? <><Check className="h-4 w-4 text-green-500" />Copiado!</> : <><Copy className="h-4 w-4" />Copiar</>}
                 </button>
 
                 <button
                   onClick={handleReset}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl 
-                  border border-slate-200 bg-white text-slate-500 font-medium text-sm
-                  hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-[0.98] shadow-sm
-                  transition-all duration-200"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-500 font-medium text-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-[0.98] shadow-sm transition-all duration-200"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  Limpar
+                  <RotateCcw className="h-4 w-4" />Limpar
                 </button>
               </div>
             </div>
 
-            {/* Quick Economy Summary */}
-            {economiaMensal > 0 && (
-              <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-1.5 rounded-lg bg-green-100">
-                    <Leaf className="h-4 w-4 text-green-600" />
+            {/* Resumo de Economia */}
+            {resultado && (
+              <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 flex items-center justify-between border-b border-green-100">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-green-100">
+                      <Leaf className="h-4 w-4 text-green-600" />
+                    </div>
+                    <h3 className="text-base font-display font-semibold text-green-800">Resumo da Economia</h3>
                   </div>
-                  <h3 className="text-base font-display font-semibold text-green-800">
-                    Resumo da Economia
-                  </h3>
+                  <button
+                    onClick={() => setShowCalcDetail(!showCalcDetail)}
+                    className="text-xs text-green-600 hover:text-green-800 flex items-center gap-1 transition-colors"
+                  >
+                    {showCalcDetail
+                      ? <><ChevronUp className="h-3 w-3" />Menos</>
+                      : <><ChevronDown className="h-3 w-3" />Ver cálculos</>}
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-white/80 p-3.5 border border-green-100">
-                    <p className="text-xs text-green-600 font-medium mb-1">
-                      Mensal
-                    </p>
-                    <p className="text-lg font-bold text-green-700">
-                      {formatBRL(economiaMensal)}
-                    </p>
-                    <p className="text-xs text-green-500 mt-0.5">
-                      {form.descontoPercent}% de economia
-                    </p>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {[
+                      { label: 'Conta Celesc (sim.)', valor: resultado.valorContaCelesc, color: 'text-slate-700' },
+                      { label: 'Desconto Mensal', valor: resultado.descontoMensal, color: 'text-green-700' },
+                      { label: 'Nova Fatura PagLuz', valor: resultado.novaFatura, color: 'text-slate-700' },
+                      { label: 'Economia Anual', valor: resultado.economiaAnual, color: 'text-green-700' },
+                    ].map(item => (
+                      <div key={item.label} className="rounded-xl bg-white/80 p-3.5 border border-green-100">
+                        <p className="text-xs text-slate-500 font-medium mb-1">{item.label}</p>
+                        <p className={`text-base font-bold ${item.color}`}>{formatBRL(item.valor)}</p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="rounded-xl bg-white/80 p-3.5 border border-green-100">
-                    <p className="text-xs text-green-600 font-medium mb-1">
-                      Anual
-                    </p>
-                    <p className="text-lg font-bold text-green-700">
-                      {formatBRL(economiaMensal * 12)}
-                    </p>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: '3 anos', valor: resultado.economia3anos },
+                      { label: '5 anos', valor: resultado.economia5anos },
+                      { label: '10 anos', valor: resultado.economia10anos },
+                    ].map(p => (
+                      <div key={p.label} className="rounded-xl bg-white/80 p-3 border border-green-100 text-center">
+                        <p className="text-xs text-green-600 font-medium mb-1">{p.label}</p>
+                        <p className="text-sm font-bold text-green-700">{formatBRL(p.valor)}</p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="rounded-xl bg-white/80 p-3.5 border border-green-100">
-                    <p className="text-xs text-green-600 font-medium mb-1">
-                      5 anos
-                    </p>
-                    <p className="text-lg font-bold text-green-700">
-                      {formatBRL(economiaMensal * 60)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white/80 p-3.5 border border-green-100">
-                    <p className="text-xs text-green-600 font-medium mb-1">
-                      10 anos
-                    </p>
-                    <p className="text-lg font-bold text-green-700">
-                      {formatBRL(economiaMensal * 120)}
-                    </p>
-                  </div>
+
+                  {showCalcDetail && (
+                    <div className="mt-4 rounded-xl bg-white/70 border border-green-100 p-4 text-xs space-y-2 font-mono">
+                      <p className="font-sans font-semibold text-slate-700 mb-2">Detalhamento do cálculo:</p>
+                      <div className="flex justify-between text-slate-600">
+                        <span>{form.consumoFatura} kWh × R$ {formatNumber(kwhAtual)}</span>
+                        <span className="font-medium">{formatBRL(resultado.valorContaCelesc)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>({formatNumber(form.fioBAtualReais)} ÷ {formatNumber(form.valorFaturaAtual)}) ÷ {fioBPctAdmin}%</span>
+                        <span className="font-medium">= {(resultado.fioBPercentual * 100).toFixed(2)}% Fio B</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Perdas Fio B ({(resultado.fioBPercentual * 100).toFixed(2)}%)</span>
+                        <span className="font-medium text-red-500">- {formatBRL(resultado.perdasFioB)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>COSIP</span>
+                        <span className="font-medium text-red-500">- {formatBRL(constantes.cosip)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Taxa Mínima</span>
+                        <span className="font-medium text-red-500">- {formatBRL(constantes.taxaMinima)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-700 font-sans font-semibold border-t border-green-100 pt-2">
+                        <span>Base de cálculo</span>
+                        <span>{formatBRL(resultado.baseCalculo)}</span>
+                      </div>
+                      <div className="flex justify-between text-green-700 font-sans font-semibold">
+                        <span>Desconto ({form.descontoPercent}% sobre base)</span>
+                        <span>{formatBRL(resultado.descontoMensal)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* ─── Preview Panel ─────────────────────────── */}
+          {/* ─── Preview ─────────────────────────────────────── */}
           <div className="lg:col-span-3">
             <div className="rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
-              {/* Preview Header */}
               <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-lg bg-accent/10">
                     <Eye className="h-4 w-4 text-accent" />
                   </div>
-                  <h2 className="text-lg font-display font-semibold text-slate-900">
-                    Pré-visualização da Proposta
-                  </h2>
+                  <h2 className="text-lg font-display font-semibold text-slate-900">Pré-visualização da Proposta</h2>
                 </div>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
                   className="text-sm text-slate-500 hover:text-accent flex items-center gap-1 transition-colors"
                 >
-                  {showPreview ? (
-                    <>
-                      <ChevronUp className="h-4 w-4" />
-                      Recolher
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4" />
-                      Expandir
-                    </>
-                  )}
+                  {showPreview
+                    ? <><ChevronUp className="h-4 w-4" />Recolher</>
+                    : <><ChevronDown className="h-4 w-4" />Expandir</>}
                 </button>
               </div>
-
               {showPreview && (
                 <div className="p-4 md:p-6 bg-[#e0e0e0]">
-                  {/* Template Preview - faithful PAGLUZ layout */}
                   <div
                     ref={exportRef}
                     className="mx-auto"
@@ -786,6 +683,7 @@ export default function SimulacaoEconomia() {
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
