@@ -42,9 +42,13 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   useEffect(() => {
     localStorage.setItem('pagluz.sidebar.collapsed', isCollapsed.toString());
     if (onWidthChange) {
-      onWidthChange(isCollapsed ? COLLAPSED_W : SIDEBAR_DEFAULT);
+      if (isMobile) {
+        onWidthChange(0);
+      } else {
+        onWidthChange(isCollapsed ? COLLAPSED_W : SIDEBAR_DEFAULT);
+      }
     }
-  }, [isCollapsed, onWidthChange]);
+  }, [isCollapsed, isMobile, onWidthChange]);
 
   const toggleCollapse = () => {
     setIsCollapsed(prev => !prev);
@@ -99,7 +103,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
       {isMobile && (
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed top-4 left-4 p-2.5 bg-gradient-to-r from-accent to-accent-secondary text-white rounded-lg shadow-lg hover:shadow-xl active:scale-95 z-[2100]"
+          className="fixed top-4 right-4 p-2.5 bg-gradient-to-r from-accent to-accent-secondary text-white rounded-lg shadow-lg hover:shadow-xl active:scale-95 z-[2100]"
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -122,10 +126,10 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         }}
       >
         {/* Header com Logo e Botão Retrátil */}
-        <div className={`relative flex flex-col items-center shrink-0 border-b border-white/10 ${isCollapsed ? 'py-4 gap-2' : 'pt-6 pb-4'}`}>
+        <div className={`relative flex flex-col items-center shrink-0 border-b border-white/10 ${isCollapsed ? 'py-4 gap-2' : 'pt-4 pb-2'}`}>
           {!isCollapsed && (
-            <div className="flex justify-center w-full h-32 mt-4">
-              <PagluzLogo className="h-32 w-auto text-white drop-shadow-md scale-[2.0]" />
+            <div className="flex justify-center items-center w-full h-16 mt-4 mb-2 overflow-visible">
+              <PagluzLogo className="h-28 w-auto text-white drop-shadow-md scale-[2.2] -ml-2" />
             </div>
           )}
 
@@ -142,7 +146,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
             <button
               onClick={toggleCollapse}
               title={isCollapsed ? "Expandir menu" : "Ocultar menu"}
-              className={`relative z-10 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center cursor-pointer pointer-events-auto ${!isCollapsed ? 'mt-6' : 'mt-2'}`}
+              className={`relative z-10 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center cursor-pointer pointer-events-auto mt-2`}
             >
               {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </button>

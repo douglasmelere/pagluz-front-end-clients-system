@@ -116,31 +116,31 @@ const templateStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,700;0,900;1,900&display=swap');
   .pagluz-page * { margin: 0; padding: 0; box-sizing: border-box; }
-  .pagluz-page { font-family: 'Inter', system-ui, sans-serif; color: #333; background-color: #fff; width: 620px; }
+  .pagluz-page { font-family: 'Gotham Book', 'Inter', system-ui, sans-serif; color: #333; background-color: #fff; width: 620px; }
   .pagluz-page header { background-color: #01375a; text-align: center; overflow: hidden; }
   .pagluz-page header img.logo-img { width: 240px; height: auto; display: inline-block; margin: -80px 0 -87px 0; }
-  .pagluz-page main { padding: 26px 28px 36px; }
-  .pagluz-page h1.titulo { font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 1.45rem !important; font-weight: 900 !important; font-style: italic !important; color: #01375a !important; text-decoration: underline !important; text-decoration-color: #ffc400 !important; text-underline-offset: 4px !important; margin-bottom: 22px !important; text-align: center !important; -webkit-text-stroke: 1px #01375a; }
+  .pagluz-page main { padding: 36px 48px 42px; }
+  .pagluz-page h1.titulo { font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif !important; font-size: 1.45rem !important; font-weight: 900 !important; font-style: italic !important; color: #01375a !important; text-decoration: underline !important; text-decoration-color: #ffc400 !important; text-underline-offset: 4px !important; margin-bottom: 22px !important; text-align: center !important; -webkit-text-stroke: 1px #01375a; }
   .pagluz-page .nome-cliente { border: 2px solid #01375a; border-radius: 12px 12px 0 0; padding: 14px 16px 16px; font-size: 1.05rem; color: #01375a; margin-bottom: 8px; background: #fff; display: flex; align-items: center; }
-  .pagluz-page .nome-cliente span { font-weight: 900; margin-left: 6px; font-family: 'Plus Jakarta Sans', sans-serif; }
-  .pagluz-page .desconto { text-align: center; color: #008000; font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; margin-bottom: 18px; }
+  .pagluz-page .nome-cliente span { font-weight: 900; margin-left: 6px; font-family: 'Gotham Black', 'Plus Jakarta Sans', sans-serif; -webkit-text-stroke: 1px #01375a; }
+  .pagluz-page .desconto { text-align: center; color: #45a527; font-size: 0.95rem; font-family: 'Gotham Black', 'Plus Jakarta Sans', sans-serif; font-weight: 900; margin-bottom: 18px; }
   .pagluz-page .cards-container { display: flex; gap: 16px; margin-bottom: 26px; }
   .pagluz-page .card-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; }
-  .pagluz-page .tab { background-color: #01375a; color: #fff; font-size: 0.95rem; font-weight: 900; font-style: italic; text-align: center; padding: 8px 0; width: 68%; border-radius: 8px 8px 0 0; margin-bottom: -2px; position: relative; z-index: 10; }
+  .pagluz-page .tab { background-color: #01375a; color: #fff; font-size: 0.95rem; font-weight: 900; font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif; font-style: italic; text-align: center; padding: 6px 36px; width: auto; border-radius: 6px 6px 0 0; margin-bottom: 0; position: relative; z-index: 10; }
   .pagluz-page .card { width: 100%; border-radius: 0 0 12px 12px; overflow: hidden; }
-  .pagluz-page .card-left { border: 4px solid #cc0000; }
-  .pagluz-page .card-right { border: 4px solid #008000; }
-  .pagluz-page .card-title { padding: 14px 10px; font-family: 'Plus Jakarta Sans', sans-serif; text-align: center; font-size: 1.25rem; font-weight: 900; font-style: italic; color: #fff; -webkit-text-stroke: 0.6px #fff; }
-  .pagluz-page .card-left .card-title { background-color: #cc0000; }
-  .pagluz-page .card-right .card-title { background-color: #008000; }
+  .pagluz-page .card-left { border: 4px solid #ff0002; }
+  .pagluz-page .card-right { border: 4px solid #45a527; }
+  .pagluz-page .card-title { padding: 14px 10px; font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif; font-weight: 900; text-align: center; font-size: 1.25rem; font-style: italic; color: #fff; -webkit-text-stroke: 0.6px #fff; }
+  .pagluz-page .card-left .card-title { background-color: #ff0002; }
+  .pagluz-page .card-right .card-title { background-color: #45a527; }
   .pagluz-page .card-body { background: #fff; padding: 18px 14px; text-align: center; border-radius: 0 0 9px 9px; }
-  .pagluz-page .card-label { font-size: 0.85rem; color: #01375a; margin-bottom: 4px; font-weight: 500; }
-  .pagluz-page .card-value { font-size: 1.9rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 900; color: #01375a; letter-spacing: -0.5px; }
+  .pagluz-page .card-label { font-size: 0.85rem; color: #01375a; margin-bottom: 4px; font-family: 'Gotham Book', 'Inter', sans-serif; }
+  .pagluz-page .card-value { font-size: 1.9rem; font-family: 'Gotham Black', 'Plus Jakarta Sans', sans-serif; font-weight: 900; color: #01375a; letter-spacing: -0.5px; -webkit-text-stroke: 1.5px #01375a; }
   .pagluz-page .card-divider { border: none; height: 3px; margin: 14px 0; }
-  .pagluz-page .card-left .card-divider { background-color: #cc0000; }
-  .pagluz-page .card-right .card-divider { background-color: #008000; }
+  .pagluz-page .card-left .card-divider { background-color: #ff0002; }
+  .pagluz-page .card-right .card-divider { background-color: #45a527; }
   .pagluz-page .economia-section { background-color: #01375a; border: 4px solid #01375a; border-radius: 0 0 14px 14px; }
-  .pagluz-page .economia-titulo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.35rem; font-weight: 900; font-style: italic; color: #fff; padding: 14px 20px; text-align: center; -webkit-text-stroke: 0.6px #fff; }
+  .pagluz-page .economia-titulo { font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 1.35rem; font-style: italic; color: #fff; padding: 14px 20px; text-align: center; -webkit-text-stroke: 0.6px #fff; }
   .pagluz-page .economia-rows { background-color: #fff; border-radius: 0 0 11px 11px; padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 12px; }
 `;
 
@@ -201,8 +201,8 @@ export default function SimulacaoEconomia() {
 
     const projectionsHtml = projections.map(p => `
       <div style="display:flex;align-items:center;gap:0;padding-right:1rem;margin-bottom:12px;">
-        <div style="background-color:#079841;color:#fff;font-weight:900;font-size:1.05rem;display:flex;align-items:center;justify-content:center;height:52px;width:100px;min-width:100px;text-align:center;border-radius:5px;position:relative;z-index:2;">${p.label}</div>
-        <div style="background-color:#01375a;color:#fff;font-size:1.4rem;font-weight:900;font-style:italic;display:flex;align-items:center;height:42px;padding:0 22px 0 40px;border-radius:8px;flex:1;margin-left:-20px;position:relative;z-index:1;">R$ ${formatNumber(p.valor)}</div>
+        <div style="background-color:#45a527;color:#fff;font-family:'Gotham Black', sans-serif;font-weight:900;font-size:1.05rem;display:flex;align-items:center;justify-content:center;height:52px;width:100px;min-width:100px;text-align:center;border-radius:5px;position:relative;z-index:2;">${p.label}</div>
+        <div style="background-color:#01375a;color:#fff;font-family:'Gotham Black', sans-serif;font-weight:900;font-size:1.4rem;font-style:italic;display:flex;align-items:center;height:42px;padding:0 22px 0 40px;border-radius:8px;flex:1;margin-left:-20px;position:relative;z-index:1;">R$ ${formatNumber(p.valor)}</div>
       </div>
     `).join('');
 
@@ -213,7 +213,7 @@ export default function SimulacaoEconomia() {
         <main>
           <h1 class="titulo">Quanto você pode economizar conosco?</h1>
           <div class="nome-cliente">Cliente: <span>${clientName}</span></div>
-          <div class="desconto">Desconto pretendido de: <span>${form.descontoPercent}%</span></div>
+          <div class="desconto">Desconto na energia injetada de: <span>${form.descontoPercent}%</span></div>
           <div class="cards-container">
             <div class="card-wrapper">
               <div class="tab">Sem a</div>
