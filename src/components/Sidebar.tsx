@@ -19,10 +19,12 @@ import {
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
+import { api } from '../types/services/api';
+import AvatarUpload from './common/AvatarUpload';
 
 interface SidebarProps {
-  currentView: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao';
-  onViewChange: (view: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao') => void;
+  currentView: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes';
+  onViewChange: (view: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes') => void;
   onWidthChange?: (width: number) => void;
 }
 
@@ -33,6 +35,18 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   const { user, logout, loading } = useAuth();
   const { isMobile } = useResponsive();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Sincronizar avatarUrl quando o objeto user mudar
+  useEffect(() => {
+    if (user) {
+      // Tenta pegar do objeto user (API) ou do cache local (fallback)
+      const cachedAvatar = localStorage.getItem(`pagluz_avatar_${user.id}`);
+      const userPhoto = (user as any).avatarUrl || (user as any).avatar || (user as any).fileUrl;
+      setAvatarUrl(userPhoto || cachedAvatar || null);
+    }
+  }, [user]);
 
   // Estados do redimensionamento (sincronizados se onWidthChange for suportado no App.tsx)
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -62,6 +76,49 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
     }
   };
 
+  const handleUploadAdminAvatar = async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      setAvatarUploading(true);
+      const res: any = await api.post('/users/me/avatar', formData);
+
+      // Tenta extrair a URL da resposta
+      const newUrl = res?.avatarUrl ?? res?.fileUrl ?? res?.url;
+
+      if (newUrl) {
+        setAvatarUrl(newUrl);
+        // Persiste localmente para o reload
+        if (user?.id) {
+          localStorage.setItem(`pagluz_avatar_${user.id}`, newUrl);
+        }
+      } else {
+        // Fallback para preview local
+        const localPreview = URL.createObjectURL(file);
+        setAvatarUrl(localPreview);
+      }
+    } catch {
+      // Falha silenciosa ou log
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAdminAvatar = async () => {
+    try {
+      setAvatarUploading(true);
+      await api.delete('/users/me/avatar');
+      setAvatarUrl(null);
+      if (user?.id) {
+        localStorage.removeItem(`pagluz_avatar_${user.id}`);
+      }
+    } catch {
+      // Falha
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const menuItems: Array<{ id: string; label: string; icon: any; view: any; description: string }> = [];
   menuItems.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, view: 'dashboard' as const, description: 'Visão geral' });
   menuItems.push({ id: 'contratos', label: 'Contratos', icon: FileText, view: 'contratos' as const, description: 'Documentos' });
@@ -75,15 +132,20 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   if (isOperatorPlus) {
     menuItems.push({ id: 'pendentes', label: 'Pendentes', icon: UserCheck, view: 'pendentes' as const, description: 'Aprovações' });
     menuItems.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas' as const, description: 'Alterações' });
+    menuItems.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes' as const, description: 'Propostas solicitadas' });
+
+    // Configurações e Comissões agora visíveis para ADMIN também
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+      menuItems.push({ id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes' as const, description: 'Ajustes do sistema' });
+      menuItems.push({ id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes' as const, description: 'Gestão de comissões' });
+    }
   }
   menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
   menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
 
   const superAdminMenuItems = [
     { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },
-    { id: 'logs', label: 'Auditoria', icon: Bell, view: 'logs' as const, description: 'Logs do sistema' },
-    { id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes' as const, description: 'Ajustes do sistema' },
-    { id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes' as const, description: 'Gestão de comissões' }
+    { id: 'logs', label: 'Auditoria', icon: Bell, view: 'logs' as const, description: 'Logs do sistema' }
   ];
 
   const roleLabel: Record<string, string> = {
@@ -204,12 +266,22 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         <div className="shrink-0 p-4 border-t border-white/10 bg-gradient-to-t from-black/20 to-transparent space-y-3">
           {/* Card User */}
           <div className={`rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm
-            ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}
+            ${isCollapsed ? 'p-1' : 'p-3'}`}
           >
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-              <div className="w-10 h-10 rounded-lg bg-white shadow-md flex items-center justify-center flex-shrink-0 text-accent font-bold">
-                {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-              </div>
+            <div className={`flex items-center ${isCollapsed ? 'flex-col gap-2' : 'gap-3'}`}>
+
+              {/* Componente de Upload unificado */}
+              <AvatarUpload
+                currentAvatarUrl={avatarUrl}
+                name={user?.name}
+                size={isCollapsed ? 48 : 44}
+                onUpload={handleUploadAdminAvatar}
+                onRemove={handleRemoveAdminAvatar}
+                disabled={avatarUploading}
+                hideButtons={true}
+                className={isCollapsed ? 'scale-75 origin-top' : ''}
+              />
+
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">
@@ -218,6 +290,18 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
                   <p className="text-xs text-blue-100/80 font-medium truncate">
                     {roleLabel[userRole] || 'Usuário'}
                   </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      // Busca o input dentro do mesmo card de perfil
+                      const card = e.currentTarget.closest('.rounded-xl');
+                      const input = card?.querySelector('input[type="file"]') as HTMLInputElement;
+                      input?.click();
+                    }}
+                    className="text-[10px] text-blue-200/60 hover:text-blue-100 transition-colors mt-0.5 leading-tight block"
+                  >
+                    Alterar foto
+                  </button>
                 </div>
               )}
             </div>

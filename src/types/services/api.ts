@@ -10,8 +10,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  // Só definir Content-Type quando houver body (POST/PUT/PATCH)
-  const contentTypeHeader = options.body ? { 'Content-Type': 'application/json' } : {};
+  // Só definir Content-Type quando houver body (POST/PUT/PATCH) e quando não for FormData
+  const isFormData = options.body instanceof FormData;
+  const contentTypeHeader = options.body && !isFormData ? { 'Content-Type': 'application/json' } : {};
 
   const headers = {
     ...baseHeaders,
@@ -69,15 +70,15 @@ export const api = {
   get: (endpoint: string) => apiRequest(endpoint),
   post: (endpoint: string, data: any) => apiRequest(endpoint, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data instanceof FormData ? data : JSON.stringify(data),
   }),
   put: (endpoint: string, data: any) => apiRequest(endpoint, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: data instanceof FormData ? data : JSON.stringify(data),
   }),
   patch: (endpoint: string, data: any) => apiRequest(endpoint, {
     method: 'PATCH',
-    body: JSON.stringify(data),
+    body: data instanceof FormData ? data : JSON.stringify(data),
   }),
   delete: (endpoint: string) => apiRequest(endpoint, {
     method: 'DELETE',

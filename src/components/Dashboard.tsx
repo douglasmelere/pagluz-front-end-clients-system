@@ -24,6 +24,7 @@ import { ConsumerStatus } from '../types';
 import { api } from '../types/services/api';
 import { useToast } from '../hooks/useToast';
 import { useNavigation } from '../hooks/useNavigation';
+import AdminNotificationsBell from './admin/AdminNotificationsBell';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -351,6 +352,7 @@ export default function Dashboard() {
             <p className="text-sm text-slate-500 font-medium">Visão geral do sistema</p>
           </div>
           <div className="flex gap-2 sm:gap-3">
+            <AdminNotificationsBell />
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="h-9 sm:h-10 rounded-xl border border-slate-200 bg-white px-3 sm:px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 flex items-center gap-2"

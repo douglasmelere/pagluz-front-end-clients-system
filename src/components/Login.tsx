@@ -5,6 +5,7 @@ import LoadingSpinner from './common/LoadingSpinner';
 import { Eye, EyeOff, User, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { validateEmail, sanitizeInput } from '../utils/security';
+import Toast from './common/Toast';
 
 export default function Login() {
   const { login, loading: authLoading } = useApp();
@@ -163,6 +164,18 @@ export default function Login() {
       </div>
 
       {authLoading && <LoadingSpinner />}
+
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+        {toast.toasts.map((t) => (
+          <div key={t.id} className="pointer-events-auto">
+            <Toast
+              type={t.type}
+              message={t.message}
+              onClose={() => toast.removeToast(t.id)}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

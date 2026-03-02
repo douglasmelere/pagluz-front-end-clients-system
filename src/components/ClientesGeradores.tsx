@@ -34,9 +34,10 @@ export default function ClientesGeradores() {
     ...g,
     statusReal: getStatusReal(g, g.porcentagemAlocada)
   })).filter(c => {
-    const searchMatch = c.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.cpfCnpj.includes(searchTerm) ||
-      c.city.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const searchMatch = (c.ownerName || '').toLowerCase().includes(searchLower) ||
+      (c.cpfCnpj || '').includes(searchTerm) ||
+      (c.city || '').toLowerCase().includes(searchLower);
     const statusMatch = filters.status === 'todos' || c.statusReal === filters.status;
     const sourceMatch = filters.sourceType === 'todos' || c.sourceType === filters.sourceType;
     return searchMatch && statusMatch && sourceMatch;

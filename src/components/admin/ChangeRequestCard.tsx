@@ -64,22 +64,22 @@ export default function ChangeRequestCard({ change, onApprove, onReject }: Chang
       <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-slate-900 mb-1">{change.consumer.name}</h3>
-            <div className="flex items-center space-x-4 text-sm text-slate-600">
-              <span>CPF/CNPJ: {change.consumer.cpfCnpj}</span>
-              <span>UC: {change.consumer.ucNumber}</span>
+            <h3 className="text-xl font-display font-bold text-slate-900 mb-1 leading-tight">{change.consumer.name}</h3>
+            <div className="flex items-center space-x-4 text-sm text-slate-500 font-medium">
+              <span>CPF/CNPJ: <span className="text-slate-700 font-semibold">{change.consumer.cpfCnpj}</span></span>
+              <span>UC: <span className="text-slate-700 font-semibold">{change.consumer.ucNumber}</span></span>
             </div>
-            <div className="mt-2 text-sm text-slate-500">
+            <div className="mt-2 text-sm text-slate-500 font-medium">
               <span>Representante: </span>
-              <span className="font-semibold text-slate-700">{change.representative.name}</span>
+              <span className="font-bold text-accent font-display">{change.representative.name}</span>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusBadge.class}`}>
-              <statusBadge.icon className="h-3 w-3 mr-1" />
-              {statusBadge.text}
+            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold font-display border shadow-sm ${statusBadge.class}`}>
+              <statusBadge.icon className="h-3.5 w-3.5 mr-1.5" />
+              {statusBadge.text.toUpperCase()}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs font-semibold text-slate-400 font-display bg-slate-100 px-2 py-1 rounded-md">
               {new Date(change.requestedAt).toLocaleDateString('pt-BR')}
             </span>
           </div>
@@ -87,14 +87,17 @@ export default function ChangeRequestCard({ change, onApprove, onReject }: Chang
       </div>
 
       {/* Campos Alterados */}
-      <div className="px-6 py-4">
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-slate-700 mb-2">Campos Alterados:</h4>
+      <div className="px-6 py-5">
+        <div className="mb-6">
+          <h4 className="text-sm font-display font-bold text-slate-800 mb-3 flex items-center">
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
+            Campos Alterados:
+          </h4>
           <div className="flex flex-wrap gap-2">
             {change.changedFields.map((field) => (
               <span
                 key={field}
-                className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200"
+                className="px-3 py-1.5 bg-blue-50/80 text-blue-700 rounded-xl text-xs font-bold font-display border border-blue-100 shadow-sm hover:bg-blue-100 transition-colors"
               >
                 {translateField(field)}
               </span>
@@ -104,27 +107,30 @@ export default function ChangeRequestCard({ change, onApprove, onReject }: Chang
 
         {/* Comparação Antes/Depois */}
         {showDetails && (
-          <div className="mt-4 border-t border-slate-200 pt-4">
-            <h4 className="text-sm font-semibold text-slate-700 mb-3">Comparação de Valores:</h4>
+          <div className="mt-6 border-t border-slate-100 pt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <h4 className="text-sm font-display font-bold text-slate-800 mb-4 flex items-center">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></span>
+              Comparação de Valores:
+            </h4>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-slate-50">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-700 border border-slate-200">Campo</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-700 border border-slate-200 bg-yellow-50">Valor Anterior</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-700 border border-slate-200 bg-green-50">Novo Valor</th>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-600 border border-slate-100 font-display uppercase tracking-wider">Campo</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-yellow-800 border border-slate-100 bg-yellow-50/50 font-display uppercase tracking-wider">Valor Anterior</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-emerald-800 border border-slate-100 bg-emerald-50/30 font-display uppercase tracking-wider">Novo Valor</th>
                   </tr>
                 </thead>
                 <tbody>
                   {change.changedFields.map((field) => (
-                    <tr key={field} className="hover:bg-slate-50">
-                      <td className="px-4 py-2 text-sm font-medium text-slate-900 border border-slate-200">
+                    <tr key={field} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-5 py-3 text-sm font-bold text-slate-900 border border-slate-100 font-display bg-slate-50/30">
                         {translateField(field)}
                       </td>
-                      <td className="px-4 py-2 text-sm text-slate-700 border border-slate-200 bg-yellow-50">
+                      <td className="px-5 py-3 text-sm font-medium text-slate-600 border border-slate-100 bg-yellow-50/30">
                         {formatValue(change.oldValues[field])}
                       </td>
-                      <td className="px-4 py-2 text-sm text-slate-700 border border-slate-200 bg-green-50">
+                      <td className="px-5 py-3 text-sm font-bold text-emerald-700 border border-slate-100 bg-emerald-50/20">
                         {formatValue(change.newValues[field])}
                       </td>
                     </tr>
@@ -137,36 +143,39 @@ export default function ChangeRequestCard({ change, onApprove, onReject }: Chang
 
         {/* Motivo da Rejeição */}
         {change.status === ChangeRequestStatus.REJECTED && change.rejectionReason && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-red-800 mb-1">Motivo da Rejeição:</h4>
-            <p className="text-sm text-red-700">{change.rejectionReason}</p>
+          <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+            <h4 className="text-sm font-display font-bold text-red-800 mb-1 flex items-center">
+              <XCircle className="h-4 w-4 mr-2" />
+              Motivo da Rejeição:
+            </h4>
+            <p className="text-sm text-red-700 font-medium pl-6">{change.rejectionReason}</p>
           </div>
         )}
       </div>
 
       {/* Ações */}
       {change.status === ChangeRequestStatus.PENDING && (
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center space-x-2 px-4 py-2 text-slate-700 bg-white hover:bg-slate-100 rounded-lg transition-colors border border-slate-300"
+            className="flex items-center space-x-2 px-5 py-2.5 text-slate-600 bg-white hover:bg-slate-50 rounded-xl transition-all font-display font-bold text-sm border border-slate-200 shadow-sm hover:shadow-md"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4.5 w-4.5" />
             <span>{showDetails ? 'Ocultar Detalhes' : 'Ver Detalhes'}</span>
           </button>
           <div className="flex items-center space-x-3">
             <button
               onClick={onApprove}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-xl transition-all duration-300 font-display font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5"
             >
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="h-4.5 w-4.5" />
               <span>Aprovar</span>
             </button>
             <button
               onClick={() => setShowRejectModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-xl transition-all duration-300 font-display font-bold text-sm shadow-lg shadow-red-500/20 hover:shadow-red-500/40 hover:-translate-y-0.5"
             >
-              <XCircle className="h-4 w-4" />
+              <XCircle className="h-4.5 w-4.5" />
               <span>Rejeitar</span>
             </button>
           </div>

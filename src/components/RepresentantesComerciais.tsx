@@ -24,6 +24,7 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import Badge from './ui/Badge';
 import Modal, { ModalFooter } from './ui/Modal';
+import AvatarUpload from './common/AvatarUpload';
 
 export default function RepresentantesComerciais() {
   const {
@@ -51,6 +52,39 @@ export default function RepresentantesComerciais() {
     state: '',
     specialization: ''
   });
+
+  // Mapa de avatarUrl por id (para atualização local sem reload)
+  const [avatarUrls, setAvatarUrls] = useState<Record<string, string | null>>({});
+
+  const getAvatarUrl = (rep: Representative): string | null =>
+    avatarUrls[rep.id] !== undefined
+      ? avatarUrls[rep.id]
+      : (rep as any).avatarUrl ?? null;
+
+  const handleUploadRepresentanteAvatar = async (file: File, representativeId: string) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      const res: any = await api.post(`/representatives/${representativeId}/avatar`, formData);
+      const newUrl = res?.avatarUrl ?? res?.url ?? null;
+      setAvatarUrls(prev => ({ ...prev, [representativeId]: newUrl }));
+      showSuccess('Foto do representante atualizada!');
+    } catch (err: any) {
+      showError(err?.message ?? 'Erro ao enviar foto');
+      throw err;
+    }
+  };
+
+  const handleRemoveRepresentanteAvatar = async (representativeId: string) => {
+    try {
+      await api.delete(`/representatives/${representativeId}/avatar`);
+      setAvatarUrls(prev => ({ ...prev, [representativeId]: null }));
+      showSuccess('Foto removida.');
+    } catch (err: any) {
+      showError(err?.message ?? 'Erro ao remover foto');
+      throw err;
+    }
+  };
 
   const [formData, setFormData] = useState<RepresentanteComercialCreate>({
     name: '',
@@ -95,9 +129,9 @@ export default function RepresentantesComerciais() {
   const filteredRepresentantes = representativesData.filter(rep => {
     const searchLower = filters.search.toLowerCase();
     const searchMatch = !filters.search ||
-      rep.name.toLowerCase().includes(searchLower) ||
-      rep.email.toLowerCase().includes(searchLower) ||
-      (rep.cpfCnpj && rep.cpfCnpj.includes(searchLower));
+      (rep.name || '').toLowerCase().includes(searchLower) ||
+      (rep.email || '').toLowerCase().includes(searchLower) ||
+      (rep.cpfCnpj || '').includes(searchLower);
 
     const statusMatch = !filters.status || rep.status === filters.status;
     const stateMatch = !filters.state || rep.state === filters.state;
@@ -436,7 +470,6 @@ export default function RepresentantesComerciais() {
                   <th className="px-6 py-4 whitespace-nowrap">Representante</th>
                   <th className="px-6 py-4 whitespace-nowrap">Contato</th>
                   <th className="px-6 py-4 whitespace-nowrap">Localização</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Comissão</th>
                   <th className="px-6 py-4 whitespace-nowrap">Status</th>
                   <th className="px-6 py-4 whitespace-nowrap text-right">Ações</th>
                 </tr>
@@ -446,9 +479,28 @@ export default function RepresentantesComerciais() {
                   <tr key={representante.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm ring-2 ring-white">
-                          {representante.name.charAt(0)}
-                        </div>
+                        {/* Avatar com foto real ou inicial - Clicável para abrir edição */}
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(representante)}
+                          className="relative group/rep-avatar w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow flex items-center justify-center bg-gradient-to-br from-indigo-400 to-indigo-600 text-white font-bold text-sm flex-shrink-0 transition-transform hover:scale-105"
+                          title="Clique para editar foto"
+                        >
+                          {getAvatarUrl(representante) ? (
+                            <img
+                              src={getAvatarUrl(representante)!}
+                              alt={representante.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            representante.name.charAt(0)
+                          )}
+
+                          {/* Overlay discreto no hover */}
+                          <div className="absolute inset-0 bg-black/0 group-hover/rep-avatar:bg-black/20 flex items-center justify-center opacity-0 group-hover/rep-avatar:opacity-100 transition-all">
+                            <Edit className="h-3 w-3 text-white" />
+                          </div>
+                        </button>
                         <div>
                           <p className="font-medium text-slate-900 font-display">{representante.name}</p>
                           <p className="text-xs text-slate-500 font-mono mt-0.5">{representante.cpfCnpj}</p>
@@ -467,10 +519,6 @@ export default function RepresentantesComerciais() {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
                         {representante.city} - {representante.state}
                       </span>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <span className="text-slate-400 text-xs italic">N/A</span>
                     </td>
 
                     <td className="px-6 py-4">
@@ -530,6 +578,26 @@ export default function RepresentantesComerciais() {
         headerVariant="brand"
       >
         <form id="representative-form" onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Foto do representante — visível apenas ao editar */}
+          {editingRepresentante && (
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-slate-100">
+              <AvatarUpload
+                currentAvatarUrl={getAvatarUrl(editingRepresentante)}
+                name={editingRepresentante.name}
+                size={88}
+                onUpload={(file) => handleUploadRepresentanteAvatar(file, editingRepresentante.id)}
+                onRemove={() => handleRemoveRepresentanteAvatar(editingRepresentante.id)}
+              />
+              <div className="flex flex-col justify-center gap-1 text-center sm:text-left">
+                <p className="font-semibold text-slate-800 font-display">{editingRepresentante.name}</p>
+                <p className="text-sm text-slate-500 font-display">{editingRepresentante.email}</p>
+                <p className="text-xs text-slate-400 mt-1 font-display">
+                  Clique na foto ou no botão para alterar / remover.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               label="Nome Completo"

@@ -15,12 +15,13 @@ import ConfiguracoesSistema from './components/ConfiguracoesSistema';
 import GestaoComissoes from './components/GestaoComissoes';
 import SimulacaoEconomia from './components/SimulacaoEconomia';
 import PendingChanges from './components/admin/PendingChanges';
+import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
 import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -94,6 +95,8 @@ function AppContent() {
         return <PendingChanges />;
       case 'simulacao':
         return <SimulacaoEconomia />;
+      case 'solicitacoes':
+        return <ProposalRequestsAdmin />;
       default:
         return <Dashboard />;
     }

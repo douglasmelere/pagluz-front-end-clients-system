@@ -218,8 +218,8 @@ export default function PendingConsumers() {
           </h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="block text-xs text-slate-500 uppercase tracking-wider font-semibold">Nome</span>
-              <span className="text-slate-900 font-medium">{consumer.name}</span>
+              <span className="block text-xs text-slate-500 uppercase tracking-wider font-bold font-display italic">Nome</span>
+              <span className="text-slate-900 font-bold font-display text-base">{consumer.name}</span>
             </div>
             <div>
               <span className="block text-xs text-slate-500 uppercase tracking-wider font-semibold">Documento</span>
@@ -235,8 +235,8 @@ export default function PendingConsumers() {
             </div>
             {consumer.Representative && (
               <div className="col-span-2">
-                <span className="block text-xs text-slate-500 uppercase tracking-wider font-semibold">Representante</span>
-                <span className="text-slate-900 font-medium">{consumer.Representative.name}</span>
+                <span className="block text-xs text-slate-500 uppercase tracking-wider font-bold font-display italic">Representante</span>
+                <span className="text-accent font-bold font-display">{consumer.Representative.name}</span>
               </div>
             )}
           </div>
@@ -269,7 +269,7 @@ export default function PendingConsumers() {
 
         {commission ? (
           <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-5">
-            <h4 className="font-medium text-emerald-800 mb-4 flex items-center">
+            <h4 className="font-bold text-emerald-800 mb-4 flex items-center font-display">
               <DollarSign className="h-5 w-5 mr-2" />
               Cálculo de Comissão
             </h4>
@@ -458,8 +458,8 @@ export default function PendingConsumers() {
                     <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-900">{c.name}</span>
-                          <span className="text-xs text-slate-500 font-mono">{c.cpfCnpj}</span>
+                          <span className="font-bold text-slate-900 font-display text-base">{c.name}</span>
+                          <span className="text-xs text-slate-500 font-mono font-medium">{c.cpfCnpj}</span>
                           <span className="text-xs text-slate-400 mt-1 flex items-center">
                             <Clock className="h-3 w-3 mr-1" />
                             {new Date(c.createdAt).toLocaleDateString('pt-BR')}
@@ -477,8 +477,8 @@ export default function PendingConsumers() {
                       <td className="px-6 py-4">
                         {c.Representative ? (
                           <div className="flex flex-col">
-                            <span className="text-slate-900 font-medium">{c.Representative.name}</span>
-                            <span className="text-xs text-slate-500">{c.Representative.email}</span>
+                            <span className="text-slate-900 font-bold font-display">{c.Representative.name}</span>
+                            <span className="text-xs text-slate-500 font-medium">{c.Representative.email}</span>
                           </div>
                         ) : (
                           <span className="text-slate-400 italic text-xs">Sem vínculo</span>

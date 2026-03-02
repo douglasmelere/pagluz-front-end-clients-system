@@ -47,6 +47,31 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import Button from './ui/Button';
 
+// Funções auxiliares movidas para o topo para evitar erros de inicialização
+const getGeneratorName = (generatorId: string, geradoresList: Generator[]) => {
+  if (!generatorId || !geradoresList) return 'N/A';
+  const gerador = geradoresList.find(g => g.id === generatorId);
+  return (gerador?.ownerName) || (gerador ? 'ID sem nome' : 'ID não encontrado');
+};
+
+const renderGeneratorIcon = (sourceType: string, className: string) => {
+  const normalizedType = (sourceType || '').toUpperCase().trim();
+  switch (normalizedType) {
+    case 'SOLAR':
+      return <Sun className={className} />;
+    case 'WIND':
+      return <Wind className={className} />;
+    case 'HYDRO':
+    case 'HIDRO':
+      return <Droplet className={className} />;
+    case 'BIOMASS':
+    case 'BIOMASSA':
+      return <Leaf className={className} />;
+    default:
+      return <Factory className={className} />;
+  }
+};
+
 export default function ClientesConsumidores() {
   const toast = useToast();
   const {
@@ -140,9 +165,9 @@ export default function ClientesConsumidores() {
   const filteredClientes = (clientesConsumidores || []).filter(cliente => {
     const searchLower = searchTerm.toLowerCase();
     const searchMatch = !searchTerm ||
-      cliente.name.toLowerCase().includes(searchLower) ||
-      cliente.cpfCnpj.includes(searchTerm) ||
-      cliente.city?.toLowerCase().includes(searchLower) ||
+      (cliente.name || '').toLowerCase().includes(searchLower) ||
+      (cliente.cpfCnpj || '').includes(searchTerm) ||
+      (cliente.city || '').toLowerCase().includes(searchLower) ||
       getGeneratorName(cliente.generatorId || '', geradores).toLowerCase().includes(searchLower);
 
     const statusMatch = filterStatus === 'todos' || cliente.status === filterStatus;
@@ -265,29 +290,7 @@ export default function ClientesConsumidores() {
     }
   };
 
-  const getGeneratorName = (generatorId: string, geradoresList: Generator[]) => {
-    if (!generatorId || !geradoresList) return 'N/A';
-    const gerador = geradoresList.find(g => g.id === generatorId);
-    return gerador ? gerador.ownerName : 'ID não encontrado';
-  };
 
-  const renderGeneratorIcon = (sourceType: string, className: string) => {
-    const normalizedType = (sourceType || '').toUpperCase().trim();
-    switch (normalizedType) {
-      case 'SOLAR':
-        return <Sun className={className} />;
-      case 'WIND':
-        return <Wind className={className} />;
-      case 'HYDRO':
-      case 'HIDRO':
-        return <Droplet className={className} />;
-      case 'BIOMASS':
-      case 'BIOMASSA':
-        return <Leaf className={className} />;
-      default:
-        return <Factory className={className} />;
-    }
-  };
 
 
 

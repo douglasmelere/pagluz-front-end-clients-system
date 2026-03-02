@@ -9,6 +9,7 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import Modal, { ModalFooter } from './ui/Modal';
 import LoadingSpinner from './common/LoadingSpinner';
+import AvatarUpload from './common/AvatarUpload';
 
 export default function UsuariosSistema() {
   const [users, setUsers] = useState<UserType[]>([]);
@@ -241,8 +242,20 @@ export default function UsuariosSistema() {
                     <tr key={userItem.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm ring-2 ring-white">
-                            {userItem.name.charAt(0).toUpperCase()}
+                          <div
+                            className="relative group/avatar cursor-pointer"
+                            onClick={() => handleEdit(userItem)}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm ring-2 ring-white overflow-hidden transition-transform group-hover/avatar:scale-110 group-hover/avatar:ring-accent/30">
+                              {userItem.avatarUrl ? (
+                                <img src={userItem.avatarUrl} alt={userItem.name} className="w-full h-full object-cover" />
+                              ) : (
+                                userItem.name.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
+                              <Edit className="w-3 h-3 text-white" />
+                            </div>
                           </div>
                           <div>
                             <p className="font-medium text-slate-900 font-display">{userItem.name}</p>
@@ -260,8 +273,8 @@ export default function UsuariosSistema() {
 
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${userItem.isActive === true || userItem.isActive === undefined
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-red-50 text-red-700 border border-red-200'
                           }`}>
                           {(userItem.isActive === true || userItem.isActive === undefined) ? (
                             <>
@@ -323,6 +336,54 @@ export default function UsuariosSistema() {
         size="md"
         headerVariant="brand"
       >
+        {editingUser && (
+          <div className="flex justify-center mb-8 pt-2">
+            <AvatarUpload
+              currentAvatarUrl={editingUser.avatarUrl}
+              name={editingUser.name}
+              size={120}
+              onUpload={async (file: File) => {
+                const formData = new FormData();
+                formData.append('avatar', file);
+                try {
+                  const res = await api.post(`/users/${editingUser.id}/avatar`, formData);
+                  const newAvatarUrl = res.avatarUrl || res.url;
+
+                  // Atualiza o estado local do usuário sendo editado
+                  setEditingUser({ ...editingUser, avatarUrl: newAvatarUrl });
+
+                  // Atualiza a lista geral
+                  setUsers(users.map(u => u.id === editingUser.id ? { ...u, avatarUrl: newAvatarUrl } : u));
+
+                  // Se for o próprio usuário logado, atualiza o cache local
+                  if (user?.id === editingUser.id) {
+                    localStorage.setItem(`pagluz_avatar_${user.id}`, newAvatarUrl);
+                  }
+
+                  showSuccess('Foto atualizada!');
+                } catch (err: any) {
+                  showError(err.message || 'Erro ao carregar foto');
+                }
+              }}
+              onRemove={async () => {
+                try {
+                  await api.delete(`/users/${editingUser.id}/avatar`);
+                  setEditingUser({ ...editingUser, avatarUrl: null });
+                  setUsers(users.map(u => u.id === editingUser.id ? { ...u, avatarUrl: null } : u));
+
+                  if (user?.id === editingUser.id) {
+                    localStorage.removeItem(`pagluz_avatar_${user.id}`);
+                  }
+
+                  showSuccess('Foto removida');
+                } catch (err: any) {
+                  showError(err.message || 'Erro ao remover foto');
+                }
+              }}
+            />
+          </div>
+        )}
+
         <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
           <Input
             label="Nome"

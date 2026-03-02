@@ -17,23 +17,72 @@ import {
 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { useToast } from '../hooks/useToast';
+import { useApp } from '../context/AppContext';
+import { api } from '../types/services/api';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import LoadingSpinner from './common/LoadingSpinner';
+import AvatarUpload from './common/AvatarUpload';
 
 export default function ConfiguracoesSistema() {
   const { kwhPrice, kwhPriceHistory, systemStats, loading, error, setKwhPriceValue, fetchKwhPriceHistory,
     fioBPercentage, fioBHistory, fioBError, setFioBPercentageValue, fetchFioBHistory
   } = useSettings();
   const toast = useToast();
+  const { user } = useApp();
   const [newPrice, setNewPrice] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState<string | null>(null);
+
+  // Sincronizar avatarUrl quando o objeto user mudar
+  useEffect(() => {
+    if (user) {
+      const cachedAvatar = localStorage.getItem(`pagluz_avatar_${user.id}`);
+      const userPhoto = (user as any).avatarUrl || (user as any).avatar || (user as any).fileUrl;
+      setAdminAvatarUrl(userPhoto || cachedAvatar || null);
+    }
+  }, [user]);
 
   // Fio B states
   const [newFioB, setNewFioB] = useState('');
   const [showFioBHistory, setShowFioBHistory] = useState(false);
   const [updatingFioB, setUpdatingFioB] = useState(false);
+
+  // --- Avatar handlers ---
+  const handleUploadAdminAvatar = async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      const res: any = await api.post('/users/me/avatar', formData);
+      const newUrl = res?.avatarUrl ?? res?.fileUrl ?? res?.url;
+
+      if (newUrl) {
+        setAdminAvatarUrl(newUrl);
+        if (user?.id) {
+          localStorage.setItem(`pagluz_avatar_${user.id}`, newUrl);
+        }
+      }
+      toast.showSuccess('Foto de perfil atualizada com sucesso!');
+    } catch (err: any) {
+      toast.showError(err?.message ?? 'Erro ao enviar foto de perfil');
+      throw err;
+    }
+  };
+
+  const handleRemoveAdminAvatar = async () => {
+    try {
+      await api.delete('/users/me/avatar');
+      setAdminAvatarUrl(null);
+      if (user?.id) {
+        localStorage.removeItem(`pagluz_avatar_${user.id}`);
+      }
+      toast.showSuccess('Foto de perfil removida.');
+    } catch (err: any) {
+      toast.showError(err?.message ?? 'Erro ao remover foto de perfil');
+      throw err;
+    }
+  };
 
   useEffect(() => {
     if (kwhPrice != null) {
@@ -132,6 +181,30 @@ export default function ConfiguracoesSistema() {
       </header>
 
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Minha Foto de Perfil */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center font-display">
+            <User className="h-6 w-6 mr-3 text-indigo-600" />
+            Minha Foto de Perfil
+          </h3>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <AvatarUpload
+              currentAvatarUrl={adminAvatarUrl}
+              name={user?.name}
+              size={100}
+              onUpload={handleUploadAdminAvatar}
+              onRemove={handleRemoveAdminAvatar}
+            />
+            <div className="flex flex-col justify-center gap-1 text-center sm:text-left">
+              <p className="font-semibold text-slate-800 font-display text-lg">{user?.name ?? 'Administrador'}</p>
+              <p className="text-sm text-slate-500 font-display">{user?.email ?? ''}</p>
+              <p className="text-xs text-slate-400 mt-2 font-display max-w-xs">
+                A foto é exibida no painel e pode ser alterada a qualquer momento.
+                Formatos aceitos: JPG, PNG, WebP.
+              </p>
+            </div>
+          </div>
+        </div>
         {/* Valor Atual do kWh */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
           <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center font-display">

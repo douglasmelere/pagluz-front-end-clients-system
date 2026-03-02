@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export interface ModalProps {
@@ -22,6 +23,13 @@ const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
   headerVariant = 'default'
 }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   const sizeClasses = {
     sm: 'max-w-md',
     md: 'max-w-lg',
@@ -30,12 +38,12 @@ const Modal: React.FC<ModalProps> = ({
     full: 'max-w-7xl'
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const headerBaseClasses = "flex items-start justify-between p-6 transition-colors";
   const headerVariantClasses = headerVariant === 'brand'
     ? "bg-gradient-to-r from-accent to-accent-secondary text-white rounded-t-2xl"
-    : "bg-card text-foreground border-b border-border rounded-t-2xl"; // Added rounded-t-2xl to match modal
+    : "bg-card text-foreground border-b border-border rounded-t-2xl";
 
   const closeButtonClasses = headerVariant === 'brand'
     ? "text-white/80 hover:text-white hover:bg-white/20"
@@ -45,17 +53,17 @@ const Modal: React.FC<ModalProps> = ({
     ? "text-blue-100"
     : "text-muted-foreground";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in pointer-events-none">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-foreground/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-foreground/50 backdrop-blur-sm pointer-events-auto"
         onClick={onClose}
       />
 
-      {/* Modal */}
+      {/* Modal Container */}
       <div
-        className={`relative bg-card rounded-2xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col animate-scale-in`}
+        className={`relative bg-card rounded-2xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col animate-scale-in pointer-events-auto`}
       >
         {/* Header */}
         {(title || showCloseButton) && (
@@ -90,6 +98,8 @@ const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export const ModalFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({

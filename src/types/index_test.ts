@@ -107,7 +107,6 @@ export interface User {
   documentUrl?: string;
   proposalFileUrl?: string;
   updatedAt: string;
-  avatarUrl?: string | null;
 }
 
 // Interfaces de Representantes
@@ -136,7 +135,6 @@ export interface Representative {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  avatarUrl?: string | null;
   lastLoginAt: string | null;
   loginCount: number;
   _count: {

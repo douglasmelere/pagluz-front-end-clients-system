@@ -95,9 +95,9 @@ export default function GestaoComissoes() {
   const filteredCommissions = commissions.filter(commission => {
     // Busca tridimensional
     const searchMatch = !searchTerm || (
-      commission.representative?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      commission.consumer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      commission.consumer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      (commission.representative?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (commission.consumer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (commission.consumer?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const repMatch = !filterRepresentative || commission.representative?.id === filterRepresentative;
