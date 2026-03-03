@@ -119,121 +119,145 @@ function UploadModal({ open, onClose, onSuccess }: UploadModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[4000] flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
+
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-accent/5 to-transparent">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-accent/10 rounded-xl">
+            <div className="p-2.5 bg-accent/10 rounded-xl">
               <Upload className="h-5 w-5 text-accent" />
             </div>
-            <h2 className="text-xl font-display font-bold text-slate-900">Novo Material</h2>
+            <div>
+              <h2 className="text-xl font-display font-bold text-slate-900 leading-tight">Novo Material</h2>
+              <p className="text-xs text-slate-500 font-medium">Preencha os dados do arquivo</p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            aria-label="Fechar"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Dropzone */}
-          <div
-            className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${dragOver ? 'border-accent bg-accent/5' : 'border-slate-200 hover:border-accent/50 hover:bg-slate-50'}`}
-            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              className="hidden"
-              accept=".pdf,.ppt,.pptx,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4"
-              onChange={e => setFile(e.target.files?.[0] ?? null)}
-            />
-            {file ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="p-3 bg-accent/10 rounded-xl">
-                  <FileText className="h-8 w-8 text-accent" />
+        {/* Body - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Dropzone */}
+            <div
+              className={`group border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragOver
+                  ? 'border-accent bg-accent/5 ring-4 ring-accent/10'
+                  : 'border-slate-200 hover:border-accent/40 hover:bg-slate-50'
+                }`}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => inputRef.current?.click()}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.ppt,.pptx,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4"
+                onChange={e => setFile(e.target.files?.[0] ?? null)}
+              />
+              {file ? (
+                <div className="flex flex-col items-center gap-3 animate-scale-up">
+                  <div className="p-4 bg-accent/10 rounded-2xl shadow-inner">
+                    <FileText className="h-10 w-10 text-accent" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-slate-900 text-sm truncate max-w-[300px]">{file.name}</p>
+                    <p className="text-xs text-slate-500 font-medium">{formatSize(file.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                    className="text-xs font-bold text-rose-500 hover:text-rose-600 hover:underline"
+                  >
+                    Remover e escolher outro
+                  </button>
                 </div>
-                <p className="font-medium text-slate-900 text-sm truncate max-w-full">{file.name}</p>
-                <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-4 bg-slate-50 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                    <Upload className="h-10 w-10 text-slate-300 group-hover:text-accent/50" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-700">Escolha um arquivo</p>
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed">Arraste aqui ou clique para buscar<br />PDF, PPT, XLS, DOC, fotos ou vídeos</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Inputs Grid */}
+            <div className="grid grid-cols-1 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-display">Título do Material *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="Ex: Apresentação Comercial Q1 2025"
+                  required
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-accent/10 focus:border-accent text-slate-900 placeholder:text-slate-400 transition-all outline-none text-sm font-medium"
+                />
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="p-3 bg-slate-100 rounded-xl">
-                  <Upload className="h-8 w-8 text-slate-400" />
-                </div>
-                <p className="text-sm font-medium text-slate-700">Arraste um arquivo ou clique para selecionar</p>
-                <p className="text-xs text-slate-400">PDF, PPT, XLS, DOC, imagens e vídeos</p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-display">Categoria</label>
+                <select
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-accent/10 focus:border-accent text-slate-900 transition-all outline-none text-sm font-medium bg-white appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione uma categoria...</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-display">Descrição (opcional)</label>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Descreva para que serve este material..."
+                  rows={3}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-accent/10 focus:border-accent text-slate-900 placeholder:text-slate-400 transition-all outline-none text-sm font-medium resize-none"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-sm animate-shake">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <p className="font-medium">{error}</p>
               </div>
             )}
-          </div>
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-display">Título *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Ex: Apresentação Comercial Q1 2025"
-              required
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent text-slate-900 placeholder:text-slate-400 transition-all outline-none text-sm"
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-display">Categoria</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent text-slate-900 transition-all outline-none text-sm bg-white"
-            >
-              <option value="">Selecione uma categoria</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-display">Descrição</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Descreva para que serve este material..."
-              rows={3}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent text-slate-900 placeholder:text-slate-400 transition-all outline-none text-sm resize-none"
-            />
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              {error}
-            </div>
-          )}
-        </form>
+          </form>
+        </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors text-sm"
+            className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-all text-sm active:scale-95"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit as any}
             disabled={loading || !file || !title.trim()}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-accent text-white font-semibold rounded-xl hover:bg-accent-secondary transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2.5 px-6 py-2.5 bg-accent text-white font-bold rounded-xl hover:bg-accent-secondary shadow-lg shadow-accent/20 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            {loading ? 'Enviando...' : 'Enviar Material'}
+            {loading ? 'Enviando arquivo...' : 'Salvar e Enviar'}
           </button>
         </div>
       </div>
