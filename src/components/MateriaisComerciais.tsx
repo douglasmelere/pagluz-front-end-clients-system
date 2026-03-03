@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FolderOpen,
   Upload,
@@ -119,7 +120,7 @@ function UploadModal({ open, onClose, onSuccess }: UploadModalProps) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop - cobre 100% da viewport sem nenhum padding */}
       <div
@@ -277,7 +278,7 @@ function UploadModal({ open, onClose, onSuccess }: UploadModalProps) {
         </div>
       </div>
     </>
-  );
+    , document.body);
 }
 
 

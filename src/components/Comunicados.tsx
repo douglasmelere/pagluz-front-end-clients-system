@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Megaphone,
   Plus,
@@ -109,7 +110,7 @@ function CreateModal({ open, onClose, onSuccess }: CreateModalProps) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop - cobre 100% da viewport sem nenhum padding */}
       <div
@@ -269,7 +270,7 @@ function CreateModal({ open, onClose, onSuccess }: CreateModalProps) {
         </div>
       </div>
     </>
-  );
+    , document.body);
 }
 
 // ─── Read List (expandable) ───────────────────────────────────────────────────
