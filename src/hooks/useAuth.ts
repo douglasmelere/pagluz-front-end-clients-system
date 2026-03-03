@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { authService } from '../types/services/authService';
+import { api } from '../types/services/api';
 import { User, LoginRequest } from '../types';
 
 export function useAuth() {
@@ -22,9 +23,31 @@ export function useAuth() {
     try {
       const userData = await authService.validateToken();
 
-      // Mapear a resposta para incluir campos obrigatórios
+      let finalAvatarUrl = userData.avatarUrl || (userData as any).avatar || (userData as any).fileUrl;
+
+      if (!finalAvatarUrl) {
+        try {
+          if (userData.role === 'REPRESENTATIVE') {
+            const res: any = await api.get(`/representatives/${userData.id}`);
+            finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+          } else {
+            try {
+              const res: any = await api.get(`/users/me`);
+              finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+            } catch {
+              const res: any = await api.get(`/users/${userData.id}`);
+              finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+            }
+          }
+        } catch (e) {
+          // Fallback silencioso
+        }
+      }
+
+      // Mapear a resposta para incluir campos obrigatórios e o avatar encontrado
       const userWithDefaults = {
         ...userData,
+        avatarUrl: finalAvatarUrl,
         createdAt: userData.createdAt || new Date().toISOString(),
         updatedAt: userData.updatedAt || new Date().toISOString()
       };
@@ -45,9 +68,31 @@ export function useAuth() {
     try {
       const response = await authService.login(credentials);
 
+      let finalAvatarUrl = (response.user as any).avatarUrl || (response.user as any).avatar || (response.user as any).fileUrl;
+
+      if (!finalAvatarUrl) {
+        try {
+          if (response.user.role === 'REPRESENTATIVE') {
+            const res: any = await api.get(`/representatives/${response.user.id}`);
+            finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+          } else {
+            try {
+              const res: any = await api.get(`/users/me`);
+              finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+            } catch {
+              const res: any = await api.get(`/users/${response.user.id}`);
+              finalAvatarUrl = res?.avatarUrl || res?.avatar || res?.fileUrl || null;
+            }
+          }
+        } catch (e) {
+          // Fallback silencioso
+        }
+      }
+
       // Mapear a resposta para incluir campos obrigatórios
       const userWithDefaults = {
         ...response.user,
+        avatarUrl: finalAvatarUrl,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

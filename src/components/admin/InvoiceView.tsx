@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Download, Eye, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import DocumentPreviewModal from '../ui/DocumentPreviewModal';
 
@@ -26,8 +26,7 @@ export default function InvoiceView({
   consumerId,
   invoiceUrl,
   invoiceFileName,
-  invoiceUploadedAt,
-  invoiceScannedData
+  invoiceUploadedAt
 }: InvoiceViewProps) {
   const { user } = useApp();
   const [errorLoadingInvoice, setErrorLoadingInvoice] = useState(false);
@@ -292,8 +291,8 @@ export default function InvoiceView({
               <FileText className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Fatura Anexada</h3>
-              <p className="text-sm text-slate-600">
+              <h3 className="text-lg font-bold text-slate-900 font-display">Fatura Anexada</h3>
+              <p className="text-sm text-slate-600 font-display">
                 {invoiceFileName || 'Fatura do consumidor'}
               </p>
             </div>
@@ -305,7 +304,7 @@ export default function InvoiceView({
               className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Eye className="h-4 w-4" />
-              <span>{isLoadingInvoice ? 'Carregando...' : 'Ver Fatura'}</span>
+              <span className="font-display">{isLoadingInvoice ? 'Carregando...' : 'Ver Fatura'}</span>
             </button>
             <button
               onClick={handleDownloadClick}
@@ -313,7 +312,7 @@ export default function InvoiceView({
               className="flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
-              <span>Baixar</span>
+              <span className="font-display">Baixar</span>
             </button>
           </div>
         </div>
@@ -329,96 +328,6 @@ export default function InvoiceView({
           </div>
         )}
 
-        {/* Dados Extraídos do OCR */}
-        {invoiceScannedData && invoiceScannedData.extractedData && (
-          <div className="border-t border-slate-200 pt-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <h4 className="text-lg font-bold text-slate-900">Dados Extraídos (OCR)</h4>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {invoiceScannedData.extractedData?.ucNumber && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Número da UC</p>
-                  <p className="text-lg font-bold text-slate-900">{invoiceScannedData.extractedData.ucNumber}</p>
-                </div>
-              )}
-
-              {invoiceScannedData.extractedData?.consumption !== undefined && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Consumo</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {invoiceScannedData.extractedData.consumption.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })} kWh
-                  </p>
-                </div>
-              )}
-
-              {invoiceScannedData.extractedData?.value !== undefined && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Valor</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    R$ {invoiceScannedData.extractedData.value.toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
-                  </p>
-                </div>
-              )}
-
-              {invoiceScannedData.extractedData?.dueDate && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Vencimento</p>
-                  <p className="text-lg font-bold text-slate-900">{invoiceScannedData.extractedData.dueDate}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Confiança do OCR */}
-            {invoiceScannedData.confidence !== undefined && (
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center space-x-2">
-                  {invoiceScannedData.confidence >= 80 ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-yellow-500" />
-                  )}
-                  <span className="text-sm font-medium text-slate-700">Confiança do OCR:</span>
-                </div>
-                <span className={`text-sm font-bold ${invoiceScannedData.confidence >= 80 ? 'text-green-600' : 'text-yellow-600'
-                  }`}>
-                  {invoiceScannedData.confidence.toFixed(1)}%
-                </span>
-              </div>
-            )}
-
-            {/* Texto Completo Extraído */}
-            {invoiceScannedData.text && (
-              <div className="mt-4">
-                <h5 className="text-sm font-semibold text-slate-700 mb-2">Texto Completo Extraído:</h5>
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 max-h-48 overflow-y-auto">
-                  <p className="text-xs text-slate-600 whitespace-pre-wrap font-mono">
-                    {invoiceScannedData.text}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {(!invoiceScannedData || !invoiceScannedData.extractedData) && (
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <p className="text-sm text-yellow-800">
-                Os dados da fatura ainda não foram processados pelo OCR.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
       <DocumentPreviewModal
         isOpen={isPreviewModalOpen}

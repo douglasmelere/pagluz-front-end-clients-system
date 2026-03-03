@@ -34,11 +34,11 @@ export default function InvoiceModal({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -50,11 +50,11 @@ export default function InvoiceModal({
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-white font-display">
                   Fatura do Consumidor
                 </h2>
                 {consumerName && (
-                  <p className="text-blue-100 text-sm mt-1">{consumerName}</p>
+                  <p className="text-blue-100 text-sm mt-1 font-display">{consumerName}</p>
                 )}
               </div>
             </div>

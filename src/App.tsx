@@ -16,12 +16,14 @@ import GestaoComissoes from './components/GestaoComissoes';
 import SimulacaoEconomia from './components/SimulacaoEconomia';
 import PendingChanges from './components/admin/PendingChanges';
 import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
+import MateriaisComerciais from './components/MateriaisComerciais';
+import Comunicados from './components/Comunicados';
 import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -97,6 +99,10 @@ function AppContent() {
         return <SimulacaoEconomia />;
       case 'solicitacoes':
         return <ProposalRequestsAdmin />;
+      case 'materiais':
+        return <MateriaisComerciais />;
+      case 'comunicados':
+        return <Comunicados />;
       default:
         return <Dashboard />;
     }

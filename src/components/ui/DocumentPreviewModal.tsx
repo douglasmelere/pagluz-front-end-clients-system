@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal, { ModalFooter } from './Modal';
 import Button from './Button';
-import { ExternalLink, Eye, FileText, Image as ImageIcon } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 
 interface DocumentPreviewModalProps {
   isOpen: boolean;
@@ -19,7 +19,13 @@ export default function DocumentPreviewModal({
   if (!isOpen) return null;
 
   const isImage = documentUrl?.match(/\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i);
-  const isPdf = documentUrl?.match(/\.pdf(\?.*)?$/i) || !isImage;
+
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Reset loading state when url changes
+  React.useEffect(() => {
+    if (isOpen) setIsLoading(true);
+  }, [isOpen, documentUrl]);
 
   return (
     <Modal
@@ -31,17 +37,27 @@ export default function DocumentPreviewModal({
       headerVariant="brand"
     >
       <div className="flex flex-col space-y-4">
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden min-h-[50vh] max-h-[70vh] flex items-center justify-center relative">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl min-h-[50vh] max-h-[70vh] flex items-center justify-center relative shadow-inner overflow-hidden">
+          {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-10">
+              <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
+              <span className="text-slate-500 font-medium text-sm animate-pulse">Carregando documento...</span>
+            </div>
+          )}
           {isImage ? (
             <img
               src={documentUrl}
               alt={documentTitle}
-              className="max-w-full max-h-full object-contain"
+              onLoad={() => setIsLoading(false)}
+              onError={() => setIsLoading(false)}
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             />
           ) : (
             <iframe
               src={`${documentUrl}#toolbar=0`}
-              className="w-full h-[60vh] border-0"
+              onLoad={() => setIsLoading(false)}
+              onError={() => setIsLoading(false)}
+              className={`w-full h-[60vh] border-0 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
               title={documentTitle}
             />
           )}

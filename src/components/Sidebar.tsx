@@ -15,16 +15,20 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
-  X
+  X,
+  FolderOpen,
+  Megaphone,
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 import { api } from '../types/services/api';
 import AvatarUpload from './common/AvatarUpload';
 
+type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados';
+
 interface SidebarProps {
-  currentView: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes';
-  onViewChange: (view: 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes') => void;
+  currentView: AppView;
+  onViewChange: (view: AppView) => void;
   onWidthChange?: (width: number) => void;
 }
 
@@ -142,6 +146,8 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   }
   menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
   menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
+  menuItems.push({ id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais' as const, description: 'Materiais comerciais' });
+  menuItems.push({ id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados' as const, description: 'Avisos e comunicados' });
 
   const superAdminMenuItems = [
     { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },
