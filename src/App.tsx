@@ -18,12 +18,13 @@ import PendingChanges from './components/admin/PendingChanges';
 import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
 import MateriaisComerciais from './components/MateriaisComerciais';
 import Comunicados from './components/Comunicados';
+import Feedbacks from './components/Feedbacks';
 import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -103,6 +104,8 @@ function AppContent() {
         return <MateriaisComerciais />;
       case 'comunicados':
         return <Comunicados />;
+      case 'feedbacks':
+        return <Feedbacks />;
       default:
         return <Dashboard />;
     }

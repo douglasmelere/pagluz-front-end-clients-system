@@ -18,13 +18,14 @@ import {
   X,
   FolderOpen,
   Megaphone,
+  MessageSquareText,
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 import { api } from '../types/services/api';
 import AvatarUpload from './common/AvatarUpload';
 
-type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados';
+type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks';
 
 interface SidebarProps {
   currentView: AppView;
@@ -148,6 +149,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
   menuItems.push({ id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais' as const, description: 'Materiais comerciais' });
   menuItems.push({ id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados' as const, description: 'Avisos e comunicados' });
+  menuItems.push({ id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks' as const, description: 'Feedbacks dos representantes' });
 
   const superAdminMenuItems = [
     { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },
