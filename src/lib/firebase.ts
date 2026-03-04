@@ -2,15 +2,15 @@ import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { getAnalytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration using Environment Variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBiuTx1bOlv5zZpZp5O1n-JQkL0mb4l4Qw",
-  authDomain: "pagluz-push-notifacions.firebaseapp.com",
-  projectId: "pagluz-push-notifacions",
-  storageBucket: "pagluz-push-notifacions.firebasestorage.app",
-  messagingSenderId: "903545758594",
-  appId: "1:903545758594:web:3c702c7c09d2fde32ae59b",
-  measurementId: "G-NCCGPT4J2J"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -27,7 +27,11 @@ export const requestFirebaseNotificationPermission = async () => {
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      const swUrl = `/firebase-messaging-sw.js?apiKey=${firebaseConfig.apiKey}&projectId=${firebaseConfig.projectId}&messagingSenderId=${firebaseConfig.messagingSenderId}&appId=${firebaseConfig.appId}`;
+      const registration = await navigator.serviceWorker.register(swUrl);
+
       const currentToken = await getToken(messaging, {
+        serviceWorkerRegistration: registration,
         // VAPID key is usually needed here for web push
         // vapidKey: 'YOUR_PUBLIC_VAPID_KEY_HERE' 
       });
