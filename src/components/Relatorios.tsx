@@ -268,8 +268,8 @@ export default function Relatorios() {
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 flex items-start gap-3">
         <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm text-blue-600 font-display font-semibold mb-1">Sobre os relatórios</p>
-          <p className="text-sm text-blue-700 leading-relaxed">
+          <p className="text-sm text-blue-500 font-display font-semibold mb-1">Sobre os relatórios</p>
+          <p className="text-sm text-blue-500/80 leading-relaxed">
             Os relatórios são gerados em formato Excel (.xlsx) e incluem todos os dados filtrados.
             Use os filtros acima para refinar os dados antes de exportar.
           </p>
