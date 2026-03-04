@@ -243,7 +243,7 @@ export default function Relatorios() {
                 <div className="p-3 bg-white/15 rounded-xl w-fit mb-4">
                   <Icon className="h-7 w-7" />
                 </div>
-                <h3 className="text-xl font-display font-bold mb-1">{card.title}</h3>
+                <h3 className="text-xl font-display font-bold mb-1 text-white">{card.title}</h3>
                 <p className="text-white/80 text-sm mb-6 leading-relaxed">{card.description}</p>
                 <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition-colors">
                   {isLoading ? (
