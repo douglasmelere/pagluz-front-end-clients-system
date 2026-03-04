@@ -788,7 +788,7 @@ export default function Feedbacks() {
           {/* By Type */}
           {metrics.byType?.length > 0 && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Por Tipo</h3>
+              <h3 className="text-xs font-display font-black text-slate-400 uppercase tracking-wider mb-3">Por Tipo</h3>
               <div className="space-y-2">
                 {metrics.byType.map(t => {
                   const cfg = TYPE_CONFIG[t.type];
@@ -817,7 +817,7 @@ export default function Feedbacks() {
           {/* By Priority */}
           {metrics.byPriority?.length > 0 && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Por Prioridade</h3>
+              <h3 className="text-xs font-display font-black text-slate-400 uppercase tracking-wider mb-3">Por Prioridade</h3>
               <div className="space-y-2">
                 {metrics.byPriority.map(p => {
                   const cfg = PRIORITY_CONFIG[p.priority];
