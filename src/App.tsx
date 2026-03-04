@@ -65,6 +65,29 @@ function AppContent() {
   }, [isAuthenticated]);
 
   // Aguardar o carregamento da autenticação
+  // Start Push Notifications flow logic when logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      import('./lib/firebase').then(({ requestFirebaseNotificationPermission, onMessageListener }) => {
+        requestFirebaseNotificationPermission()
+          .then((token) => {
+            if (token) {
+              console.log('Firebase Token obtained successfully', token);
+              // Save token to backend API if needed:
+              // api.post('/auth/push-token', { token, userId: user.id }).catch(console.error);
+            }
+          })
+          .catch(console.error);
+
+        onMessageListener()?.then((payload: any) => {
+          console.log('Received foreground message: ', payload);
+          // Podemos exibir um Toast aqui caso chegue no foreground
+          // toast.showSuccess(payload?.notification?.title || 'Novo comunicado');
+        });
+      });
+    }
+  }, [isAuthenticated, user]);
+
   if (authLoading) {
     return (
       <div className="flex h-screen bg-gray-50 items-center justify-center">

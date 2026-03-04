@@ -15,6 +15,7 @@
   "dependencies": {
     "caniuse-lite": "^1.0.30001727",
     "date-fns": "^4.1.0",
+    "firebase": "^12.10.0",
     "html-to-image": "^1.11.13",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.344.0",
