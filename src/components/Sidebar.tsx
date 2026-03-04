@@ -19,13 +19,19 @@ import {
   FolderOpen,
   Megaphone,
   MessageSquareText,
+  FileSpreadsheet,
+  Trophy,
+  Activity,
+  BarChart3,
+  BellRing,
+  Coins,
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 import { api } from '../types/services/api';
 import AvatarUpload from './common/AvatarUpload';
 
-type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks';
+type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas';
 
 interface SidebarProps {
   currentView: AppView;
@@ -150,6 +156,12 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   menuItems.push({ id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais' as const, description: 'Materiais comerciais' });
   menuItems.push({ id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados' as const, description: 'Avisos e comunicados' });
   menuItems.push({ id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks' as const, description: 'Feedbacks dos representantes' });
+  menuItems.push({ id: 'relatorios', label: 'Relatórios', icon: FileSpreadsheet, view: 'relatorios' as const, description: 'Exportar dados em Excel' });
+  menuItems.push({ id: 'ranking', label: 'Ranking', icon: Trophy, view: 'ranking' as const, description: 'Performance e metas' });
+  menuItems.push({ id: 'timeline', label: 'Timeline', icon: Activity, view: 'timeline' as const, description: 'Atividades do sistema' });
+  menuItems.push({ id: 'push', label: 'Push', icon: BellRing, view: 'push' as const, description: 'Notificações push' });
+  menuItems.push({ id: 'dashboard-avancado', label: 'Gráficos', icon: BarChart3, view: 'dashboard-avancado' as const, description: 'Dashboard avançado' });
+  menuItems.push({ id: 'tarifas', label: 'Tarifas', icon: Coins, view: 'tarifas' as const, description: 'Preços kWh' });
 
   const superAdminMenuItems = [
     { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },

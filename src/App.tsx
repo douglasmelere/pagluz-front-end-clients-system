@@ -19,12 +19,18 @@ import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
 import MateriaisComerciais from './components/MateriaisComerciais';
 import Comunicados from './components/Comunicados';
 import Feedbacks from './components/Feedbacks';
+import Relatorios from './components/Relatorios';
+import RankingMetas from './components/RankingMetas';
+import TimelineAtividades from './components/TimelineAtividades';
+import PushNotifications from './components/PushNotifications';
+import DashboardAvancado from './components/DashboardAvancado';
+import TarifasKwh from './components/TarifasKwh';
 import { startVersionMonitoring, reloadWithoutCache } from './utils/versionChecker';
 
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -106,6 +112,18 @@ function AppContent() {
         return <Comunicados />;
       case 'feedbacks':
         return <Feedbacks />;
+      case 'relatorios':
+        return <Relatorios />;
+      case 'ranking':
+        return <RankingMetas />;
+      case 'timeline':
+        return <TimelineAtividades />;
+      case 'push':
+        return <PushNotifications />;
+      case 'dashboard-avancado':
+        return <DashboardAvancado />;
+      case 'tarifas':
+        return <TarifasKwh />;
       default:
         return <Dashboard />;
     }
