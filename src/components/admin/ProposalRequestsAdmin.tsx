@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../types/services/api';
 import { ProposalRequest } from '../../types';
 import { format } from 'date-fns';
@@ -266,149 +267,151 @@ export default function ProposalRequestsAdmin() {
       </div>
 
       {/* Modal de Detalhes da Solicitação */}
-      {selectedRequest && (
-        <div className="fixed inset-0 z-[4000] flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedRequest(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-scale-up">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-display font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <FileText className="h-5 w-5 text-accent" />
-                Detalhes da Solicitação
-              </h2>
-              <button
-                onClick={() => setSelectedRequest(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {selectedRequest && createPortal(
+        <>
+          <div className="fixed inset-0 z-[5000] bg-slate-900/60 backdrop-blur-[2px] animate-fade-in" onClick={() => setSelectedRequest(null)} />
+          <div className="fixed inset-0 z-[5001] flex items-center justify-center p-4 sm:p-6">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-scale-up">
+              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <h2 className="text-xl font-display font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-accent" />
+                  Detalhes da Solicitação
+                </h2>
+                <button
+                  onClick={() => setSelectedRequest(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="block text-sm font-medium text-slate-500 mb-1">Cliente Solicitante</span>
-                    <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.clientName}</span>
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="block text-sm font-medium text-slate-500 mb-1">Cliente Solicitante</span>
+                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.clientName}</span>
+                    </div>
+                    <div>
+                      <span className="block text-sm font-medium text-slate-500 mb-1">Representante Vinculado</span>
+                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.representative?.name}</span>
+                      <span className="block text-sm text-slate-500">{selectedRequest.representative?.email}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="block text-sm font-medium text-slate-500 mb-1">Representante Vinculado</span>
-                    <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.representative?.name}</span>
-                    <span className="block text-sm text-slate-500">{selectedRequest.representative?.email}</span>
-                  </div>
-                </div>
 
-                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 mt-6">
-                  <h4 className="text-sm font-display font-semibold text-slate-700 mb-4 uppercase tracking-wider flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-slate-400" />
-                    Dados do Formulário da Proposta
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                    {Object.entries(selectedRequest).map(([key, value]) => {
-                      if (['id', 'clientName', 'representative', 'status', 'createdAt', 'updatedAt', 'fileUrl', 'proposalUrl', 'documentUrl', 'proposalFileUrl'].includes(key)) return null;
-                      if (typeof value === 'object' && value !== null) return null;
-                      if (value === null || value === undefined || value === '') return null;
+                  <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 mt-6">
+                    <h4 className="text-sm font-display font-semibold text-slate-700 mb-4 uppercase tracking-wider flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-slate-400" />
+                      Dados do Formulário da Proposta
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                      {Object.entries(selectedRequest).map(([key, value]) => {
+                        if (['id', 'clientName', 'representative', 'status', 'createdAt', 'updatedAt', 'fileUrl', 'proposalUrl', 'documentUrl', 'proposalFileUrl'].includes(key)) return null;
+                        if (typeof value === 'object' && value !== null) return null;
+                        if (value === null || value === undefined || value === '') return null;
 
-                      const keyTranslations: Record<string, string> = {
-                        representativeId: 'ID do Representante',
-                        invoiceAmount: 'Valor da Fatura (R$)',
-                        phaseType: 'Tipo de Fase',
-                        kwhValue: 'Valor kWh',
-                        phone: 'Telefone',
-                        email: 'E-mail',
-                        averageConsumption: 'Consumo Médio (kWh)',
-                        discount: 'Desconto',
-                        state: 'UF',
-                        city: 'Cidade',
-                        street: 'Rua',
-                        number: 'Número',
-                        neighborhood: 'Bairro',
-                        zipCode: 'CEP',
-                        ucNumber: 'Nº UC',
-                        concessionaire: 'Concessionária',
-                        consumerType: 'Tipo Consumidor',
-                        phase: 'Fase',
-                        notes: 'Observações',
-                        documentType: 'Tipo de Documento',
-                        cpfCnpj: 'CPF/CNPJ',
-                        discountOffered: 'Desconto Oferecido (%)'
-                      };
+                        const keyTranslations: Record<string, string> = {
+                          representativeId: 'ID do Representante',
+                          invoiceAmount: 'Valor da Fatura (R$)',
+                          phaseType: 'Tipo de Fase',
+                          kwhValue: 'Valor kWh',
+                          phone: 'Telefone',
+                          email: 'E-mail',
+                          averageConsumption: 'Consumo Médio (kWh)',
+                          discount: 'Desconto',
+                          state: 'UF',
+                          city: 'Cidade',
+                          street: 'Rua',
+                          number: 'Número',
+                          neighborhood: 'Bairro',
+                          zipCode: 'CEP',
+                          ucNumber: 'Nº UC',
+                          concessionaire: 'Concessionária',
+                          consumerType: 'Tipo Consumidor',
+                          phase: 'Fase',
+                          notes: 'Observações',
+                          documentType: 'Tipo de Documento',
+                          cpfCnpj: 'CPF/CNPJ',
+                          discountOffered: 'Desconto Oferecido (%)'
+                        };
 
-                      const valueTranslations: Record<string, string> = {
-                        MONOPHASIC: 'Monofásico',
-                        BIPHASIC: 'Bifásico',
-                        TRIPHASIC: 'Trifásico',
-                        RESIDENTIAL: 'Residencial',
-                        COMMERCIAL: 'Comercial',
-                        INDUSTRIAL: 'Industrial',
-                        RURAL: 'Rural',
-                        PUBLIC_POWER: 'Poder Público'
-                      };
+                        const valueTranslations: Record<string, string> = {
+                          MONOPHASIC: 'Monofásico',
+                          BIPHASIC: 'Bifásico',
+                          TRIPHASIC: 'Trifásico',
+                          RESIDENTIAL: 'Residencial',
+                          COMMERCIAL: 'Comercial',
+                          INDUSTRIAL: 'Industrial',
+                          RURAL: 'Rural',
+                          PUBLIC_POWER: 'Poder Público'
+                        };
 
-                      const formatKey = (k: string) => {
-                        if (keyTranslations[k]) return keyTranslations[k];
-                        return k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                      };
+                        const formatKey = (k: string) => {
+                          if (keyTranslations[k]) return keyTranslations[k];
+                          return k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                        };
 
-                      const formattedValue = typeof value === 'boolean'
-                        ? (value ? 'Sim' : 'Não')
-                        : (valueTranslations[String(value)] || String(value));
+                        const formattedValue = typeof value === 'boolean'
+                          ? (value ? 'Sim' : 'Não')
+                          : (valueTranslations[String(value)] || String(value));
 
-                      return (
-                        <div key={key} className="break-all border-b border-slate-200/60 pb-2">
-                          <span className="block text-xs font-semibold text-slate-500 mb-1">{formatKey(key)}</span>
-                          <span className="block text-sm text-slate-900 font-medium">{formattedValue}</span>
-                        </div>
-                      )
-                    })}
+                        return (
+                          <div key={key} className="break-all border-b border-slate-200/60 pb-2">
+                            <span className="block text-xs font-semibold text-slate-500 mb-1">{formatKey(key)}</span>
+                            <span className="block text-sm text-slate-900 font-medium">{formattedValue}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
-              <button
-                onClick={() => setSelectedRequest(null)}
-                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                Fechar
-              </button>
-              {selectedRequest.status === 'PENDING' ? (
+              <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
                 <button
-                  onClick={(e) => triggerFileInput(selectedRequest.id, e)}
-                  className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                  onClick={() => setSelectedRequest(null)}
+                  className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  <Upload className="h-4 w-4" />
-                  Anexar Proposta Gerada
+                  Fechar
                 </button>
-              ) : selectedRequest.status === 'GENERATED' && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={(e) => handleDeleteRequest(selectedRequest.id, e)}
-                    className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg transition-colors flex items-center gap-2 border border-red-100"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Excluir
-                  </button>
+                {selectedRequest.status === 'PENDING' ? (
                   <button
                     onClick={(e) => triggerFileInput(selectedRequest.id, e)}
-                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition-colors flex items-center gap-2 border border-blue-100"
+                    className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    Substituir
+                    Anexar Proposta Gerada
                   </button>
-                  <button
-                    onClick={(e) => handleViewDocument(selectedRequest.id, e)}
-                    className="px-5 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent-secondary transition-colors flex items-center gap-2"
-                  >
-                    <FileSignature className="h-4 w-4" />
-                    Ver Arquivo Anexado
-                  </button>
-                </div>
-              )}
+                ) : selectedRequest.status === 'GENERATED' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => handleDeleteRequest(selectedRequest.id, e)}
+                      className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg transition-colors flex items-center gap-2 border border-red-100"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </button>
+                    <button
+                      onClick={(e) => triggerFileInput(selectedRequest.id, e)}
+                      className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition-colors flex items-center gap-2 border border-blue-100"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Substituir
+                    </button>
+                    <button
+                      onClick={(e) => handleViewDocument(selectedRequest.id, e)}
+                      className="px-5 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent-secondary transition-colors flex items-center gap-2"
+                    >
+                      <FileSignature className="h-4 w-4" />
+                      Ver Arquivo Anexado
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </>
+        , document.body)}
 
       {/* Hidden file input for uploading generated proposals */}
       <input
