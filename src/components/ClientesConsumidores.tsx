@@ -35,7 +35,6 @@ import { useClientesGeradores } from '../hooks/useClientesGeradores';
 import { useRepresentantesComerciais } from '../hooks/useRepresentantesComerciais';
 import { useCommissions } from '../hooks/useCommissions';
 import { api } from '../types/services/api';
-import { clienteConsumidorService } from '../types/services/clienteConsumidorService';
 import { applyPhoneMask, applyCepMask, applyDocumentMask, isValidEmail, isValidPhone, isValidCep, isValidCpf, isValidCnpj } from '../utils/masks';
 
 import { Consumer, ConsumerStatus, Generator, DocumentType } from '../types';
@@ -81,8 +80,8 @@ export default function ClientesConsumidores() {
     updateCliente,
     allocateToGenerator,
     deallocateFromGenerator,
-    clearFilters,
-    refetch
+    deleteCliente,
+    clearFilters
   } = useClientesConsumidores();
 
   const { generateCommissionsForConsumer, commissions, refetch: refetchCommissions } = useCommissions();
@@ -122,25 +121,15 @@ export default function ClientesConsumidores() {
     }
   };
 
-  // Função para aprovar um consumidor individual
-  const handleApproveConsumer = async (consumer: Consumer) => {
-    try {
-      // Confirmar ação
-      const confirmed = window.confirm(`Deseja aprovar o consumidor "${consumer.name}"?`);
-      if (!confirmed) {
-        return;
+
+  const handleDeleteConsumer = async (id: string, name: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o consumidor "${name}"? Esta ação não pode ser desfeita.`)) {
+      try {
+        await deleteCliente(id);
+        toast.showSuccess(`Consumidor "${name}" excluído com sucesso!`);
+      } catch (error) {
+        toast.showError('Erro ao excluir consumidor. Verifique se existem dependências (como comissões pagas).');
       }
-
-      // Chamar API real de aprovação
-      await clienteConsumidorService.approve(consumer.id);
-
-      toast.showSuccess(`Consumidor "${consumer.name}" aprovado com sucesso!`);
-
-      // Recarregar a lista de consumidores
-      await refetch();
-
-    } catch (error) {
-      toast.showError('Erro ao aprovar consumidor. Tente novamente.');
     }
   };
 
@@ -545,10 +534,10 @@ export default function ClientesConsumidores() {
             generators={geradores}
             representatives={representantes}
             onEdit={handleEdit}
-            onApprove={handleApproveConsumer}
             onViewInvoice={(consumer) => setInvoiceModal({ isOpen: true, consumer })}
             onGenerateCommission={handleGenerateCommissionForConsumer}
             hasCommission={hasCommission}
+            onDelete={handleDeleteConsumer}
           />
 
           {/* Pagination Controls */}

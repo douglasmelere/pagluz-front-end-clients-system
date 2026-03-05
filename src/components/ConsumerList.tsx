@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useResponsive } from '../hooks/useResponsive';
 import ConsumerTable from './ConsumerTable';
 import ConsumerCard from './ConsumerCard';
-import { Consumer, ConsumerStatus, Generator } from '../types';
+import { Consumer, Generator } from '../types';
 
 interface ConsumerListProps {
   consumers: Consumer[];
   generators: Generator[];
   representatives: any[];
   onEdit: (consumer: Consumer) => void;
-  onApprove: (consumer: Consumer) => void;
   onViewInvoice: (consumer: Consumer) => void;
   onGenerateCommission: (id: string) => void;
   hasCommission: (id: string) => boolean;
+  onDelete: (id: string, name: string) => void;
 }
 
 export default function ConsumerList({
@@ -20,10 +20,10 @@ export default function ConsumerList({
   generators,
   representatives,
   onEdit,
-  onApprove,
   onViewInvoice,
   onGenerateCommission,
-  hasCommission
+  hasCommission,
+  onDelete
 }: ConsumerListProps) {
   const { isMobile } = useResponsive();
   const [expandedGeneratorId, setExpandedGeneratorId] = useState<string | null>(null);
@@ -56,10 +56,10 @@ export default function ConsumerList({
             generators={generators}
             representatives={representatives}
             onEdit={onEdit}
-            onApprove={onApprove}
             onViewInvoice={onViewInvoice}
             onGenerateCommission={onGenerateCommission}
             hasCommission={hasCommission}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -72,10 +72,10 @@ export default function ConsumerList({
       generators={generators}
       representatives={representatives}
       onEdit={onEdit}
-      onApprove={onApprove}
       onViewInvoice={onViewInvoice}
       onGenerateCommission={onGenerateCommission}
       hasCommission={hasCommission}
+      onDelete={onDelete}
       onShowGeneratorDetails={handleShowGeneratorDetails}
       expandedGeneratorId={expandedGeneratorId}
     />

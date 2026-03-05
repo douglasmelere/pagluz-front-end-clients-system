@@ -17,7 +17,8 @@ import {
   Wind,
   Droplet,
   Leaf,
-  Mail
+  Mail,
+  Trash2
 } from 'lucide-react';
 import { Consumer, ConsumerStatus, Generator, DocumentType } from '../types';
 import { Badge } from './ui';
@@ -27,10 +28,10 @@ interface ConsumerTableProps {
   generators: Generator[];
   representatives: any[];
   onEdit: (consumer: Consumer) => void;
-  onApprove: (consumer: Consumer) => void;
   onViewInvoice: (consumer: Consumer) => void;
   onGenerateCommission: (id: string) => void;
   hasCommission: (id: string) => boolean;
+  onDelete: (id: string, name: string) => void;
   onShowGeneratorDetails: (id: string) => void;
   expandedGeneratorId: string | null;
 }
@@ -40,10 +41,10 @@ export default function ConsumerTable({
   generators,
   representatives,
   onEdit,
-  onApprove,
   onViewInvoice,
   onGenerateCommission,
   hasCommission,
+  onDelete,
   onShowGeneratorDetails,
   expandedGeneratorId
 }: ConsumerTableProps) {
@@ -302,6 +303,13 @@ export default function ConsumerTable({
                         title="Editar"
                       >
                         <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(cliente.id, cliente.name)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

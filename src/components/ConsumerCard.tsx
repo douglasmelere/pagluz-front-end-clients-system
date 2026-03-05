@@ -11,6 +11,7 @@ import {
   FileText,
   Link,
   RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { Consumer, Generator } from '../types';
 import { Badge } from './ui';
@@ -20,10 +21,10 @@ interface ConsumerCardProps {
   generators: Generator[];
   representatives: any[]; // Using any[] based on usage in parent, ideally strictly typed
   onEdit: (consumer: Consumer) => void;
-  onApprove: (consumer: Consumer) => void;
   onViewInvoice: (consumer: Consumer) => void;
   onGenerateCommission: (id: string) => void;
   hasCommission: (id: string) => boolean;
+  onDelete: (id: string, name: string) => void;
 }
 
 export default function ConsumerCard({
@@ -31,10 +32,10 @@ export default function ConsumerCard({
   generators,
   representatives,
   onEdit,
-  onApprove,
   onViewInvoice,
   onGenerateCommission,
-  hasCommission
+  hasCommission,
+  onDelete
 }: ConsumerCardProps) {
 
 
@@ -75,7 +76,6 @@ export default function ConsumerCard({
   };
 
   const statusInfo = getStatusConfig(consumer.status);
-  const StatusIcon = statusInfo.icon;
   const tipoConfig = getTipoIcon(consumer.consumerType);
   const generator = getGeneratorDetails(consumer.generatorId);
   const representative = representatives.find(r => r.id === consumer.representativeId);
@@ -195,6 +195,14 @@ export default function ConsumerCard({
             Editar
           </button>
 
+          <button
+            onClick={() => onDelete(consumer.id, consumer.name)}
+            className="flex items-center justify-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-colors w-full"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir
+          </button>
+
           {(consumer.invoiceUrl && consumer.invoiceUrl.trim() !== '') ? (
             <button
               onClick={() => onViewInvoice(consumer)}
@@ -218,6 +226,6 @@ export default function ConsumerCard({
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }
