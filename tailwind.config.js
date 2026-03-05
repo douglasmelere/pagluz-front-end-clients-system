@@ -49,7 +49,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Poppins", "Calistoga", "Georgia", "serif"],
+        display: ["Poppins", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {

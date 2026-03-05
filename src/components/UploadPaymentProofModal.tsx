@@ -7,7 +7,6 @@ interface UploadPaymentProofModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (file: File) => Promise<void>;
-  commissionId: string;
   commissionValue: number;
   representativeName: string;
 }
@@ -31,7 +30,6 @@ export default function UploadPaymentProofModal({
   isOpen,
   onClose,
   onUpload,
-  commissionId,
   commissionValue,
   representativeName,
 }: UploadPaymentProofModalProps) {
@@ -139,7 +137,7 @@ export default function UploadPaymentProofModal({
           <div className="flex items-start">
             <CheckCircle className="h-5 w-5 text-emerald-600 mr-3 mt-0.5" />
             <div>
-              <h4 className="font-medium text-emerald-900">Marcar como Paga</h4>
+              <h4 className="text-lg font-display font-bold text-emerald-900">Marcar como Paga</h4>
               <p className="text-sm text-emerald-700 mt-1">
                 Ao anexar o comprovante, a comissão será automaticamente marcada como paga.
               </p>
@@ -150,12 +148,12 @@ export default function UploadPaymentProofModal({
         {/* Área de upload */}
         <div
           className={`relative border-2 border-dashed rounded-2xl p-8 transition-all ${dragActive
-              ? 'border-accent bg-accent/5'
-              : error
-                ? 'border-red-300 bg-red-50'
-                : file
-                  ? 'border-emerald-300 bg-emerald-50'
-                  : 'border-slate-300 bg-slate-50 hover:border-accent hover:bg-accent/5'
+            ? 'border-accent bg-accent/5'
+            : error
+              ? 'border-red-300 bg-red-50'
+              : file
+                ? 'border-emerald-300 bg-emerald-50'
+                : 'border-slate-300 bg-slate-50 hover:border-accent hover:bg-accent/5'
             }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}

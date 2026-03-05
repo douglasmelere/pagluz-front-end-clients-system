@@ -65,8 +65,7 @@
   h4,
   h5,
   h6 {
-    font-family: "Calistoga", Georgia, serif;
-    @apply tracking-tight text-foreground;
+    @apply font-display tracking-tight text-foreground;
   }
 
   /* Global Scrollbar */
