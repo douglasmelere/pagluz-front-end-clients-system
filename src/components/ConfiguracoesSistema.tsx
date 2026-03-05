@@ -29,7 +29,7 @@ export default function ConfiguracoesSistema() {
     fioBPercentage, fioBHistory, fioBError, setFioBPercentageValue, fetchFioBHistory
   } = useSettings();
   const toast = useToast();
-  const { user } = useApp();
+  const { user, updateUser } = useApp();
   const [newPrice, setNewPrice] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -40,7 +40,8 @@ export default function ConfiguracoesSistema() {
     if (user) {
       const cachedAvatar = localStorage.getItem(`pagluz_avatar_${user.id}`);
       const userPhoto = (user as any).avatarUrl || (user as any).avatar || (user as any).fileUrl;
-      setAdminAvatarUrl(userPhoto || cachedAvatar || null);
+      // Prioritize cachedAvatar for immediate persistence across reloads
+      setAdminAvatarUrl(cachedAvatar || userPhoto || null);
     }
   }, [user]);
 
@@ -61,6 +62,7 @@ export default function ConfiguracoesSistema() {
         setAdminAvatarUrl(newUrl);
         if (user?.id) {
           localStorage.setItem(`pagluz_avatar_${user.id}`, newUrl);
+          updateUser({ avatarUrl: newUrl });
         }
       }
       toast.showSuccess('Foto de perfil atualizada com sucesso!');
@@ -76,6 +78,7 @@ export default function ConfiguracoesSistema() {
       setAdminAvatarUrl(null);
       if (user?.id) {
         localStorage.removeItem(`pagluz_avatar_${user.id}`);
+        updateUser({ avatarUrl: null });
       }
       toast.showSuccess('Foto de perfil removida.');
     } catch (err: any) {

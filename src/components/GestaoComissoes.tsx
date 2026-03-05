@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   DollarSign,
   Search,
-  Filter,
   Users,
   CheckCircle,
   Clock,
@@ -12,12 +11,10 @@ import {
   RefreshCw,
   AlertCircle,
   Loader,
-  User,
   Zap,
   Calendar,
   TrendingUp,
   BarChart3,
-  FileText,
   Upload,
   Eye,
   Trash2,
@@ -46,7 +43,6 @@ export default function GestaoComissoes() {
     error,
     updateFilters,
     clearFilters,
-    markAsPaid,
     generateCommissionsForExisting,
     uploadPaymentProof,
     deletePaymentProof,
@@ -146,17 +142,6 @@ export default function GestaoComissoes() {
   const displayCommissions = selectedRepId
     ? filteredCommissions.filter(c => c.representative?.id === selectedRepId)
     : filteredCommissions;
-
-  const handleMarkAsPaid = async (id: string) => {
-    if (confirm('Tem certeza que deseja marcar esta comissão como paga?')) {
-      try {
-        await markAsPaid(id);
-        toast.showSuccess('Comissão marcada como paga com sucesso!');
-      } catch (error) {
-        toast.showError('Erro ao marcar comissão como paga');
-      }
-    }
-  };
 
   const handleGenerateCommissions = async () => {
     try {
@@ -494,8 +479,12 @@ export default function GestaoComissoes() {
 
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-700 font-bold text-lg border border-white shadow-inner group-hover/card:shadow-accent/20 transition-shadow">
-                      {group.representative.name.charAt(0)}
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-700 font-bold text-lg border border-white shadow-inner group-hover/card:shadow-accent/20 transition-shadow overflow-hidden">
+                      {group.representative.avatarUrl ? (
+                        <img src={group.representative.avatarUrl} alt={group.representative.name} className="w-full h-full object-cover" />
+                      ) : (
+                        group.representative.name.charAt(0)
+                      )}
                     </div>
                     <div>
                       <h3 className="font-display font-bold text-slate-900 line-clamp-1 group-hover/card:text-accent transition-colors">
@@ -559,8 +548,12 @@ export default function GestaoComissoes() {
                     <tr key={commission.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm ring-2 ring-white">
-                            {commission.representative?.name?.charAt(0) || 'R'}
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm ring-2 ring-white overflow-hidden">
+                            {commission.representative?.avatarUrl ? (
+                              <img src={commission.representative.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              commission.representative?.name?.charAt(0) || 'R'
+                            )}
                           </div>
                           <div>
                             <p className="font-medium text-slate-900 font-display">{commission.representative?.name || 'N/A'}</p>
@@ -769,7 +762,6 @@ export default function GestaoComissoes() {
           isOpen={uploadModal.isOpen}
           onClose={() => setUploadModal({ isOpen: false, commission: null })}
           onUpload={handleUploadProof}
-          commissionId={uploadModal.commission.id}
           commissionValue={uploadModal.commission.commissionValue}
           representativeName={uploadModal.commission.representative.name}
         />

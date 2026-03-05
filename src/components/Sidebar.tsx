@@ -43,7 +43,7 @@ const SIDEBAR_DEFAULT = 280;
 const COLLAPSED_W = 80;
 
 export default function Sidebar({ currentView, onViewChange, onWidthChange }: SidebarProps) {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading, updateUser } = useAuth();
   const { isMobile } = useResponsive();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -55,7 +55,8 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
       // Tenta pegar do objeto user (API) ou do cache local (fallback)
       const cachedAvatar = localStorage.getItem(`pagluz_avatar_${user.id}`);
       const userPhoto = (user as any).avatarUrl || (user as any).avatar || (user as any).fileUrl;
-      setAvatarUrl(userPhoto || cachedAvatar || null);
+      // Prioritize cachedAvatar for immediate persistence across reloads
+      setAvatarUrl(cachedAvatar || userPhoto || null);
     }
   }, [user]);
 
@@ -102,6 +103,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         // Persiste localmente para o reload
         if (user?.id) {
           localStorage.setItem(`pagluz_avatar_${user.id}`, newUrl);
+          updateUser({ avatarUrl: newUrl });
         }
       } else {
         // Fallback para preview local
@@ -122,6 +124,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
       setAvatarUrl(null);
       if (user?.id) {
         localStorage.removeItem(`pagluz_avatar_${user.id}`);
+        updateUser({ avatarUrl: null });
       }
     } catch {
       // Falha

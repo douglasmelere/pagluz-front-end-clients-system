@@ -123,6 +123,10 @@ export function useAuth() {
     }
   }, []);
 
+  const updateUser = useCallback((updatedFields: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updatedFields } : null);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       // Tentar fazer logout na API
@@ -148,6 +152,7 @@ export function useAuth() {
     error,
     login,
     logout,
+    updateUser,
     isAuthenticated
   };
 

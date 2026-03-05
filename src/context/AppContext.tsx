@@ -49,6 +49,7 @@ const AppContext = createContext<{
   isAuthenticated: ReturnType<typeof useAuth>['isAuthenticated'];
   login: ReturnType<typeof useAuth>['login'];
   logout: ReturnType<typeof useAuth>['logout'];
+  updateUser: ReturnType<typeof useAuth>['updateUser'];
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -57,14 +58,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Memoizar o valor do contexto para evitar re-renders desnecessários
   const contextValue = useMemo(() => ({
-    state, 
-    dispatch, 
+    state,
+    dispatch,
     user: auth.user,
     loading: auth.loading,
     isAuthenticated: auth.isAuthenticated,
     login: auth.login,
-    logout: auth.logout
-  }), [state, auth.user, auth.loading, auth.isAuthenticated, auth.login, auth.logout]);
+    logout: auth.logout,
+    updateUser: auth.updateUser
+  }), [state, auth.user, auth.loading, auth.isAuthenticated, auth.login, auth.logout, auth.updateUser]);
 
   return (
     <AppContext.Provider value={contextValue}>

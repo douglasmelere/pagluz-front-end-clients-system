@@ -150,7 +150,7 @@ export default function Relatorios() {
             <FileSpreadsheet className="h-7 w-7 text-accent" />
           </div>
           <div>
-            <h1 className="text-2xl font-display font-bold text-slate-900">Relatórios</h1>
+            <h1 className="text-2xl font-display font-medium text-slate-800">Relatórios</h1>
             <p className="text-slate-500 text-sm mt-0.5">Exporte dados em planilha Excel (.xlsx)</p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function Relatorios() {
       {showFilters && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 animate-fade-in">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-display font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-sm font-display font-bold text-slate-800 flex items-center gap-2">
               <Filter className="h-4 w-4 text-accent" />
               Filtros do Relatório
             </h3>
@@ -178,9 +178,9 @@ export default function Relatorios() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="text-left">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Representante</label>
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">Representante</label>
               <div className="relative">
-                <select value={filters.representativeId} onChange={e => setFilters({ ...filters, representativeId: e.target.value })} className="w-full appearance-none px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all cursor-pointer pr-10">
+                <select value={filters.representativeId} onChange={e => setFilters({ ...filters, representativeId: e.target.value })} className="w-full appearance-none px-4 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all cursor-pointer pr-10">
                   <option value="">Todos</option>
                   {reps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
@@ -188,23 +188,23 @@ export default function Relatorios() {
               </div>
             </div>
             <div className="text-left">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Data Início</label>
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">Data Início</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                <input type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
+                <input type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} className="w-full pl-10 pr-4 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
               </div>
             </div>
             <div className="text-left">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Data Fim</label>
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">Data Fim</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                <input type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
+                <input type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} className="w-full pl-10 pr-4 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
               </div>
             </div>
             <div className="text-left">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Status</label>
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">Status</label>
               <div className="relative">
-                <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="w-full appearance-none px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all cursor-pointer pr-10">
+                <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="w-full appearance-none px-4 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all cursor-pointer pr-10">
                   <option value="">Todos</option>
                   <option value="PENDING">Pendente</option>
                   <option value="PAID">Pago</option>
@@ -215,8 +215,8 @@ export default function Relatorios() {
               </div>
             </div>
             <div className="text-left">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2">Concessionária</label>
-              <input value={filters.concessionaire} onChange={e => setFilters({ ...filters, concessionaire: e.target.value })} placeholder="Ex: CEMIG, CPFL" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
+              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">Concessionária</label>
+              <input value={filters.concessionaire} onChange={e => setFilters({ ...filters, concessionaire: e.target.value })} placeholder="Ex: CEMIG, CPFL" className="w-full px-4 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-600 placeholder:text-slate-400 focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none transition-all" />
             </div>
           </div>
         </div>

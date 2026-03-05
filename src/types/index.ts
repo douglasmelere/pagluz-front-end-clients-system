@@ -279,11 +279,13 @@ export interface Commission {
     id: string;
     name: string;
     email: string;
+    avatarUrl?: string | null;
   };
   consumer: {
     id: string;
     name: string;
     email: string;
+    avatarUrl?: string | null;
     averageMonthlyConsumption?: number;
   };
 }

@@ -138,7 +138,7 @@ export default function UploadPaymentProofModal({
             <CheckCircle className="h-5 w-5 text-emerald-600 mr-3 mt-0.5" />
             <div>
               <h4 className="text-lg font-display font-bold text-emerald-900">Marcar como Paga</h4>
-              <p className="text-sm text-emerald-700 mt-1">
+              <p className="text-sm font-display text-emerald-700 mt-1">
                 Ao anexar o comprovante, a comissão será automaticamente marcada como paga.
               </p>
             </div>
@@ -174,8 +174,8 @@ export default function UploadPaymentProofModal({
 
             {file ? (
               <div className="mt-4 space-y-2">
-                <p className="font-medium text-slate-900">{file.name}</p>
-                <p className="text-sm text-slate-500">
+                <p className="font-display font-medium text-slate-900">{file.name}</p>
+                <p className="text-sm font-display text-slate-500">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
                 <Button
@@ -191,10 +191,10 @@ export default function UploadPaymentProofModal({
               </div>
             ) : (
               <div className="mt-4 space-y-2">
-                <p className="text-slate-700 font-medium">
+                <p className="text-slate-700 font-display font-medium">
                   Arraste um arquivo aqui ou clique para selecionar
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm font-display text-slate-500">
                   Aceita JPG, PNG ou PDF • Máximo 5MB
                 </p>
                 <Button

@@ -75,7 +75,7 @@ const Modal: React.FC<ModalProps> = ({
                 </h2>
               )}
               {description && (
-                <p className={`text-sm mt-1 ${descriptionClasses}`}>
+                <p className={`text-sm mt-1 font-display ${descriptionClasses}`}>
                   {description}
                 </p>
               )}
