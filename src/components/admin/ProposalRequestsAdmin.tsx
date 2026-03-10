@@ -177,6 +177,7 @@ export default function ProposalRequestsAdmin() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="px-6 py-4 text-sm font-semibold text-slate-700 tracking-wide uppercase">Cliente</th>
+                  <th className="px-6 py-4 text-sm font-semibold text-slate-700 tracking-wide uppercase">Tipo</th>
                   <th className="px-6 py-4 text-sm font-semibold text-slate-700 tracking-wide uppercase">Representante</th>
                   <th className="px-6 py-4 text-sm font-semibold text-slate-700 tracking-wide uppercase">Data da Solicitação</th>
                   <th className="px-6 py-4 text-sm font-semibold text-slate-700 tracking-wide uppercase">Status</th>
@@ -189,6 +190,16 @@ export default function ProposalRequestsAdmin() {
                     <td className="px-6 py-4">
                       <div className="font-display font-medium text-slate-900">{request.clientName}</div>
                       <div className="text-xs text-slate-500 mt-0.5">ID: {request.id}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-slate-700">
+                        {request.consumerType === 'RESIDENTIAL' ? 'Residencial' :
+                         request.consumerType === 'COMMERCIAL' ? 'Comercial' :
+                         request.consumerType === 'INDUSTRIAL' ? 'Industrial' :
+                         request.consumerType === 'RURAL' ? 'Rural' :
+                         request.consumerType === 'PUBLIC_POWER' ? 'Poder Público' :
+                         request.consumerType || '-'}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-slate-900">{request.representative.name}</div>

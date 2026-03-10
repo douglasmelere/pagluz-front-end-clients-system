@@ -1,4 +1,4 @@
-﻿// Enums
+// Enums
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
@@ -473,6 +473,7 @@ export interface ProposalRequest {
     name: string;
     email: string;
   };
+  consumerType?: 'RESIDENTIAL' | 'COMMERCIAL' | 'INDUSTRIAL' | 'RURAL' | 'PUBLIC_POWER' | string;
   createdAt: string;
   // Others as needed per API return
 }
