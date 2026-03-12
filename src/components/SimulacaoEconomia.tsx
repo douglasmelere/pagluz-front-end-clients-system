@@ -123,8 +123,8 @@ const templateStyles = `
   .pagluz-page .card-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; }
   .pagluz-page .tab { background-color: #01375a; color: #fff; font-size: 0.95rem; font-weight: 900; font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif; font-style: italic; text-align: center; padding: 6px 36px; width: auto; border-radius: 6px 6px 0 0; margin-bottom: 0; position: relative; z-index: 10; }
   .pagluz-page .card { width: 100%; border-radius: 0 0 12px 12px; overflow: hidden; }
-  .pagluz-page .card-left { border: 4px solid #ff0002; }
-  .pagluz-page .card-right { border: 4px solid #45a527; }
+  .pagluz-page .card-left { border: 4px solid #ff0002; background-color: #ff0002; }
+  .pagluz-page .card-right { border: 4px solid #45a527; background-color: #45a527; }
   .pagluz-page .card-title { padding: 14px 10px; font-family: 'Gotham Ultra', 'Plus Jakarta Sans', sans-serif; font-weight: 900; text-align: center; font-size: 1.25rem; font-style: italic; color: #fff; -webkit-text-stroke: 0.6px #fff; }
   .pagluz-page .card-left .card-title { background-color: #ff0002; }
   .pagluz-page .card-right .card-title { background-color: #45a527; }

@@ -134,37 +134,43 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
   };
 
   const menuItems: Array<{ id: string; label: string; icon: any; view: any; description: string }> = [];
+
+  // Principal (Dia a dia)
   menuItems.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, view: 'dashboard' as const, description: 'Visão geral' });
-  menuItems.push({ id: 'contratos', label: 'Contratos', icon: FileText, view: 'contratos' as const, description: 'Documentos' });
+  menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
   menuItems.push({ id: 'geradores', label: 'Geradores', icon: Factory, view: 'geradores' as const, description: 'Clientes geradores' });
   menuItems.push({ id: 'consumidores', label: 'Consumidores', icon: Users, view: 'consumidores' as const, description: 'Clientes consumidores' });
+  menuItems.push({ id: 'contratos', label: 'Contratos', icon: FileText, view: 'contratos' as const, description: 'Documentos' });
+  menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
 
   const userRoleRaw = user?.role as unknown as string | undefined;
   const userRole = (userRoleRaw || '').toUpperCase();
   const isOperatorPlus = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR'].includes(userRole);
 
   if (isOperatorPlus) {
+    // Gestão e Processos
+    menuItems.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes' as const, description: 'Propostas solicitadas' });
     menuItems.push({ id: 'pendentes', label: 'Pendentes', icon: UserCheck, view: 'pendentes' as const, description: 'Aprovações' });
     menuItems.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas' as const, description: 'Alterações' });
-    menuItems.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes' as const, description: 'Propostas solicitadas' });
-
-    // Configurações e Comissões agora visíveis para ADMIN também
-    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
-      menuItems.push({ id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes' as const, description: 'Ajustes do sistema' });
-      menuItems.push({ id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes' as const, description: 'Gestão de comissões' });
-    }
   }
-  menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
-  menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
+
+  // Desempenho e Comunicação
+  menuItems.push({ id: 'relatorios', label: 'Relatórios', icon: FileSpreadsheet, view: 'relatorios' as const, description: 'Exportar dados' });
+  menuItems.push({ id: 'dashboard-avancado', label: 'Gráficos', icon: BarChart3, view: 'dashboard-avancado' as const, description: 'Dashboard avançado' });
+  menuItems.push({ id: 'ranking', label: 'Ranking', icon: Trophy, view: 'ranking' as const, description: 'Performance e metas' });
   menuItems.push({ id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais' as const, description: 'Materiais comerciais' });
   menuItems.push({ id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados' as const, description: 'Avisos e comunicados' });
-  menuItems.push({ id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks' as const, description: 'Feedbacks dos representantes' });
-  menuItems.push({ id: 'relatorios', label: 'Relatórios', icon: FileSpreadsheet, view: 'relatorios' as const, description: 'Exportar dados em Excel' });
-  menuItems.push({ id: 'ranking', label: 'Ranking', icon: Trophy, view: 'ranking' as const, description: 'Performance e metas' });
-  menuItems.push({ id: 'timeline', label: 'Timeline', icon: Activity, view: 'timeline' as const, description: 'Atividades do sistema' });
-  menuItems.push({ id: 'push', label: 'Push', icon: BellRing, view: 'push' as const, description: 'Notificações push' });
-  menuItems.push({ id: 'dashboard-avancado', label: 'Gráficos', icon: BarChart3, view: 'dashboard-avancado' as const, description: 'Dashboard avançado' });
+  menuItems.push({ id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks' as const, description: 'Feedbacks' });
+
+  // Configurações menos mexidas e afins pro final
   menuItems.push({ id: 'tarifas', label: 'Tarifas', icon: Coins, view: 'tarifas' as const, description: 'Preços kWh' });
+  menuItems.push({ id: 'timeline', label: 'Timeline', icon: Activity, view: 'timeline' as const, description: 'Atividades' });
+  menuItems.push({ id: 'push', label: 'Push', icon: BellRing, view: 'push' as const, description: 'Notificações push' });
+
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    menuItems.push({ id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes' as const, description: 'Gestão de comissões' });
+    menuItems.push({ id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes' as const, description: 'Ajustes do sistema' });
+  }
 
   const superAdminMenuItems = [
     { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },
