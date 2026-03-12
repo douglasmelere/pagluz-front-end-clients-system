@@ -1,0 +1,15 @@
+256d54a - feat(ui): unify blue theme and show consumer type in proposal requests
+2da1db0 - fix: profile picture persistence, display in commissions, and UI refinements in reports and modals
+70609ab - feat: adiciona funcionalidade de exclus??o de consumidores no frontend e limpa c??digo n??o utilizado
+59bc321 - fix: padroniza fontes modernas (sans-serif) em todos os t??tulos e no modal de comprovante de comiss??o, removendo a fonte antiga serifada
+63581d8 - refactor: isola chaves do firebase no arquivo env e repassa service worker em tempo de execucao
+ea14664 - feat: integracao Firebase Cloud Messaging para Push Notifications
+b21034a - fix: adiciona text-white explicito nos h3 dos cards de relatorios - regra global h1-h6 no index.css sobreescrevia a cor herdada
+0d36eda - fix: clareia texto informativo dos relatorios para blue-500
+8af0b28 - fix: suaviza fonte do titulo Sobre os relatorios de blue-800 para blue-600
+7626559 - feat: implementa 6 novas features do painel admin - Relatorios: exportacao Excel de comissoes, consumidores e representantes com filtros - Ranking e Metas: leaderboard com podium, tabela completa, criacao de metas com barras de progresso - Timeline: historico global de atividades com filtros por entidade/acao/representante - Push Notifications: envio individual ou broadcast com estatisticas de tokens - Dashboard Avancado: 6 graficos Recharts (area, barra, linha, pizza, horizontal, tabela) - Tarifas kWh: gestao de precos por concessionaria com versionamento e historico
+7344e85 - fix: aplica createPortal no modal de solicitacoes de propostas - Corrige bug de overlay com bordas brancas causado por ancestor com transform/animation
+dfb0614 - fix: aplica font-display nos titulos Por Tipo e Por Prioridade
+2fcb0a8 - feat: implementa painel completo de Feedbacks para admin - Dashboard com metricas (total, abertos, em analise, resolvidos, recusados) - Lista com filtros por status, tipo e prioridade - Busca por texto em assunto, representante e descricao - View de detalhes com informacoes do representante - Thread de respostas estilo chat (admin vs representante) - Modais de resposta e atualizacao de status com createPortal - Distribuicao visual por tipo e prioridade com barras de progresso - Tempo medio de resolucao - Zona de perigo para exclusao de feedback - Item Feedbacks adicionado ao menu lateral (Sidebar)
+2057679 - fix: usa createPortal para renderizar modais no document.body - Resolve bug de bordas brancas causado por ancestor com transform/animation - Modais agora escapam do stacking context do layout
+d432088 - fix: corrige bug visual do overlay cinza com bordas brancas nas modais
