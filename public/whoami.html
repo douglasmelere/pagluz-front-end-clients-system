@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quem Somos | PagLuz - Economia em energia sustentável</title>
+    <link rel="icon" type="image/x-icon" href="/assets/icone.svg">
+    <meta name="description" content="Conheça a história e missão da PagLuz, conectando geradores a consumidores com energia limpa e economia de até 30% na sua conta.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <style>
+        :root {
+            --primary-green: #35cc20;
+            --primary-blue: #0c3a59;
+            --dark-blue: #041e31;
+            --light-green: #6edc5f;
+            --hover-green: #2db018;
+        }
+        
+        body {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-green {
+            color: var(--primary-green);
+        }
+
+        .bg-green {
+            background-color: var(--primary-green);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: var(--primary-blue);
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        
+        .btn-primary:hover:before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--hover-green);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Custom navbar */
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-scrolled {
+            background-color: rgba(4, 30, 49, 0.95);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: var(--primary-green);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-green);
+        }
+        
+        /* Mobile menu animation */
+        #menu-mobile {
+            background-color: var(--primary-blue);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        
+
+        #menu-mobile.translate-x-full {
+            transform: translateX(100%);
+        }
+        
+        /* Efeito de hover no botão de fechar do menu */
+        #close-menu:hover {
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+        
+        /* Efeito para destacar o botão de download no menu mobile */
+        #mobile-download-app {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #mobile-download-app::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(53, 204, 32, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        #mobile-download-app:hover::after {
+            left: 100%;
+        }
+        
+        #menu-mobile.active {
+            transform: translateX(0);
+        }
+        
+        /* Timeline styling */
+        .timeline-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background: var(--primary-green);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            margin-bottom: 50px;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 40px;
+        }
+        
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 40px;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-green);
+            top: 20px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .timeline-item:nth-child(odd)::after {
+            right: -12px;
+        }
+        
+        .timeline-item:nth-child(even)::after {
+            left: -12px;
+        }
+        
+        .timeline-content {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: var(--primary-green);
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timeline-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.75rem;
+        }
+        
+        /* Team member cards */
+        .team-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .team-card-image {
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+        }
+        
+        .team-card-image::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+            z-index: 1;
+        }
+        
+        .team-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .team-card:hover .team-card-image img {
+            transform: scale(1.1);
+        }
+        
+        .team-card-content {
+            padding: 1.5rem;
+        }
+        
+        .team-card-social {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .team-card-social a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            color: var(--primary-blue);
+            transition: all 0.3s ease;
+        }
+        
+        .team-card-social a:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        /* Testimonial cards */
+        .testimonial-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .testimonial-card::before {
+            content: '\201C';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            font-size: 6rem;
+            line-height: 1;
+            color: var(--primary-green);
+            opacity: 0.2;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        
+        .testimonial-author-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 1rem;
+            border: 3px solid var(--primary-green);
+        }
+        
+        .testimonial-author-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Values section styling */
+        .value-card {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .value-card::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, rgba(53, 204, 32, 0.1) 0%, rgba(12, 58, 89, 0.1) 100%);
+            border-radius: 1rem;
+            z-index: -1;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .value-card:hover::before {
+            opacity: 1;
+        }
+        
+        .value-icon {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(53, 204, 32, 0.1);
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .value-card:hover .value-icon {
+            transform: scale(1.1);
+            background: rgba(53, 204, 32, 0.2);
+        }
+        
+        /* Impact counter */
+        .counter-container {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .counter-value {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .counter-label {
+            font-size: 1.25rem;
+            color: white;
+        }
+        
+        /* Certifications */
+        .certification-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .certification-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .certification-image {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+        
+        /* Custom footer styling */
+        .footer-gradient {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+        }
+        
+        .social-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-5px);
+            color: var(--primary-green);
+        }
+        
+        /* Page header */
+        .page-header {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(4, 30, 49, 0.8) 0%, rgba(12, 58, 89, 0.8) 100%);
+            z-index: 1;
+        }
+        
+        .page-header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Responsive adjustments for timeline */
+        @media (max-width: 768px) {
+            .timeline-container::after {
+                left: 31px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 0;
+            }
+            
+            .timeline-item:nth-child(even) {
+                left: 0;
+            }
+            
+            .timeline-item::after {
+                left: 19px;
+            }
+            
+            .timeline-item:nth-child(odd)::after {
+                right: auto;
+                left: 19px;
+            }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+            
+            .counter-value {
+                font-size: 2.5rem;
+            }
+            
+            .counter-label {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Styles for highlight text */
+        .highlight {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .highlight::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 30%;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(53, 204, 32, 0.2);
+            z-index: -1;
+            transform: skew(-15deg);
+        }
+        
+        /* Remove input number arrows */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+    
+        .whatsapp-float:hover {
+            background-color: #20ba5a;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+    
+        .whatsapp-float i {
+            margin-top: 0;
+        }
+    
+        .whatsapp-tooltip {
+            position: absolute;
+            top: -45px;
+            background-color: #333;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+    
+        .whatsapp-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+    
+        .whatsapp-float:hover .whatsapp-tooltip {
+            visibility: visible;
+            opacity: 1;
+            top: -40px;
+        }
+    
+        /* Animação de pulsação */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+    
+        .whatsapp-float {
+            animation: pulse 2s infinite;
+        }
+    
+        /* Responsividade */
+        @media screen and (max-width: 768px) {
+            .whatsapp-float {
+                width: 50px;
+                height: 50px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Navbar -->
+    <nav id="navbar" class="navbar fixed top-0 w-full z-50 py-4 navbar-scrolled">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="flex items-center">
+                <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12 md:h-8 lg:h-12 transform transition-transform hover:scale-105">
+            </a>
+            
+            <!-- Links desktop -->
+            <div class="hidden lg:flex space-x-8 items-center">
+                <a href="/" class="nav-link text-white text-lg font-medium px-1 py-1">Home</a>
+                <a href="/whoami" class="nav-link text-green text-lg font-medium px-1 py-1">Quem Somos</a>
+                <a href="/consumer" class="nav-link text-white text-lg font-medium px-1 py-1">Consumidor</a>
+                <a href="/generator" class="nav-link text-white text-lg font-medium px-1 py-1">Gerador</a>
+                <a href="#contato" class="btn-primary ml-4 px-6 py-3 text-lg">Solicitar Simulação</a>
+            </div>
+
+            <!-- Menu hamburger mobile -->
+            <button id="menu-hamburguer" class="lg:hidden text-white text-2xl focus:outline-none">
+                <span class="flex flex-col space-y-1.5">
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Menu Mobile -->
+    <div id="menu-mobile"
+         class="lg:hidden fixed inset-0 bg-primary-blue/95 backdrop-blur-sm z-50 flex flex-col transform transition-transform duration-300 ease-in-out translate-x-full"
+         aria-hidden="true">
+      <div class="flex justify-between items-center p-6 border-b border-blue-800">
+        <a href="/" class="flex items-center" aria-label="PagLuz Home">
+          <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12" loading="lazy">
+        </a>
+        <button id="close-menu" class="text-white text-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-green hover:text-green transition-colors" aria-label="Close menu">
+          <i class="fas fa-times transform transition-transform duration-200 hover:rotate-90"></i>
+        </button>
+      </div>
+      <nav class="flex flex-col items-center space-y-4 text-white text-lg mt-8 px-6" aria-label="Mobile navigation">
+        <a href="/"
+           class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg data-[active=true]:border-green data-[active=true]:bg-blue-900/50"
+           data-active="false">Home</a>
+        <a href="/whoami"
+           class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg data-[active=true]:border-green data-[active=true]:bg-blue-900/50"
+           data-active="true">Quem Somos</a>
+        <a href="/consumer"
+           class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg data-[active=true]:border-green data-[active=true]:bg-blue-900/50"
+           data-active="false">Consumidor</a>
+        <a href="/generator"
+           class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg data-[active=true]:border-green data-[active=true]:bg-blue-900/50"
+           data-active="false">Gerador</a>
+        <div class="w-full h-px bg-blue-800 my-4"></div>
+        <a href="#download-app" id="mobile-download-app"
+           class="w-full flex items-center justify-between py-4 px-5 bg-green/10 text-white hover:bg-green/20 focus:bg-green/20 rounded-lg transition-colors">
+          <span>Baixar Aplicativo</span>
+          <i class="fas fa-mobile-alt"></i>
+        </a>
+        <a href="#contato"
+           class="w-full py-4 px-5 bg-green text-primary-blue font-bold rounded-lg text-center hover:bg-green/90 focus:bg-green/90 transition-colors">Solicitar Simulação</a>
+      </nav>
+      <footer class="mt-auto p-6 border-t border-blue-800">
+        <div class="flex justify-center space-x-8 mb-4">
+          <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="https://www.instagram.com/pag.luz/#" target="_blank" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        </div>
+        <p class="text-white text-opacity-60 text-center text-sm">© 2025 PagLuz</p>
+      </footer>
+    </div>
+    
+    <!-- Modal para download do app -->
+    <div id="app-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-xl p-8 max-w-md mx-4 relative transform transition-all duration-300 opacity-0 scale-95" id="modal-content">
+        <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl" aria-label="Close modal">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="text-center">
+          <div class="bg-green bg-opacity-10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-mobile-alt text-white text-4xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-primary-blue mb-2">App em Desenvolvimento</h3>
+          <p class="text-gray-600 mb-6">Nosso aplicativo ainda está em desenvolvimento. Em breve você poderá gerenciar sua economia de energia diretamente do seu celular!</p>
+          <div class="flex flex-col space-y-4">
+            <div class="flex items-center justify-center space-x-4 bg-gray-50 p-3 rounded-lg">
+              <i class="fas fa-bell text-green"></i>
+              <p class="text-primary-blue">Quer ser notificado quando o app estiver disponível?</p>
+            </div>
+            <form class="flex gap-2">
+              <input type="email" placeholder="Seu e-mail" class="form-input flex-1 border border-gray-300 rounded-lg px-4 py-2" />
+              <button type="submit" class="bg-green text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <section class="page-header pt-32 pb-20 md:pt-40 md:pb-28 bg-blue-900">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col items-center text-center">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6" data-aos="fade-up">
+                    Quem <span class="text-gradient">Somos</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-white opacity-90 max-w-3xl mb-8" data-aos="fade-up" data-aos-delay="100">
+                    Conheça nossa história, visão e os valores que guiam nosso compromisso em transformar o mercado de energia no Brasil.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nossa História Section -->
+    <section class="bg-white py-20 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center mb-16">
+                    <div class="w-full md:w-1/2 mb-10 md:mb-0 md:pr-12" data-aos="fade-right">
+                        <h2 class="text-3xl md:text-4xl font-bold text-primary-blue mb-6">
+                            Nossa <span class="text-gradient">História</span>
+                        </h2>
+                        <p class="text-gray-700 text-lg mb-6">
+                            A PagLuz nasceu da visão de um grupo de empreendedores apaixonados por inovação e sustentabilidade, que identificaram uma oportunidade única no mercado de energia brasileiro.
+                        </p>
+                        <p class="text-gray-700 text-lg mb-6">
+                            Em 2024, enquanto o mundo enfrentava desafios sem precedentes, percebemos que muitas famílias e empresas buscavam formas de reduzir custos, enquanto geradores de energia renovável enfrentavam dificuldades para monetizar seus créditos de energia excedentes.
+                        </p>
+                        <p class="text-gray-700 text-lg">
+                            Nesse cenário, criamos uma plataforma inovadora que conecta de forma transparente e eficiente geradores de energia renovável a consumidores que desejam economizar em suas contas de luz, promovendo ao mesmo tempo a sustentabilidade ambiental.
+                        </p>
+                    </div>
+                    <div class="w-full md:w-1/2" data-aos="fade-left" data-aos-delay="100">
+                        <img src="assets/whoami-resized.png" alt="Fundadores da PagLuz" class="rounded-lg shadow-lg w-full">
+                    </div>
+                </div>
+
+                <!-- Timeline 
+                <h3 class="text-2xl md:text-3xl font-bold text-center text-primary-blue mb-16" data-aos="fade-up">
+                    Nossa jornada até aqui
+                </h3>
+                
+                <div class="timeline-container" data-aos="fade-up">
+                    <div class="timeline-item" data-aos="fade-right">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - Março</div>
+                            <h3 class="timeline-title">Nascimento da ideia</h3>
+                            <p class="text-gray-700">
+                                Nossa equipe identificou a oportunidade de conectar geradores e consumidores de energia limpa, começando o desenvolvimento do conceito e estudos de viabilidade.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" data-aos="fade-left">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - Setembro</div>
+                            <h3 class="timeline-title">Desenvolvimento da plataforma</h3>
+                            <p class="text-gray-700">
+                                Iniciamos o desenvolvimento da nossa plataforma tecnológica proprietária para gerenciamento e distribuição de créditos de energia.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" data-aos="fade-right">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2025 - Janeiro</div>
+                            <h3 class="timeline-title">Primeiras parcerias</h3>
+                            <p class="text-gray-700">
+                                Estabelecemos nossas primeiras parcerias com geradores de energia solar e eólica, iniciando os primeiros projetos-piloto com consumidores selecionados.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" data-aos="fade-left">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2025 - Feveiro</div>
+                            <h3 class="timeline-title">Expansão regional</h3>
+                            <p class="text-gray-700">
+                                Ampliamos nossa operação para múltiplas regiões de Santa Catarina, alcançando a marca de 50 consumidores atendidos e 5 usinas geradoras parceiras.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" data-aos="fade-right">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2025 - Março</div>
+                            <h3 class="timeline-title">Inovação e reconhecimento</h3>
+                            <p class="text-gray-700">
+                                Por termos sido reconhecidos no evento Startup Weekend, ampliamos nossa equipe para atender à crescente demanda.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" data-aos="fade-left">
+                        <div class="timeline-content">
+                            <div class="timeline-date">2025 - Atual</div>
+                            <h3 class="timeline-title">Consolidação e futuro</h3>
+                            <p class="text-gray-700">
+                                Seguimos expandindo nossos serviços e desenvolvendo novas soluções para democratizar o acesso à energia limpa e sustentável para todos os brasileiros.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Missão, Visão e Valores -->
+    <section class="bg-gray-50 py-20 md:py-24">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-16" data-aos="fade-up">
+                Missão, Visão e <span class="text-gradient">Valores</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+                <!-- Missão -->
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-bullseye text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Nossa Missão</h3>
+                    <p class="text-gray-700 text-center">
+                        Democratizar o acesso à energia renovável no Brasil, conectando geradores e consumidores com transparência e eficiência, promovendo economia financeira e sustentabilidade ambiental.
+                    </p>
+                </div>
+                
+                <!-- Visão -->
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-eye text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Nossa Visão</h3>
+                    <p class="text-gray-700 text-center">
+                        Ser a principal referência na gestão e distribuição de créditos de energia renovável no Brasil, transformando positivamente a forma como a sociedade acessa e consome energia.
+                    </p>
+                </div>
+                
+                <!-- Propósito -->
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="300">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-heart text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Nosso Propósito</h3>
+                    <p class="text-gray-700 text-center">
+                        Contribuir para um futuro mais sustentável e economicamente viável para todos, impulsionando a transição energética para fontes renováveis e acessíveis.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Valores -->
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-primary-blue mb-10" data-aos="fade-up">
+                Nossos Valores
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="100">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-leaf text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Sustentabilidade</h3>
+                    <p class="text-gray-700">
+                        Acreditamos no poder transformador da energia limpa. Cada ação que tomamos visa contribuir para um futuro mais sustentável e equilibrado para nosso planeta.
+                    </p>
+                </div>
+                
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="200">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-handshake text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Transparência</h3>
+                    <p class="text-gray-700">
+                        Construímos relações baseadas em confiança, com comunicação clara e processos transparentes que permitem a todos entenderem exatamente como funcionamos.
+                    </p>
+                </div>
+                
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="300">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-lightbulb text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Inovação</h3>
+                    <p class="text-gray-700">
+                        Buscamos constantemente soluções criativas e disruptivas para os desafios do setor energético, investindo em tecnologia e novas abordagens.
+                    </p>
+                </div>
+                
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="400">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-users text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Colaboração</h3>
+                    <p class="text-gray-700">
+                        Acreditamos no poder do trabalho em equipe e das parcerias. Juntos, geradores, consumidores e nossa equipe formam um ecossistema forte e resiliente.
+                    </p>
+                </div>
+                
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="500">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-chart-line text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Eficiência</h3>
+                    <p class="text-gray-700">
+                        Otimizamos processos e recursos para entregar o máximo valor possível a nossos parceiros e clientes, com economia de tempo e dinheiro.
+                    </p>
+                </div>
+                
+                <div class="value-card bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="600">
+                    <div class="value-icon mx-auto">
+                        <i class="fas fa-balance-scale text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-primary-blue mb-3">Acessibilidade</h3>
+                    <p class="text-gray-700">
+                        Trabalhamos para democratizar o acesso à energia limpa, tornando-a disponível para todos, independentemente de seu poder aquisitivo ou localização.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nosso Impacto -->
+    <section class="py-20 md:py-24 bg-primary-blue relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-white mb-16" data-aos="fade-up">
+                Nosso <span class="text-gradient">Impacto</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="counter-container" data-aos="fade-up" data-aos-delay="100">
+                    <div class="counter-value" data-value="5000">1.000+</div>
+                    <p class="counter-label">Consumidores Atendidos</p>
+                </div>
+                
+                <div class="counter-container" data-aos="fade-up" data-aos-delay="200">
+                    <div class="counter-value" data-value="10">10+</div>
+                    <p class="counter-label">Usinas Parceiras</p>
+                </div>
+                
+                <div class="counter-container" data-aos="fade-up" data-aos-delay="300">
+                    <div class="counter-value" data-value="25">25%</div>
+                    <p class="counter-label">Economia Média nas Contas</p>
+                </div>
+                
+                <div class="counter-container" data-aos="fade-up" data-aos-delay="400">
+                    <div class="counter-value" data-value="15000">63,50+</div>
+                    <p class="counter-label">Toneladas de CO₂ Evitadas</p>
+                </div>
+            </div>
+            
+           <!-- Testimonials -->
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-white mt-20 mb-12" data-aos="fade-up">
+                O que nossos clientes dizem
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Testimonial 1 -->
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                    <p class="text-gray-700 italic mb-6">
+                        "Desde que adotamos a PagLuz, nossa conta de luz caiu quase 20%! O procedimento foi descomplicado, tudo bem explicado e sem precisar de qualquer instalação. Indicamos para todo mundo!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/shell.png" alt="Cliente">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Posto Shell - Luzerna</h4>
+                            <p class="text-gray-600">Consumidor Comercial</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <p class="text-gray-700 italic mb-6">
+                        "Desde que adotamos a PagLuz, nossa conta de luz caiu quase 20%! O procedimento foi descomplicado, tudo bem explicado e sem precisar de qualquer instalação. Indicamos para todo mundo!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/ponto-do-cafe.jpg" alt="Cliente">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Ponto do Café - Luzerna</h4>
+                            <p class="text-gray-600">Consumidor Comercial</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Background elements -->
+        <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="polka-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1" fill="white" />
+                    </pattern>
+                </defs>
+                <rect x="0" y="0" width="100%" height="100%" fill="url(#polka-dots)" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-white py-20 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto bg-primary-blue rounded-2xl p-10 relative overflow-hidden" data-aos="fade-up">
+                <!-- Background elements -->
+                <div class="absolute inset-0 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-green opacity-10 rounded-full translate-x-1/4 -translate-y-1/4"></div>
+                    <div class="absolute bottom-0 left-0 w-96 h-96 bg-green opacity-10 rounded-full -translate-x-1/3 translate-y-1/3"></div>
+                </div>
+                
+                <div class="relative z-10 text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+                        Faça parte desta <span class="text-gradient">revolução energética</span>
+                    </h2>
+                    <p class="text-white text-lg md:text-xl max-w-3xl mx-auto mb-10 opacity-90">
+                        Junte-se a milhares de brasileiros que já estão economizando em suas contas de luz enquanto contribuem para um planeta mais sustentável.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="#" class="btn-primary text-xl px-8 py-4 inline-flex items-center justify-center">
+                            Solicitar simulação gratuita
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                        <a href="#" class="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-lg transition-all hover:bg-white hover:text-primary-blue inline-flex items-center justify-center">
+                            Fale com um consultor
+                            <i class="fas fa-headset ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-gradient text-white py-16 md:py-20 relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="100">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">PagLuz</h3>
+                    <p class="text-lg md:text-xl text-center md:text-left opacity-90">
+                        Sua conta reduzida,<br>seu bolso e o planeta felizes.
+                    </p>
+                    <div class="mt-8">
+                        <img src="/assets/LOGO NOVA SVG.svg" class="w-40 md:w-48" alt="Logo PagLuz">
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="200">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Contato</h3>
+                    <div class="space-y-4">
+                        <a href="mailto:pagueminhaluz@gmail.com" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>comercial.pagluz@gmail.com</span>
+                        </a>
+                        <a href="tel:+5549998376140" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-phone-alt mr-3"></i>
+                            <span>(49) 99837-6140</span>
+                        </a>
+                        <div class="flex items-center text-blue-300 text-lg md:text-xl">
+                            <i class="fas fa-map-marker-alt mr-3"></i>
+                            <span>Luzerna - SC</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="300">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Redes Sociais</h3>
+                    <div class="flex space-x-6">
+                        <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="https://www.instagram.com/pag.luz/#" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-blue-900/50 w-full">
+                        <h4 class="text-xl font-semibold mb-4">Links Rápidos</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/" class="text-blue-300 hover:text-white transition-colors">Home</a>
+                            <a href="/whoami" class="text-blue-300 hover:text-white transition-colors">Quem Somos</a>
+                            <a href="/consumer" class="text-blue-300 hover:text-white transition-colors">Consumidor</a>
+                            <a href="/generator" class="text-blue-300 hover:text-white transition-colors">Gerador</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-blue-900/50 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-blue-300 text-sm md:text-base mb-4 md:mb-0">
+                        © 2025 PagLuz. Todos os direitos reservados.
+                    </p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Política de Privacidade</a>
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Termos de Uso</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 left-0 w-full h-full opacity-5">
+            <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary-green blur-3xl"></div>
+            <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-green blur-3xl"></div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/5549998376140?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20a%20Pague%20Minha%20Luz." 
+        class="whatsapp-float" 
+        target="_blank"
+        rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Fale conosco</span>
+    </a>
+
+    <script>
+        // Initialize AOS animations
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out',
+                once: true
+            });
+            
+            // Menu mobile toggle
+            const menuHamburger = document.getElementById('menu-hamburguer');
+            const closeMenu = document.getElementById('close-menu');
+            const menuMobile = document.getElementById('menu-mobile');
+            const mobileLinks = document.querySelectorAll('#menu-mobile a');
+            
+            menuHamburger.addEventListener('click', function() {
+                menuMobile.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            function closeMenuMobile() {
+                menuMobile.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            closeMenu.addEventListener('click', closeMenuMobile);
+            
+            // Close menu when clicking on links
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', closeMenuMobile);
+            });
+            
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

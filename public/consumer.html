@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumidor | PagLuz - Economize até 30% na sua conta</title>
+    <link rel="icon" type="image/x-icon" href="/assets/icone.svg">
+    <meta name="description" content="Reduza sua conta de luz em até 30% sem instalação. Descubra como a PagLuz conecta você a energia limpa com economia garantida todo mês.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #35cc20;
+            --primary-blue: #0c3a59;
+            --dark-blue: #041e31;
+            --light-green: #6edc5f;
+            --hover-green: #2db018;
+        }
+        
+        body {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-green {
+            color: var(--primary-green);
+        }
+
+        .bg-green {
+            background-color: var(--primary-green);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: var(--primary-blue);
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        
+        .btn-primary:hover:before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--hover-green);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Custom navbar */
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-scrolled {
+            background-color: rgba(4, 30, 49, 0.95); /* Azul escuro com opacidade */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: var(--primary-green);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-green);
+        }
+        
+        /* Mobile menu animation */
+        #menu-mobile {
+            background-color: var(--primary-blue); /* Cor de fundo consistente */
+            /* A transição é controlada por classes do Tailwind (translate-x-full) */
+        }
+        
+        /* As classes 'translate-x-full' e a ausência dela controlam a visibilidade */
+        /* O script JS vai adicionar/remover 'translate-x-full' e 'active' (se usada) */
+
+        #close-menu:hover { /* Efeito de hover para o botão de fechar do menu */
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+        
+        #mobile-download-app { /* Efeito para destacar o botão de download no menu mobile */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #mobile-download-app::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(53, 204, 32, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        #mobile-download-app:hover::after {
+            left: 100%;
+        }
+
+        /* Benefits cards - Estilos já presentes e parecem bons */
+        .benefit-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .benefit-icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            background-color: rgba(53, 204, 32, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-card:hover .benefit-icon-container {
+            transform: scale(1.1);
+            background-color: rgba(53, 204, 32, 0.2);
+        }
+        
+        /* Step cards - Estilos já presentes */
+        .step-container {
+            position: relative;
+        }
+        
+        .step-connector {
+            position: absolute;
+            top: 40px;
+            left: calc(50% - 1px);
+            width: 2px;
+            height: calc(100% - 80px);
+            background-color: var(--primary-green);
+            z-index: 0;
+        }
+        
+        .step-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-green);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover .step-number {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(53, 204, 32, 0.3);
+        }
+        
+        /* FAQ section - Estilos já presentes */
+        .faq-item {
+            border-bottom: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            cursor: pointer;
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question h3 {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question:hover h3 {
+            color: var(--primary-green);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out; /* Melhorado */
+            padding: 0 0;
+        }
+        
+        .faq-answer-content {
+            padding-bottom: 1.5rem;
+        }
+        
+        .faq-item.active .faq-question h3 {
+            color: var(--primary-green);
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 500px; /* Ajuste se o conteúdo for maior */
+        }
+        
+        .faq-toggle {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+        
+        /* Comparison table - Estilos já presentes */
+        .comparison-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-table th {
+            background-color: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .comparison-table th:first-child {
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .comparison-table td:first-child {
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:nth-child(odd) {
+            background-color: #f8fafc;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: white;
+        }
+        
+        .comparison-highlight {
+            background-color: rgba(53, 204, 32, 0.1) !important;
+        }
+        
+        /* Testimonial slider - Estilos já presentes */
+        .testimonial-slide {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .testimonial-slide::before {
+            content: '\201C';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 4rem;
+            color: var(--primary-green);
+            opacity: 0.2;
+            line-height: 1;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        
+        .testimonial-author-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 1rem;
+            border: 3px solid var(--primary-green);
+        }
+        
+        .testimonial-author-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .testimonial-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .testimonial-control {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .testimonial-control:hover,
+        .testimonial-control.active-dot { /* Estilo para ponto ativo */
+            background-color: var(--primary-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+         .testimonial-control.active-dot i {
+            font-weight: 900; /* Torna o ícone sólido para o ponto ativo */
+        }
+        
+        /* Statistics - Estilos já presentes */
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-value {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        /* Calculator styles - Estilos já presentes (se aplicável a esta página) */
+        .calculator-box { /* Reutilizado para o formulário */
+            position: relative;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .calculator-box::after { /* Adiciona borda inferior ao formulário */
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+        }
+        
+        .calculator-input { /* Estilo para inputs da calculadora, pode ser reutilizado/ajustado */
+            transition: all 0.3s ease;
+            font-size: 1.5rem; /* Pode ser grande para inputs de texto normais */
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        
+        .calculator-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(53, 204, 32, 0.2);
+            border-color: var(--primary-green);
+        }
+        
+        /* Form styling - Ajustado para inputs de formulário */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--primary-blue);
+        }
+        
+        .form-input { /* Classe genérica para inputs de formulário */
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem; /* Tamanho mais apropriado para texto */
+            transition: all 0.3s ease;
+            color: #333;
+        }
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(53, 204, 32, 0.15);
+        }
+
+        /* Custom footer styling */
+        .footer-gradient {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+        }
+        
+        .social-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-5px);
+            color: var(--primary-green);
+        }
+        
+        /* Page header (geralmente para a imagem de fundo com overlay) */
+        .page-header {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before { 
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(4, 30, 49, 0.7), rgba(12, 58, 89, 0.7)); 
+            z-index: 1;
+        }
+        
+        .page-header-content { 
+            position: relative;
+            z-index: 2;
+        }
+        
+        .highlight {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .highlight::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 30%;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(53, 204, 32, 0.2);
+            z-index: -1;
+            transform: skew(-15deg);
+        }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .whatsapp-float:hover {
+            background-color: #20ba5a;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        
+        .whatsapp-float i {
+            margin-top: 0;
+        }
+        
+        .whatsapp-tooltip {
+            position: absolute;
+            top: -45px;
+            left: 50%; /* Para centralizar */
+            transform: translateX(-50%); /* Para centralizar */
+            background-color: #333;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .whatsapp-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .whatsapp-float:hover .whatsapp-tooltip {
+            visibility: visible;
+            opacity: 1;
+            top: -40px;
+        }
+        
+        /* Animação de pulsação - Certifique-se que está definida apenas uma vez */
+        @keyframes pulse { 
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+        .whatsapp-float {
+            animation: pulse 2s infinite;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .whatsapp-float {
+                width: 50px;
+                height: 50px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 24px;
+            }
+            /* Outros ajustes responsivos podem ir aqui */
+        }
+    </style>
+</head>
+
+<body class="font-sans">
+    <nav id="navbar" class="navbar fixed top-0 w-full z-50 py-4 navbar-scrolled">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="/" class="flex items-center">
+                <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12 md:h-8 lg:h-12 transform transition-transform hover:scale-105">
+            </a>
+            
+            <div class="hidden lg:flex space-x-8 items-center">
+                <a href="/" class="nav-link text-white text-lg font-medium px-1 py-1">Home</a>
+                <a href="/whoami" class="nav-link text-white text-lg font-medium px-1 py-1">Quem Somos</a>
+                <a href="/consumer" class="nav-link text-green text-lg font-medium px-1 py-1">Consumidor</a>
+                <a href="/generator" class="nav-link text-white text-lg font-medium px-1 py-1">Gerador</a>
+                <a href="https://wa.me/5549998376140?text=Ol%C3%A1,%20quero%20solicitar%20uma%20simula%C3%A7%C3%A3o%20para%20economizar%20na%20minha%20conta%20de%20luz" target="_blank" rel="noopener noreferrer" class="btn-primary ml-4 px-6 py-3 text-lg">Solicitar Simulação</a>
+            </div>
+
+            <button id="menu-hamburguer" class="lg:hidden text-white text-2xl focus:outline-none">
+                <span class="flex flex-col space-y-1.5">
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="menu-mobile" class="lg:hidden fixed inset-0 bg-primary-blue/95 backdrop-blur-sm z-[1000] flex flex-col transform transition-transform duration-300 ease-in-out translate-x-full" aria-hidden="true">
+        <div class="flex justify-between items-center p-6 border-b border-blue-800">
+            <a href="/" class="flex items-center" aria-label="PagLuz Home">
+                <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12" loading="lazy">
+            </a>
+            <button id="close-menu" class="text-white text-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-green hover:text-green transition-colors" aria-label="Close menu">
+                <i class="fas fa-times transform transition-transform duration-200 hover:rotate-90"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col items-center space-y-4 text-white text-lg mt-8 px-6" aria-label="Mobile navigation">
+            <a href="/" class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg">Home</a>
+            <a href="/whoami" class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg">Quem Somos</a>
+            <a href="/consumer" class="w-full py-4 px-5 border-l-4 border-green bg-blue-900/50 text-green transition-all rounded-r-lg">Consumidor</a>
+            <a href="/generator" class="w-full py-4 px-5 border-l-4 border-transparent hover:border-green hover:text-green hover:bg-blue-900/50 focus:bg-blue-900/50 focus:border-green transition-all rounded-r-lg">Gerador</a>
+            <div class="w-full h-px bg-blue-800 my-4"></div>
+            <a href="#download-app" id="mobile-download-app" class="w-full flex items-center justify-between py-4 px-5 bg-green/10 text-white hover:bg-green/20 focus:bg-green/20 rounded-lg transition-colors">
+                <span>Baixar Aplicativo</span>
+                <i class="fas fa-mobile-alt"></i>
+            </a>
+            <a href="https://wa.me/5549998376140?text=Ol%C3%A1,%20quero%20solicitar%20uma%20simula%C3%A7%C3%A3o%20para%20economizar%20na%20minha%20conta%20de%20luz" target="_blank" rel="noopener noreferrer" class="w-full py-4 px-5 bg-green text-primary-blue font-bold rounded-lg text-center hover:bg-green/90 focus:bg-green/90 transition-colors">Solicitar Simulação</a>
+        </nav>
+        <footer class="mt-auto p-6 border-t border-blue-800">
+            <div class="flex justify-center space-x-8 mb-4">
+                <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.instagram.com/pag.luz/" target="_blank" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-icon text-2xl text-white hover:text-green focus:text-green transition-colors" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
+            <p class="text-white text-opacity-60 text-center text-sm">&copy; 2025 PagLuz</p>
+        </footer>
+    </div>
+
+    <div id="app-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[1001] flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4 relative transform transition-all duration-300 opacity-0 scale-95" id="modal-content">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center">
+                <div class="bg-green bg-opacity-10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-mobile-alt text-white text-4xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-primary-blue mb-2">App em Desenvolvimento</h3>
+                <p class="text-gray-600 mb-6">Nosso aplicativo está em desenvolvimento. Em breve você poderá gerenciar sua economia de energia diretamente do seu celular!</p>
+                <div class="flex flex-col space-y-4">
+                    <div class="flex items-center justify-center space-x-4 bg-gray-50 p-3 rounded-lg">
+                        <i class="fas fa-bell text-green"></i>
+                        <p class="text-primary-blue">Quer ser notificado quando o app estiver disponível?</p>
+                    </div>
+                    <form id="app-notification-form" class="flex gap-2">
+                        <input type="email" name="app_email_notification" placeholder="Seu e-mail" class="form-input flex-1 border border-gray-300 rounded-lg px-4 py-2" required />
+                        <button type="submit" class="bg-green text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="page-header pt-32 pb-20 md:pt-40 md:pb-28 bg-cover bg-center" style="background-image: url('/assets/fundo.svg');">
+        <div class="page-header-content container mx-auto px-4">
+            <div class="flex flex-col items-center text-center">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6" data-aos="fade-up">
+                    Economize até <span class="text-gradient">30%</span> na sua conta de luz
+                </h1>
+                <p class="text-xl md:text-2xl text-white opacity-90 max-w-3xl mb-8" data-aos="fade-up" data-aos-delay="100">
+                    Conectamos você à energia renovável sem instalação de equipamentos. Apenas benefícios, sem complicações.
+                </p>
+                <a href="https://wa.me/5549998376140?text=Ol%C3%A1,%20quero%20calcular%20minha%20economia%20na%20conta%20de%20luz%20com%20a%20PagLuz" target="_blank" rel="noopener noreferrer" class="btn-primary text-xl px-8 py-4 inline-flex items-center" data-aos="fade-up" data-aos-delay="200">
+                    Calcule sua economia
+                    <i class="fas fa-calculator ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Benefícios para <span class="text-gradient">Consumidores</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Descubra como a PagLuz oferece uma solução simples, econômica e sustentável para reduzir o valor da sua conta de energia.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-piggy-bank text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Economize até 30%</h3>
+                    <p class="text-gray-700 text-center">
+                        Reduza o valor da sua conta de luz em até 30% todos os meses, sem investimento inicial ou custos ocultos.
+                    </p>
+                    <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Economia garantida
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-tools text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Sem instalação</h3>
+                    <p class="text-gray-700 text-center">
+                        Não é necessário instalar painéis solares ou qualquer equipamento. Continue recebendo energia da mesma forma.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Zero obras
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="300">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-leaf text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Energia 100% limpa</h3>
+                    <p class="text-gray-700 text-center">
+                        Contribua para um planeta mais sustentável utilizando energia renovável sem mudar sua rotina diária.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Sustentabilidade
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="400">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-file-contract text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Sem burocracia</h3>
+                    <p class="text-gray-700 text-center">
+                        Processo simplificado e descomplicado. Nós cuidamos de toda a documentação e requisitos legais.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Processo simples
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="500">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-chart-line text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Relatórios detalhados</h3>
+                    <p class="text-gray-700 text-center">
+                        Acompanhe sua economia e consumo através de relatórios claros e transparentes em nossa plataforma.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Transparência total
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="600">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-headset text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Suporte dedicado</h3>
+                    <p class="text-gray-700 text-center">
+                        Conte com nossa equipe de especialistas para esclarecer dúvidas e auxiliar em qualquer momento.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Atendimento premium
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-gray-50"> 
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Como <span class="text-gradient">Funciona</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                O processo é simples e totalmente descomplicado. Veja como você pode começar a economizar na sua conta de luz em apenas 4 passos:
+            </p>
+            <div class="max-w-4xl mx-auto mt-16">
+                <div class="step-container relative">
+                    <div class="step-connector hidden md:block"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12"> 
+                        <div class="step-card" data-aos="fade-right">
+                            <div class="step-number">1</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Solicite uma simulação</h3>
+                            <p class="text-gray-700 text-center">
+                                Preencha nosso formulário com informações básicas sobre seu consumo de energia atual para calcularmos sua economia potencial.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-left">
+                            <div class="step-number">2</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Análise personalizada</h3>
+                            <p class="text-gray-700 text-center">
+                                Nossa equipe analisa seu perfil de consumo e elabora uma proposta personalizada detalhando sua economia mensal.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-right">
+                            <div class="step-number">3</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Assinatura do contrato</h3>
+                            <p class="text-gray-700 text-center">
+                                Após aprovar a proposta, assinamos o contrato digitalmente e iniciamos o processo junto à distribuidora de energia.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-left">
+                            <div class="step-number">4</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Comece a economizar</h3>
+                            <p class="text-gray-700 text-center">
+                                Em até 60 dias, sua conta de luz já virá com o desconto aplicado. Sem instalação, sem burocracia, apenas economia!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-16 text-center" data-aos="fade-up">
+                    <a href="https://wa.me/+5549998376140?text=Ol%C3%A1,%20quero%20economizar%20na%20minha%20fatura" class="btn-primary text-xl px-10 py-4 inline-flex items-center">
+                        Quero economizar agora
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Por que escolher a <span class="text-gradient">PagLuz</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Compare as opções disponíveis no mercado e entenda por que somos a melhor escolha para reduzir sua conta de luz.
+            </p>
+            
+            <div class="overflow-x-auto" data-aos="fade-up" data-aos-delay="200">
+                <table class="comparison-table w-full max-w-5xl mx-auto">
+                    <thead>
+                        <tr>
+                            <th class="w-1/4"></th>
+                            <th class="w-1/4">Conta Tradicional</th>
+                            <th class="w-1/4">Instalação Solar</th>
+                            <th class="w-1/4">PagLuz</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Economia imediata</td>
+                            <td><i class="fas fa-times text-red-500"></i></td>
+                            <td><i class="fas fa-times text-red-500"></i></td>
+                            <td class="comparison-highlight"><i class="fas fa-check text-green"></i></td>
+                        </tr>
+                        <tr>
+                            <td>Investimento inicial</td>
+                            <td>R$ 0</td>
+                            <td>R$ 15.000 a R$ 50.000</td>
+                            <td class="comparison-highlight">R$ 0</td>
+                        </tr>
+                        <tr>
+                            <td>Tempo de instalação</td>
+                            <td>Imediato</td>
+                            <td>1 a 3 meses</td>
+                            <td class="comparison-highlight">Sem instalação</td>
+                        </tr>
+                        <tr>
+                            <td>Economia média</td>
+                            <td>0%</td>
+                            <td>Até 95% (após payback)</td>
+                            <td class="comparison-highlight">Até 30%</td>
+                        </tr>
+                        <tr>
+                            <td>Manutenção necessária</td>
+                            <td>Não</td>
+                            <td>Sim</td>
+                            <td class="comparison-highlight">Não</td>
+                        </tr>
+                        <tr>
+                            <td>Preocupação com clima</td>
+                            <td>Não</td>
+                            <td>Sim</td>
+                            <td class="comparison-highlight">Não</td>
+                        </tr>
+                        <tr>
+                            <td>Fidelidade</td>
+                            <td>Não tem</td>
+                            <td>Sistema permanente</td>
+                            <td class="comparison-highlight">Mínimo 12 meses</td>
+                        </tr>
+                        <tr>
+                            <td>Energia renovável</td>
+                            <td><i class="fas fa-times text-red-500"></i></td>
+                            <td><i class="fas fa-check text-green"></i></td>
+                            <td class="comparison-highlight"><i class="fas fa-check text-green"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-gray-50 relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Histórias de <span class="text-gradient">Sucesso</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Conheça a experiência de consumidores reais que já estão economizando com a PagLuz.
+            </p>
+            
+            <div class="max-w-3xl mx-auto testimonial-slider relative" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-slide" id="testimonial-1-consumer">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Desde que adotamos a PagLuz, nossa conta de luz caiu quase 20%! O procedimento foi descomplicado, tudo bem explicado e sem precisar de qualquer instalação. Indicamos para todo mundo!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/ponto-do-cafe.jpg" alt="Ponto do Café">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Ponto do Café</h4>
+                            <p class="text-gray-600 text-sm">Padaria, Luzerna</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-slide hidden" id="testimonial-2-consumer">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Como síndica de um condomínio residencial com 120 apartamentos, busquei alternativas para reduzir os custos da área comum. A PagLuz proporcionou uma economia de 25% nas contas do condomínio, o que nos permitiu não aumentar a taxa condominial por mais de um ano, para a felicidade dos moradores!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/prédio.jpg" alt="Mariana Silva">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Mariana Silva</h4>
+                            <p class="text-gray-600 text-sm">Síndica, Joaçaba</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-slide hidden" id="testimonial-3-consumer">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Minha fatura de energia era um dos maiores custos fixos do meu posto de gasolina. Com a PagLuz, consegui uma redução significativa sem precisar investir em nada. O atendimento foi excelente e o processo todo muito rápido!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/shell.png" alt="Posto Shell">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Posto Shell</h4>
+                            <p class="text-gray-600 text-sm">Posto de Gasolina, Luzerna</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-controls">
+                    <button class="testimonial-control active-dot" data-slide-target="testimonial-1-consumer" aria-label="Ver depoimento 1">
+                        <i class="fas fa-circle text-xs"></i></button>
+                    <button class="testimonial-control" data-slide-target="testimonial-2-consumer" aria-label="Ver depoimento 2">
+                        <i class="far fa-circle text-xs"></i></button>
+                    <button class="testimonial-control" data-slide-target="testimonial-3-consumer" aria-label="Ver depoimento 3">
+                        <i class="far fa-circle text-xs"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="absolute -top-20 -left-20 w-80 h-80 bg-primary-green opacity-5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-primary-green opacity-5 rounded-full blur-3xl"></div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Nossos <span class="text-gradient">Números</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Resultados concretos que demonstram o impacto positivo da PagLuz para nossos consumidores.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-value">1.000+</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Consumidores atendidos</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-value">25%</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Economia média mensal</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-value">R$96K</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Economia gerada em 2024</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-value">98%</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Satisfação dos clientes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white"> 
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Perguntas <span class="text-gradient">Frequentes</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Encontre respostas para as dúvidas mais comuns sobre como funciona a PagLuz para consumidores.
+            </p>
+            
+            <div class="max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Como posso economizar na conta de luz sem instalar painéis solares?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            A PagLuz funciona conectando você a geradores de energia renovável. Através do sistema de geração distribuida, você recebe créditos de energia renovável que são abatidos da sua conta, gerando economia sem necessidade de instalar equipamentos em sua residência ou empresa.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Preciso mudar de companhia de energia elétrica?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Não! Você continua recebendo energia da mesma distribuidora atual. A PagLuz atua na gestão dos créditos de energia que são abatidos da sua conta, mas a infraestrutura e o fornecimento continuam sendo feitos pela sua distribuidora local.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Quanto tempo leva para começar a economizar?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            O processo completo leva, em média, de 30 a 60 dias, dependendo da sua distribuidora local. Após esse período, sua conta já virá com o desconto aplicado automaticamente. O prazo inclui a análise do seu consumo, aprovação da proposta, assinatura do contrato e processamento junto à distribuidora.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Existe taxa de adesão ou algum custo escondido?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Não há nenhuma taxa de adesão ou custos escondidos. Nosso modelo de negócio é baseado na credibilidade, confiabilidade e segurança. Garantimos que o processo ocorra de modo transparente e legal. Toda nossa operação é amparada pela lei nº 14.300, de 6 de janeiro de 2022.
+                        </div>
+                    </div>
+                </div>
+                 <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">A energia realmente vem de fontes renováveis?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Sim! Todos os créditos de energia são provenientes de usinas certificadas de energia solar, eólica ou de biomassa. Trabalhamos apenas com geradores que seguem todas as normas ambientais e regulamentações do setor elétrico brasileiro, garantindo que sua economia tenha um impacto positivo para o planeta.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Existe um consumo mínimo para poder participar?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Para consumidores residenciais, o valor mínimo da conta mensal é de R$ 350. No entanto, avaliamos cada caso individualmente, então não deixe de solicitar uma simulação mesmo que sua conta seja um pouco menor que esses valores. Lembrando que proporcionamos esse benefício apenas para consumidores do grupo B.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-primary-blue relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-4xl mx-auto text-center" data-aos="fade-up">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    Comece a economizar <span class="text-gradient">hoje mesmo</span>
+                </h2>
+                <p class="text-white text-lg md:text-xl opacity-90 mb-10 max-w-3xl mx-auto">
+                    Junte-se a milhares de brasileiros que já estão economizando em suas contas de luz enquanto contribuem para um planeta mais sustentável.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="https://wa.me/5549998376140?text=Ol%C3%A1,%20quero%20calcular%20minha%20economia%20na%20conta%20de%20luz%20com%20a%20PagLuz" target="_blank" rel="noopener noreferrer" class="btn-primary text-xl px-8 py-4 inline-flex items-center justify-center">
+                        Calcular minha economia
+                        <i class="fas fa-calculator ml-2"></i>
+                    </a>
+                    <a href="https://wa.me/5549998376140?text=Ol%C3%A1,%20quero%20economizar%20na%20minha%20fatura" target="_blank" rel="noopener noreferrer" class="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-lg transition-all hover:bg-white hover:text-primary-blue inline-flex items-center justify-center">
+                        Falar com um consultor
+                        <i class="fas fa-headset ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 right-0 w-1/2 h-full opacity-10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <pattern id="gridConsumer" width="10" height="10" patternUnits="userSpaceOnUse"> {/* ID único */}
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#gridConsumer)" />
+            </svg>
+        </div>
+        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-primary-green opacity-10 rounded-full blur-3xl"></div>
+    </section>
+
+    <footer class="footer-gradient text-white py-16 md:py-20 relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="100">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">PagLuz</h3>
+                    <p class="text-lg md:text-xl text-center md:text-left opacity-90">
+                        Sua conta reduzida,<br>seu bolso e o planeta felizes.
+                    </p>
+                    <div class="mt-8">
+                        <img src="/assets/LOGO NOVA SVG.svg" class="w-40 md:w-48" alt="Logo PagLuz">
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="200">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Contato</h3>
+                    <div class="space-y-4">
+                        <a href="mailto:pagueminhaluz@gmail.com" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>comercial.pagluz@gmail.com</span>
+                        </a>
+                        <a href="tel:+5549998376140" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-phone-alt mr-3"></i>
+                            <span>(49) 99837-6140</span>
+                        </a>
+                        <div class="flex items-center text-blue-300 text-lg md:text-xl">
+                            <i class="fas fa-map-marker-alt mr-3"></i>
+                            <span>Luzerna - SC</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="300">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Redes Sociais</h3>
+                    <div class="flex space-x-6">
+                        <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="https://www.instagram.com/pag.luz/#" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-blue-900/50 w-full">
+                        <h4 class="text-xl font-semibold mb-4">Links Rápidos</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/" class="text-blue-300 hover:text-white transition-colors">Home</a>
+                            <a href="/whoami" class="text-blue-300 hover:text-white transition-colors">Quem Somos</a>
+                            <a href="/consumer" class="text-blue-300 hover:text-white transition-colors">Consumidor</a>
+                            <a href="/generator" class="text-blue-300 hover:text-white transition-colors">Gerador</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-blue-900/50 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-blue-300 text-sm md:text-base mb-4 md:mb-0">
+                        © 2025 PagLuz. Todos os direitos reservados.
+                    </p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Política de Privacidade</a>
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Termos de Uso</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 left-0 w-full h-full opacity-5">
+            <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary-green blur-3xl"></div>
+            <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-green blur-3xl"></div>
+        </div>
+    </footer>
+    
+    <a href="https://wa.me/5549998376140?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20a%20Pague%20Minha%20Luz." class="whatsapp-float" target="_blank" rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Fale conosco</span>
+    </a>
+
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 1000,
+        once: true,
+    });
+
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('navbar-scrolled');
+        } else {
+            navbar.classList.remove('navbar-scrolled');
+        }
+    });
+
+    // Mobile menu toggle
+    const menuHamburguer = document.getElementById('menu-hamburguer');
+    const menuMobile = document.getElementById('menu-mobile');
+    const closeMenu = document.getElementById('close-menu');
+    const hamburgerLines = menuHamburguer.querySelectorAll('span span');
+
+    function toggleMenu() {
+        menuMobile.classList.toggle('translate-x-full');
+        menuMobile.setAttribute('aria-hidden', !menuMobile.classList.contains('translate-x-full'));
+        
+        // Hamburger animation
+        if (!menuMobile.classList.contains('translate-x-full')) {
+            hamburgerLines[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+            hamburgerLines[1].style.opacity = '0';
+            hamburgerLines[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+            document.body.style.overflow = 'hidden';
+        } else {
+            hamburgerLines[0].style.transform = 'none';
+            hamburgerLines[1].style.opacity = '1';
+            hamburgerLines[2].style.transform = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    menuHamburguer.addEventListener('click', toggleMenu);
+    closeMenu.addEventListener('click', toggleMenu);
+
+    // Close menu when clicking on links
+    document.querySelectorAll('#menu-mobile a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (!menuMobile.classList.contains('translate-x-full')) {
+                toggleMenu();
+            }
+        });
+    });
+
+    // App modal functionality
+    const mobileDownloadApp = document.getElementById('mobile-download-app');
+    const appModal = document.getElementById('app-modal');
+    const modalContent = document.getElementById('modal-content');
+    const closeModal = document.getElementById('close-modal');
+
+    function openModal() {
+        appModal.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent.classList.remove('opacity-0', 'scale-95');
+            modalContent.classList.add('opacity-100', 'scale-100');
+        }, 10);
+    }
+
+    function closeModalFunc() {
+        modalContent.classList.remove('opacity-100', 'scale-100');
+        modalContent.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            appModal.classList.add('hidden');
+        }, 300);
+    }
+
+    mobileDownloadApp.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+        if (!menuMobile.classList.contains('translate-x-full')) {
+            toggleMenu();
+        }
+    });
+    closeModal.addEventListener('click', closeModalFunc);
+
+    // Close modal when clicking outside
+    appModal.addEventListener('click', (e) => {
+        if (e.target === appModal) {
+            closeModalFunc();
+        }
+    });
+
+    // Handle modal form submission (placeholder)
+    const modalForm = appModal.querySelector('form');
+    modalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('E-mail registrado! Você será notificado quando o app estiver disponível.');
+        modalForm.reset();
+        closeModalFunc();
+    });
+
+    // Keyboard accessibility for modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !appModal.classList.contains('hidden')) {
+            closeModalFunc();
+        }
+    });
+
+    // FAQ toggle
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    faqQuestions.forEach(question => {
+        question.addEventListener('click', function() {
+            const faqItem = this.parentNode;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // If the clicked item wasn't active, open it
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        });
+    });
+
+    // Testimonial slider
+    const testimonialControls = document.querySelectorAll('.testimonial-control');
+    testimonialControls.forEach(control => {
+        control.addEventListener('click', function() {
+            const slideTarget = this.getAttribute('data-slide-target');
+            
+            // Hide all slides
+            document.querySelectorAll('.testimonial-slide').forEach(slide => {
+                slide.classList.add('hidden');
+            });
+            
+            // Show the selected slide
+            document.getElementById(slideTarget).classList.remove('hidden');
+            
+            // Update controls
+            testimonialControls.forEach(ctrl => {
+                ctrl.classList.remove('active-dot');
+                ctrl.innerHTML = '<i class="far fa-circle text-xs"></i>';
+            });
+            
+            this.classList.add('active-dot');
+            this.innerHTML = '<i class="fas fa-circle text-xs"></i>';
+        });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>
