@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador | PagLuz - Conectando geradores a consumidores</title>
+    <link rel="icon" type="image/x-icon" href="/assets/icone.svg">
+    <meta name="description" content="Maximize o retorno dos seus créditos de energia excedentes. A PagLuz conecta geradores a consumidores com transparência e eficiência.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #35cc20;
+            --primary-blue: #0c3a59;
+            --dark-blue: #041e31;
+            --light-green: #6edc5f;
+            --hover-green: #2db018;
+        }
+        
+        body {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-green {
+            color: var(--primary-green);
+        }
+
+        .bg-green {
+            background-color: var(--primary-green);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: var(--primary-blue);
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        
+        .btn-primary:hover:before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--hover-green);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Custom navbar */
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-scrolled {
+            background-color: rgba(4, 30, 49, 0.95);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: var(--primary-green);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-green);
+        }
+        
+        /* Mobile menu animation */
+        #menu-mobile {
+            background-color: var(--primary-blue);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #menu-mobile:not(.translate-x-full) {
+            transform: translateX(0);
+        }
+
+        #download-app-btn:hover {
+            box-shadow: 0 0 15px rgba(53, 204, 32, 0.3);
+            transform: translateY(-2px);
+        }
+
+        #download-app-btn:hover i {
+            color: white;
+        }
+
+        #close-menu:hover {
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+
+        #mobile-download-app {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #mobile-download-app::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(53, 204, 32, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+
+        #mobile-download-app:hover::after {
+            left: 100%;
+        }
+
+        /* Hamburger animation */
+        #menu-hamburguer.active span:nth-child(1) {
+            transform: translateY(10px) rotate(45deg);
+        }
+
+        #menu-hamburguer.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        #menu-hamburguer.active span:nth-child(3) {
+            transform: translateY(-10px) rotate(-45deg);
+        }
+
+        /* Benefits cards */
+        .benefit-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .benefit-icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            background-color: rgba(53, 204, 32, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-card:hover .benefit-icon-container {
+            transform: scale(1.1);
+            background-color: rgba(53, 204, 32, 0.2);
+        }
+        
+        /* Step cards */
+        .step-container {
+            position: relative;
+        }
+        
+        .step-connector {
+            position: absolute;
+            top: 40px;
+            left: calc(50% - 1px);
+            width: 2px;
+            height: calc(100% - 80px);
+            background-color: var(--primary-green);
+            z-index: 0;
+        }
+        
+        .step-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-green);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover .step-number {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(53, 204, 32, 0.3);
+        }
+        
+        /* FAQ section */
+        .faq-item {
+            border-bottom: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            cursor: pointer;
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question h3 {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question:hover h3 {
+            color: var(--primary-green);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+            padding: 0 0;
+        }
+        
+        .faq-answer-content {
+            padding-bottom: 1.5rem;
+        }
+        
+        .faq-item.active .faq-question h3 {
+            color: var(--primary-green);
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 500px; /* Ajuste conforme necessário */
+        }
+        
+        .faq-toggle {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+        
+        /* Comparison table */
+        .comparison-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-table th {
+            background-color: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .comparison-table th:first-child {
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .comparison-table td:first-child {
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:nth-child(odd) {
+            background-color: #f8fafc;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: white;
+        }
+        
+        .comparison-highlight {
+            background-color: rgba(53, 204, 32, 0.1) !important;
+        }
+        
+        /* Testimonial slider */
+        .testimonial-slide {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .testimonial-slide::before {
+            content: '\201C';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 4rem;
+            color: var(--primary-green);
+            opacity: 0.2;
+            line-height: 1;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        
+        .testimonial-author-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 1rem;
+            border: 3px solid var(--primary-green);
+        }
+        
+        .testimonial-author-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .testimonial-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .testimonial-control {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .testimonial-control:hover,
+        .testimonial-control.active-dot {
+            background-color: var(--primary-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .testimonial-control.active-dot i {
+            font-weight: 900; 
+        }
+        
+        /* Statistics */
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-value {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary-green), #6edc5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        /* Calculator styles (se houver calculadora nesta página, se não, pode remover) */
+        .calculator-box {
+            position: relative;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .calculator-box::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+        }
+        
+        /* Form specific styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--primary-blue);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            color: #333; 
+        }
+        .form-input::placeholder {
+            color: #a0aec0; 
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(53, 204, 32, 0.15);
+        }
+        select.form-input { 
+            appearance: none; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23a0aec0'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem; 
+        }
+
+        .footer-gradient {
+            background: linear-gradient(to right, #041e31, #0c3a59);
+        }
+        
+        .social-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-5px);
+            color: var(--primary-green);
+        }
+        
+        .page-header {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before { /* Overlay para a imagem de fundo */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(4, 30, 49, 0.7), rgba(12, 58, 89, 0.7)); /* Ajuste a opacidade (0.7) */
+            z-index: 1;
+        }
+        
+        .page-header-content { /* Conteúdo sobre o overlay */
+            position: relative;
+            z-index: 2;
+        }
+        
+        .energy-source-card {
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .energy-source-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .energy-source-img {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .energy-source-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+        
+        .energy-source-card:hover .energy-source-img img {
+            transform: scale(1.1);
+        }
+        
+        .highlight {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .highlight::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 30%;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(53, 204, 32, 0.2);
+            z-index: -1;
+            transform: skew(-15deg);
+        }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .whatsapp-float:hover {
+            background-color: #20ba5a;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        
+        .whatsapp-float i {
+            margin-top: 0;
+        }
+        
+        .whatsapp-tooltip {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .whatsapp-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .whatsapp-float:hover .whatsapp-tooltip {
+            visibility: visible;
+            opacity: 1;
+            top: -40px;
+        }
+        
+        .whatsapp-float {
+            animation: pulse 2s infinite;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .whatsapp-float {
+                width: 50px;
+                height: 50px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 24px;
+            }
+            .navbar { padding: 0.5rem 0; }
+            .stat-value { font-size: 2.5rem; }
+            .comparison-table { font-size: 0.875rem; }
+            .comparison-table th, .comparison-table td { padding: 1rem; }
+            .step-connector { display: none; }
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <nav id="navbar" class="navbar fixed top-0 w-full z-50 py-4 navbar-scrolled">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="/" class="flex items-center">
+                <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12 md:h-8 lg:h-12 transform transition-transform hover:scale-105">
+            </a>
+            
+            <div class="hidden lg:flex space-x-8 items-center">
+                <a href="/" class="nav-link text-white text-lg font-medium px-1 py-1">Home</a>
+                <a href="/whoami" class="nav-link text-white text-lg font-medium px-1 py-1">Quem Somos</a>
+                <a href="/consumer" class="nav-link text-white text-lg font-medium px-1 py-1">Consumidor</a>
+                <a href="/generator" class="nav-link text-green text-lg font-medium px-1 py-1">Gerador</a>
+                <a href="#cadastro" class="btn-primary ml-4 px-6 py-3 text-lg">Cadastrar Usina</a>
+            </div>
+
+            <button id="menu-hamburguer" class="lg:hidden text-white text-2xl focus:outline-none">
+                <span class="flex flex-col space-y-1.5">
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                    <span class="block w-6 h-0.5 bg-white transform transition duration-300"></span>
+                </span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="menu-mobile"
+         class="lg:hidden fixed inset-0 bg-primary-blue/95 backdrop-blur-sm z-[1000] flex flex-col transform transition-transform duration-300 ease-in-out translate-x-full"
+         aria-hidden="true">
+        <div class="flex justify-between items-center p-6 border-b border-blue-800">
+            <a href="/" class="flex items-center" aria-label="PagLuz Home">
+                <img src="/assets/LOGO NOVA SVG.svg" alt="Logo PagLuz" class="h-12" loading="lazy">
+            </a>
+            <button id="close-menu" class="text-white text-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-green hover:text-green transition-colors" aria-label="Close menu">
+                <i class="fas fa-times transform transition-transform duration-200 hover:rotate-90"></i>
+            </button>
+        </div>
+        <nav class="flex flex-col items-center space-y-6 text-white text-xl mt-12 px-6">
+            <a href="/" class="w-full text-center py-3 hover:text-green hover:bg-blue-900/30 rounded-md transition-all">Home</a>
+            <a href="/whoami" class="w-full text-center py-3 hover:text-green hover:bg-blue-900/30 rounded-md transition-all">Quem Somos</a>
+            <a href="/consumer" class="w-full text-center py-3 hover:text-green hover:bg-blue-900/30 rounded-md transition-all">Consumidor</a>
+            <a href="/generator" class="w-full text-center py-3 text-green hover:bg-blue-900/30 rounded-md transition-all">Gerador</a>
+            <div class="w-full h-px bg-blue-800/50 my-4"></div>
+            <a href="#cadastro" class="w-full btn-primary text-lg py-3 text-center">Cadastrar Usina</a>
+        </nav>
+        <footer class="mt-auto p-6 border-t border-blue-800/50">
+            <div class="flex justify-center space-x-6 mb-4">
+                <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-2xl text-gray-400 hover:text-green"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.instagram.com/pag.luz/" target="_blank" class="social-icon text-2xl text-gray-400 hover:text-green"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-icon text-2xl text-gray-400 hover:text-green"><i class="fab fa-linkedin"></i></a>
+            </div>
+            <p class="text-gray-500 text-center text-sm">© 2025 PagLuz</p>
+        </footer>
+    </div>
+
+    <section class="page-header pt-32 pb-20 md:pt-40 md:pb-28 bg-cover bg-center" style="background-image: url('/assets/usina-solar-fundo.jpg');">
+        <div class="page-header-content container mx-auto px-4">
+            <div class="flex flex-col items-center text-center">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6" data-aos="fade-up">
+                    Maximize o valor da sua <span class="text-gradient">energia</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-white opacity-90 max-w-3xl mb-8" data-aos="fade-up" data-aos-delay="100">
+                    Transforme seus créditos em maior rentabilidade. Nossa plataforma conecta sua usina a consumidores que buscam energia limpa com eficiência e transparência.
+                </p>
+                <a href="#cadastro" class="btn-primary text-xl px-8 py-4 inline-flex items-center" data-aos="fade-up" data-aos-delay="200">
+                    Cadastre sua usina
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Benefícios para <span class="text-gradient">Geradores</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Descubra como a PagLuz pode ajudar a maximizar o retorno do seu investimento em energia renovável.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-chart-line text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Maior rentabilidade</h3>
+                    <p class="text-gray-700 text-center">
+                        Aumente o retorno sobre seu investimento com a gestão otimizada dos seus créditos de energia.
+                    </p>
+                    <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Rendimento maximizado
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-file-contract text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Gestão completa</h3>
+                    <p class="text-gray-700 text-center">
+                        Cuidamos de toda a burocracia, documentação e processos regulatórios para a transferência dos créditos.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Zero burocracia
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="300">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-shield-alt text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Contratos seguros</h3>
+                    <p class="text-gray-700 text-center">
+                        Garantimos a segurança jurídica e financeira com contratos transparentes e pagamentos pontuais.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Segurança garantida
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="400">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-users text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Ampla base de consumidores</h3>
+                    <p class="text-gray-700 text-center">
+                        Acesse uma base crescente de consumidores pré-qualificados interessados em energia renovável.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Demanda garantida
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="500">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-chart-pie text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Relatórios detalhados</h3>
+                    <p class="text-gray-700 text-center">
+                        Acompanhe em tempo real a distribuição e monetização dos seus créditos através de dashboards intuitivos.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Transparência total
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="benefit-card p-8" data-aos="fade-up" data-aos-delay="600">
+                    <div class="benefit-icon-container">
+                        <i class="fas fa-headset text-green text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-primary-blue text-center mb-4">Suporte especializado</h3>
+                    <p class="text-gray-700 text-center">
+                        Conte com um time dedicado de especialistas em energia renovável para resolver qualquer dúvida.
+                    </p>
+                     <div class="mt-6 flex justify-center">
+                        <span class="inline-flex items-center bg-green-100 text-green-700 font-semibold px-4 py-2 rounded-full text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Atendimento premium
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Como <span class="text-gradient">Funciona</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Conheça o processo simples e eficiente para conectar sua usina geradora à nossa rede de consumidores.
+            </p>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="step-container relative">
+                    <div class="step-connector hidden md:block"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+                        <div class="step-card" data-aos="fade-right">
+                            <div class="step-number">1</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Cadastro da usina</h3>
+                            <p class="text-gray-700 text-center">
+                                Preencha o formulário com informações sobre sua usina, como localização, capacidade e tecnologia.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-left">
+                            <div class="step-number">2</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Análise técnica</h3>
+                            <p class="text-gray-700 text-center">
+                                Nossa equipe realiza uma análise técnica e financeira para determinar o potencial de seus créditos.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-right">
+                            <div class="step-number">3</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Contrato e integração</h3>
+                            <p class="text-gray-700 text-center">
+                                Após aprovação, assinamos o contrato e integramos sua usina à nossa plataforma de gestão.
+                            </p>
+                        </div>
+                        <div class="step-card" data-aos="fade-left">
+                            <div class="step-number">4</div>
+                            <h3 class="text-xl font-bold text-primary-blue text-center mb-4">Distribuição e faturamento</h3>
+                            <p class="text-gray-700 text-center">
+                                Seus créditos são distribuídos automaticamente e você recebe os pagamentos mensalmente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Fontes de <span class="text-gradient">Energia</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Trabalhamos com diversos tipos de usinas geradoras de energia renovável. Conheça as fontes que aceitamos.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="energy-source-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="energy-source-img">
+                        <img src="/assets/usina-solar-2.jpg" alt="Energia Solar">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-primary-blue mb-2">Energia Solar</h3>
+                        <p class="text-gray-700 mb-4 text-sm">
+                            Usinas fotovoltaicas que captam a energia do sol para transformá-la em eletricidade limpa.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green font-semibold text-sm">Mínimo: 75 kWp</span>
+                            <i class="fas fa-sun text-2xl text-yellow-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="energy-source-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="energy-source-img">
+                        <img src="/assets/energia-eólica.jpg" alt="Energia Eólica">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-primary-blue mb-2">Energia Eólica</h3>
+                        <p class="text-gray-700 mb-4 text-sm">
+                            Usinas que utilizam a força dos ventos para gerar energia através de aerogeradores eficientes.
+                        </p>
+                        <div class="flex justify-between items-center">
+                             <span class="text-green font-semibold text-sm">Mínimo: 500 kW</span>
+                            <i class="fas fa-wind text-2xl text-blue-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="energy-source-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="energy-source-img">
+                        <img src="/assets/usina-biomassa.jpg" alt="Energia de Biomassa">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-primary-blue mb-2">Biomassa</h3>
+                        <p class="text-gray-700 mb-4 text-sm">
+                            Usinas que geram energia a partir de resíduos orgânicos, promovendo sustentabilidade.
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green font-semibold text-sm">Mínimo: 1 MW</span>
+                            <i class="fas fa-leaf text-2xl text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-gray-100 relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Histórias de <span class="text-gradient">Sucesso</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Conheça alguns geradores que já estão maximizando seus rendimentos com a PagLuz.
+            </p>
+            
+            <div class="max-w-3xl mx-auto testimonial-slider relative" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-slide" id="testimonial-1">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Depois de investir em uma usina solar de 75 kWp, enfrentamos o desafio de gerenciar os créditos. A PagLuz simplificou todo o processo, eliminando a burocracia e aumentando nossa rentabilidade em mais de 25%. Recomendamos muito!"
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/icone-homem-2.png" alt="Pedro Mendes">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Pedro Mendes</h4>
+                            <p class="text-gray-600 text-sm">Proprietário de Usina Solar, Concórdia - SC</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-slide hidden" id="testimonial-2">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Investimos em uma usina de 75 kW, e o nosso maior desafio foi escolher em qual cooperativa alocar a usina. Na grande maioria, o valor pago é muito baixo. Foi então que conhecemos a PagLuz, uma empresa que faz a gestão de um modo diferente, permitindo que a gente tenha maior controle sobre o nosso investimento e uma rentabilidade muito maior."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/icone-mulher.png" alt="Lucimara Hoffelder">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Lucimara Hoffelder</h4>
+                            <p class="text-gray-600 text-sm">Proprietária de UFV, Luzerna - SC</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-slide hidden" id="testimonial-3">
+                    <p class="text-gray-700 italic leading-relaxed text-lg">
+                        "Construímos uma usina de 300 kW e, até então, acreditávamos que as únicas opções eram cooperativas ou que o mercado era bastante limitado. Foi então que conhecemos a PagLuz, uma gestora de créditos de energia que nos proporcionou total liberdade para administrar a nossa usina, além de oferecer mais rentabilidade e transparência em todo o processo."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="/assets/icone-homem.png" alt="Roberto Santos">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-primary-blue">Roberto Santos</h4>
+                            <p class="text-gray-600 text-sm">Proprietário de UFV, Lages - SC</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-controls">
+                    <button class="testimonial-control active-dot" data-slide="1" aria-label="Ver depoimento 1">
+                        <i class="fas fa-circle text-xs"></i></button>
+                    <button class="testimonial-control" data-slide="2" aria-label="Ver depoimento 2">
+                        <i class="far fa-circle text-xs"></i></button>
+                    <button class="testimonial-control" data-slide="3" aria-label="Ver depoimento 3">
+                        <i class="far fa-circle text-xs"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Nossos <span class="text-gradient">Números</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Resultados concretos que demonstram o impacto positivo da PagLuz para geradores de energia renovável.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-value">10+</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Usinas parceiras</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-value">25%</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Aumento de rentabilidade (média)</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-value">3.8MW</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Capacidade gerenciada</p>
+                </div>
+                <div class="stat-card text-center" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-value">97%</div>
+                    <p class="text-gray-700 font-medium text-lg mt-2">Satisfação dos geradores</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cadastro" class="py-20 md:py-28 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Cadastre sua <span class="text-gradient">Usina</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Preencha o formulário abaixo para iniciar o processo de análise e cadastro da sua usina geradora em nossa plataforma.
+            </p>
+            
+            <div class="max-w-4xl mx-auto calculator-box p-8 md:p-10" data-aos="fade-up" data-aos-delay="200">
+                <form id="generator-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                    <div class="md:col-span-2 mb-2">
+                        <h3 class="text-xl font-bold text-primary-blue">Dados do Responsável</h3>
+                        <hr class="my-2 border-gray-200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nome" class="form-label">Nome completo</label>
+                        <input type="text" id="nome" name="nome" class="form-input" required placeholder="Seu nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" id="email" name="email" class="form-input" required placeholder="seu.email@dominio.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="tel" id="telefone" name="telefone" class="form-input" required placeholder="(XX) XXXXX-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="cargo" class="form-label">Cargo / Posição</label>
+                        <input type="text" id="cargo" name="cargo" class="form-input" required placeholder="Ex: Proprietário, Gerente">
+                    </div>
+                    
+                    <div class="md:col-span-2 mt-4 mb-2">
+                        <h3 class="text-xl font-bold text-primary-blue">Dados da Usina</h3>
+                         <hr class="my-2 border-gray-200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nome-usina" class="form-label">Nome da Usina (Opcional)</label>
+                        <input type="text" id="nome-usina" name="nome_usina" class="form-input" placeholder="Ex: Usina Solar Alegria">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo-energia" class="form-label">Tipo de Energia Gerada</label>
+                        <select id="tipo-energia" name="tipo_energia" class="form-input" required>
+                            <option value="" disabled selected>Selecione o tipo...</option>
+                            <option value="solar">Solar Fotovoltaica</option>
+                            <option value="eolica">Eólica</option>
+                            <option value="biomassa">Biomassa</option>
+                            <option value="cgh_pch">CGH / PCH (Hidrelétrica)</option>
+                            <option value="outra">Outra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacidade" class="form-label">Capacidade Instalada (kWp ou kW)</label>
+                        <input type="number" id="capacidade" name="capacidade_kw" class="form-input" required placeholder="Ex: 75">
+                    </div>
+                    <div class="form-group">
+                        <label for="distribuidora" class="form-label">Distribuidora de Energia Local</label>
+                        <input type="text" id="distribuidora" name="distribuidora_energia" class="form-input" required placeholder="Ex: Celesc, Copel, CPFL">
+                    </div>
+                     <div class="form-group">
+                        <label for="estado" class="form-label">Estado da Usina</label>
+                        <select id="estado" name="estado_usina" class="form-input" required>
+                            <option value="" disabled selected>Selecione o estado...</option>
+                            <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option><option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option><option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option><option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option><option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option><option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option><option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option><option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option><option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cidade" class="form-label">Cidade da Usina</label>
+                        <input type="text" id="cidade" name="cidade_usina" class="form-input" required placeholder="Nome da cidade">
+                    </div>
+                    
+                    <div class="form-group md:col-span-2">
+                        <label for="mensagem" class="form-label">Informações Adicionais (Opcional)</label>
+                        <textarea id="mensagem" name="mensagem_adicional" class="form-input h-28 resize-y" placeholder="Alguma observação ou dúvida?"></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2 mt-4">
+                        <button type="submit" class="btn-primary w-full py-3 text-lg font-semibold">
+                            Enviar Cadastro da Usina
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-white"> 
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-primary-blue mb-6" data-aos="fade-up">
+                Perguntas <span class="text-gradient">Frequentes</span>
+            </h2>
+            <p class="text-lg text-gray-700 text-center max-w-3xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+                Encontre respostas para as dúvidas mais comuns sobre como funciona a PagLuz para geradores.
+            </p>
+            
+            <div class="max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Qual o tamanho mínimo de usina para participar?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Para usinas solares, aceitamos a partir de 75 kWp de capacidade instalada. Para usinas eólicas, o mínimo é de 500 kW, e para biomassa, 1 MW. Caso sua usina tenha uma capacidade diferente, entre em contato conosco para uma análise personalizada.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Como funciona o processo de remuneração?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            A partir da sua geração mensal, calculamos o valor dos créditos distribuídos, aplicamos nossa taxa de serviço (que varia de acordo com o volume e contrato) e realizamos o pagamento diretamente em sua conta bancária até o dia 15 do mês subsequente à geração.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">É preciso fazer alguma alteração técnica na usina?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Não. Nosso sistema funciona através da gestão administrativa dos créditos junto à distribuidora. Apenas precisamos de acesso às informações de geração.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Quais são os custos para participar?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Não há custos de adesão ou mensalidades. Nosso modelo é baseado em uma taxa sobre os créditos efetivamente comercializados. Geralmente fica entre 10% e 15% do valor dos créditos.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Qual o prazo de contrato?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Contratos mínimos de 12 meses, com renovação automática e flexibilidade para atender às necessidades de cada gerador. A rescisão pode ocorrer com aviso prévio de 60 dias após o período mínimo.
+                        </div>
+                    </div>
+                </div>
+                 <div class="faq-item">
+                    <div class="faq-question">
+                        <h3 class="text-xl font-semibold text-primary-blue">Como garantem a segurança dos pagamentos?</h3>
+                        <span class="faq-toggle text-primary-blue text-xl"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content text-gray-700">
+                            Trabalhamos com consumidores pré-qualificados e análise de crédito. Mantemos um fundo garantidor para assegurar o pagamento aos geradores, mesmo em caso de inadimplência. Nosso histórico é de 100% de pagamentos em dia.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-28 bg-primary-blue relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-4xl mx-auto text-center" data-aos="fade-up">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    Maximize a rentabilidade da sua <span class="text-gradient">usina</span>
+                </h2>
+                <p class="text-white text-lg md:text-xl opacity-90 mb-10 max-w-3xl mx-auto">
+                    Junte-se a dezenas de geradores que já estão otimizando seus rendimentos e contribuindo para um futuro mais sustentável com a PagLuz.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#cadastro" class="btn-primary text-xl px-8 py-4 inline-flex items-center justify-center">
+                        Cadastrar minha usina
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                    <a href="https://wa.me/5549998376140?text=Olá!%20Gostaria%20de%20falar%20com%20um%20consultor%20sobre%20minha%20usina." target="_blank" rel="noopener noreferrer" class="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-lg transition-all hover:bg-white hover:text-primary-blue inline-flex items-center justify-center">
+                        Falar com um consultor
+                        <i class="fas fa-headset ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 right-0 w-1/2 h-full opacity-10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <pattern id="gridPatternGen" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#gridPatternGen)" />
+            </svg>
+        </div>
+        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-primary-green opacity-10 rounded-full blur-3xl"></div>
+    </section>
+
+    <footer class="footer-gradient text-white py-16 md:py-20 relative overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="100">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">PagLuz</h3>
+                    <p class="text-lg md:text-xl text-center md:text-left opacity-90">
+                        Sua conta reduzida,<br>seu bolso e o planeta felizes.
+                    </p>
+                    <div class="mt-8">
+                        <img src="/assets/LOGO NOVA SVG.svg" class="w-40 md:w-48" alt="Logo PagLuz">
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="200">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Contato</h3>
+                    <div class="space-y-4">
+                        <a href="mailto:pagueminhaluz@gmail.com" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-envelope mr-3"></i>
+                            <span>comercial.pagluz@gmail.com</span>
+                        </a>
+                        <a href="tel:+5549998376140" class="flex items-center text-blue-300 hover:text-white transition-colors text-lg md:text-xl">
+                            <i class="fas fa-phone-alt mr-3"></i>
+                            <span>(49) 99837-6140</span>
+                        </a>
+                        <div class="flex items-center text-blue-300 text-lg md:text-xl">
+                            <i class="fas fa-map-marker-alt mr-3"></i>
+                            <span>Luzerna - SC</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center md:items-start" data-aos="fade-up" data-aos-delay="300">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">Redes Sociais</h3>
+                    <div class="flex space-x-6">
+                        <a href="https://www.facebook.com/profile.php?id=61567151247215" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="https://www.instagram.com/pag.luz/#" target="_blank" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon text-3xl md:text-4xl text-blue-300 hover:text-green transition-all">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <div class="mt-8 pt-4 border-t border-blue-900/50 w-full">
+                        <h4 class="text-xl font-semibold mb-4">Links Rápidos</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/" class="text-blue-300 hover:text-white transition-colors">Home</a>
+                            <a href="/whoami" class="text-blue-300 hover:text-white transition-colors">Quem Somos</a>
+                            <a href="/consumer" class="text-blue-300 hover:text-white transition-colors">Consumidor</a>
+                            <a href="/generator" class="text-blue-300 hover:text-white transition-colors">Gerador</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-blue-900/50 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-blue-300 text-sm md:text-base mb-4 md:mb-0">
+                        © 2025 PagLuz. Todos os direitos reservados.
+                    </p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Política de Privacidade</a>
+                        <a href="#" class="text-blue-300 hover:text-white transition-colors text-sm md:text-base">Termos de Uso</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 left-0 w-full h-full opacity-5">
+            <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary-green blur-3xl"></div>
+            <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-green blur-3xl"></div>
+        </div>
+    </footer>
+    
+    <a href="https://wa.me/5549998376140?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20a%20Pague%20Minha%20Luz." class="whatsapp-float" target="_blank" rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Fale conosco</span>
+    </a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 0. Suas Chaves EmailJS e Inicialização
+            const EMAILJS_GENERATOR_PUBLIC_KEY = "ljf-5Prw0_dPL0950";
+            const EMAILJS_GENERATOR_SERVICE_ID = "service_pml";
+            const EMAILJS_GENERATOR_TEMPLATE_ID = "template_omc909d";
+
+            try {
+                if (typeof emailjs !== 'undefined') {
+                    if (EMAILJS_GENERATOR_PUBLIC_KEY && EMAILJS_GENERATOR_PUBLIC_KEY.trim() !== "" && EMAILJS_GENERATOR_PUBLIC_KEY !== "SUA_PUBLIC_KEY_AQUI_PLACEHOLDER") {
+                        emailjs.init({ publicKey: EMAILJS_GENERATOR_PUBLIC_KEY });
+                        console.log("EmailJS inicializado para formulário do Gerador.");
+                    } else {
+                        console.warn("EmailJS Public Key para Gerador não configurada corretamente. O envio de email PODE FALHAR ou ser simulado se as outras chaves também forem placeholders.");
+                    }
+                } else {
+                    console.error("SDK do EmailJS não foi carregado. Verifique a tag <script> no <head>.");
+                }
+            } catch (e) {
+                console.error("Falha ao inicializar EmailJS para formulário do Gerador:", e);
+            }
+
+            // 1. AOS Init
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out',
+                once: true
+            });
+            
+            // 2. Menu mobile toggle
+            const menuHamburger = document.getElementById('menu-hamburguer');
+            const closeMenuBtn = document.getElementById('close-menu');
+            const menuMobileEl = document.getElementById('menu-mobile');
+            const mobileLinks = document.querySelectorAll('#menu-mobile a');
+
+            if (menuHamburger && menuMobileEl && closeMenuBtn) {
+                menuHamburger.addEventListener('click', function() {
+                    menuMobileEl.classList.toggle('translate-x-full');
+                    menuMobileEl.setAttribute('aria-hidden', menuMobileEl.classList.contains('translate-x-full') ? 'true' : 'false');
+                    document.body.style.overflow = menuMobileEl.classList.contains('translate-x-full') ? '' : 'hidden';
+                    menuHamburger.classList.toggle('active');
+                });
+
+                function closeMenuMobile() {
+                    menuMobileEl.classList.add('translate-x-full');
+                    menuMobileEl.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                    menuHamburger.classList.remove('active');
+                }
+
+                closeMenuBtn.addEventListener('click', closeMenuMobile);
+                mobileLinks.forEach(link => { 
+                    link.addEventListener('click', function(e) { 
+                        if (this.getAttribute('href').startsWith('#')) {
+                            // Scroll suave já trata e.preventDefault() se necessário
+                        }
+                        closeMenuMobile(); 
+                    });
+                });
+            }
+            
+            // 3. FAQ toggle
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.closest('.faq-item');
+                    const isActive = faqItem.classList.contains('active');
+                    
+                    document.querySelectorAll('.faq-item.active').forEach(activeItem => {
+                        if (activeItem !== faqItem) {
+                           activeItem.classList.remove('active');
+                        }
+                    });
+                    faqItem.classList.toggle('active');
+                });
+            });
+            
+            // 4. Testimonial slider
+            const testimonialSlides = document.querySelectorAll('.testimonial-slide');
+            const testimonialControls = document.querySelectorAll('.testimonial-control');
+            let currentTestimonial = 0;
+
+            function showTestimonial(index) {
+                if (testimonialSlides.length === 0) return;
+
+                testimonialSlides.forEach((slide, i) => {
+                    slide.classList.toggle('hidden', i !== index);
+                });
+                testimonialControls.forEach((control, i) => {
+                    control.classList.toggle('active-dot', i === index);
+                    const icon = control.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fas', i === index);
+                        icon.classList.toggle('far', i !== index);
+                    }
+                });
+                currentTestimonial = index;
+            }
+
+            testimonialControls.forEach(control => {
+                control.addEventListener('click', function() {
+                    showTestimonial(parseInt(this.getAttribute('data-slide')) - 1);
+                });
+            });
+            if (testimonialSlides.length > 0) {
+                showTestimonial(0); 
+            }
+
+            // 5. Phone mask
+            const telefoneInput = document.getElementById('telefone');
+            if (telefoneInput) {
+                telefoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, "");
+                    if (value.length > 11) value = value.substring(0, 11);
+                    
+                    let formattedValue = "";
+                    if (value.length > 0) {
+                        formattedValue = "(" + value.substring(0, 2);
+                    }
+                    if (value.length > 2) {
+                        const breakPoint = value.length === 11 ? 7 : 6;
+                        formattedValue += ") " + value.substring(2, breakPoint);
+                    }
+                    if (value.length > (value.length === 11 ? 7 : 6) ) {
+                        formattedValue += "-" + value.substring(value.length === 11 ? 7 : 6);
+                    }
+                    e.target.value = formattedValue;
+                });
+            }
+
+            // 6. Generator Form submission (com EmailJS)
+            const generatorForm = document.getElementById('generator-form');
+            if (generatorForm) {
+                generatorForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalButtonHTML = submitButton.innerHTML;
+
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando Cadastro...';
+                    submitButton.disabled = true;
+
+                    const templateParams = {
+                        nome_responsavel: this.elements['nome'].value,
+                        email_responsavel: this.elements['email'].value,
+                        telefone_responsavel: this.elements['telefone'].value,
+                        cargo_responsavel: this.elements['cargo'].value,
+                        nome_usina: this.elements['nome_usina'].value,
+                        tipo_energia: this.elements['tipo_energia'].value,
+                        capacidade_kw: this.elements['capacidade_kw'].value,
+                        estado_usina: this.elements['estado_usina'].value,
+                        cidade_usina: this.elements['cidade_usina'].value,
+                                                distribuidora_energia: this.elements['distribuidora_energia'].value,
+                        mensagem_adicional: this.elements['mensagem_adicional'].value
+                    };
+
+                    if (!templateParams.nome_responsavel || !templateParams.email_responsavel || !templateParams.telefone_responsavel || !templateParams.cargo_responsavel || !templateParams.tipo_energia || !templateParams.capacidade_kw || !templateParams.estado_usina || !templateParams.cidade_usina || !templateParams.distribuidora_energia) {
+                        alert("Por favor, preencha todos os campos obrigatórios.");
+                        submitButton.innerHTML = originalButtonHTML;
+                        submitButton.disabled = false;
+                        return;
+                    }
+
+                    try {
+                        emailjs.send(EMAILJS_GENERATOR_SERVICE_ID, EMAILJS_GENERATOR_TEMPLATE_ID, templateParams)
+                            .then(function(response) {
+                                alert("Cadastro enviado com sucesso! Nossa equipe entrará em contato em breve.");
+                                generatorForm.reset();
+                                submitButton.innerHTML = originalButtonHTML;
+                                submitButton.disabled = false;
+                            }, function(error) {
+                                console.error("Erro ao enviar formulário:", error);
+                                alert("Ocorreu um erro ao enviar o cadastro. Tente novamente mais tarde ou entre em contato pelo WhatsApp.");
+                                submitButton.innerHTML = originalButtonHTML;
+                                submitButton.disabled = false;
+                            });
+                    } catch (e) {
+                        console.error("Exceção ao tentar enviar email:", e);
+                        alert("Erro inesperado ao enviar o cadastro. Verifique sua conexão e tente novamente.");
+                        submitButton.innerHTML = originalButtonHTML;
+                        submitButton.disabled = false;
+                    }
+                });
+            }
+
+            // 7. Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href === '#') return; // Ignora links com apenas '#'
+
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        const navbarHeight = document.getElementById('navbar').offsetHeight;
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
