@@ -1,12 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { SystemSettings, SystemStats, KwhPriceHistory } from '../types';
-import { settingsService } from '../types/services/settingsService';
+import { settingsService, FioBHistory } from '../types/services/settingsService';
 import { useAuth } from './useAuth';
 
 export function useSettings() {
   const [kwhPrice, setKwhPrice] = useState<number | null>(null);
   const [kwhPriceHistory, setKwhPriceHistory] = useState<KwhPriceHistory[]>([]);
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+  
+  const [fioBPercentage, setFioBPercentage] = useState<number | null>(null);
+  const [fioBHistory, setFioBHistory] = useState<FioBHistory[]>([]);
+  const [fioBError, setFioBError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
@@ -77,14 +82,67 @@ export function useSettings() {
     }
   }, [fetchKwhPrice, fetchKwhPriceHistory]);
 
+  const fetchFioBPercentage = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      setLoading(true);
+      setFioBError(null);
+      const val = await settingsService.getFioBPercentage();
+      setFioBPercentage(val);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar Fio B';
+      setFioBError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const fetchFioBHistory = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      setLoading(true);
+      setFioBError(null);
+      const data = await settingsService.getFioBHistory();
+      if (Array.isArray(data)) {
+        setFioBHistory(data);
+      } else {
+        setFioBHistory([]);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar histórico do Fio B';
+      setFioBError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const setFioBPercentageValue = useCallback(async (percentage: number) => {
+    try {
+      setLoading(true);
+      setFioBError(null);
+      const result = await settingsService.setFioBPercentage(percentage);
+      await fetchFioBPercentage();
+      await fetchFioBHistory();
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao atualizar Fio B';
+      setFioBError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchFioBPercentage, fetchFioBHistory]);
+
   // Carregar dados iniciais
   useEffect(() => {
     if (isAuthenticated) {
       fetchKwhPrice();
       fetchKwhPriceHistory();
       fetchSystemStats();
+      fetchFioBPercentage();
+      fetchFioBHistory();
     }
-  }, [isAuthenticated, fetchKwhPrice, fetchKwhPriceHistory, fetchSystemStats]);
+  }, [isAuthenticated, fetchKwhPrice, fetchKwhPriceHistory, fetchSystemStats, fetchFioBPercentage, fetchFioBHistory]);
 
   return {
     kwhPrice,
@@ -95,6 +153,12 @@ export function useSettings() {
     fetchKwhPrice,
     fetchKwhPriceHistory,
     fetchSystemStats,
-    setKwhPriceValue
+    setKwhPriceValue,
+    fioBPercentage,
+    fioBHistory,
+    fioBError,
+    fetchFioBPercentage,
+    fetchFioBHistory,
+    setFioBPercentageValue
   };
 }
