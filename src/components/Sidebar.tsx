@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import {
   LayoutDashboard,
@@ -11,6 +11,7 @@ import {
   DollarSign,
   Cog,
   ChevronRight,
+  ChevronDown,
   Zap,
   PanelLeftClose,
   PanelLeftOpen,
@@ -42,20 +43,28 @@ interface SidebarProps {
 const SIDEBAR_DEFAULT = 280;
 const COLLAPSED_W = 80;
 
+type MenuItemDef = {
+  id: string;
+  label: string;
+  icon: any;
+  view?: AppView;
+  description: string;
+  submenu?: MenuItemDef[];
+};
+
 export default function Sidebar({ currentView, onViewChange, onWidthChange }: SidebarProps) {
   const { user, logout, loading, updateUser } = useAuth();
   const { isMobile } = useResponsive();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   // Sincronizar avatarUrl quando o objeto user mudar
   useEffect(() => {
     if (user) {
-      // Tenta pegar do objeto user (API) ou do cache local (fallback)
       const cachedAvatar = localStorage.getItem(`pagluz_avatar_${user.id}`);
       const userPhoto = (user as any).avatarUrl || (user as any).avatar || (user as any).fileUrl;
-      // Prioritize cachedAvatar for immediate persistence across reloads
       setAvatarUrl(cachedAvatar || userPhoto || null);
     }
   }, [user]);
@@ -80,6 +89,15 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
     setIsCollapsed(prev => !prev);
   };
 
+  const toggleGroup = (groupId: string) => {
+    if (isCollapsed && !isMobile) {
+      setIsCollapsed(false);
+      setOpenGroups(prev => ({ ...prev, [groupId]: true }));
+    } else {
+      setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -94,24 +112,19 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
     try {
       setAvatarUploading(true);
       const res: any = await api.post('/users/me/avatar', formData);
-
-      // Tenta extrair a URL da resposta
       const newUrl = res?.avatarUrl ?? res?.fileUrl ?? res?.url;
 
       if (newUrl) {
         setAvatarUrl(newUrl);
-        // Persiste localmente para o reload
         if (user?.id) {
           localStorage.setItem(`pagluz_avatar_${user.id}`, newUrl);
           updateUser({ avatarUrl: newUrl });
         }
       } else {
-        // Fallback para preview local
         const localPreview = URL.createObjectURL(file);
         setAvatarUrl(localPreview);
       }
     } catch {
-      // Falha silenciosa ou log
     } finally {
       setAvatarUploading(false);
     }
@@ -127,55 +140,118 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         updateUser({ avatarUrl: null });
       }
     } catch {
-      // Falha
     } finally {
       setAvatarUploading(false);
     }
   };
 
-  const menuItems: Array<{ id: string; label: string; icon: any; view: any; description: string }> = [];
-
-  // Principal (Dia a dia)
-  menuItems.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, view: 'dashboard' as const, description: 'Visão geral' });
-  menuItems.push({ id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao' as const, description: 'Geração de propostas' });
-  menuItems.push({ id: 'geradores', label: 'Geradores', icon: Factory, view: 'geradores' as const, description: 'Clientes geradores' });
-  menuItems.push({ id: 'consumidores', label: 'Consumidores', icon: Users, view: 'consumidores' as const, description: 'Clientes consumidores' });
-  menuItems.push({ id: 'contratos', label: 'Contratos', icon: FileText, view: 'contratos' as const, description: 'Documentos' });
-  menuItems.push({ id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes' as const, description: 'Equipe comercial' });
-
   const userRoleRaw = user?.role as unknown as string | undefined;
   const userRole = (userRoleRaw || '').toUpperCase();
-  const isOperatorPlus = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR'].includes(userRole);
+  
+  const menuItems = useMemo(() => {
+    const isOperatorPlus = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR'].includes(userRole);
+    const isSuperAdmin = userRole === 'SUPER_ADMIN';
 
-  if (isOperatorPlus) {
-    // Gestão e Processos
-    menuItems.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes' as const, description: 'Propostas solicitadas' });
-    menuItems.push({ id: 'pendentes', label: 'Pendentes', icon: UserCheck, view: 'pendentes' as const, description: 'Aprovações' });
-    menuItems.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas' as const, description: 'Alterações' });
-  }
+    const items: MenuItemDef[] = [];
 
-  // Desempenho e Comunicação
-  menuItems.push({ id: 'relatorios', label: 'Relatórios', icon: FileSpreadsheet, view: 'relatorios' as const, description: 'Exportar dados' });
-  menuItems.push({ id: 'dashboard-avancado', label: 'Gráficos', icon: BarChart3, view: 'dashboard-avancado' as const, description: 'Dashboard avançado' });
-  menuItems.push({ id: 'ranking', label: 'Ranking', icon: Trophy, view: 'ranking' as const, description: 'Performance e metas' });
-  menuItems.push({ id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais' as const, description: 'Materiais comerciais' });
-  menuItems.push({ id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados' as const, description: 'Avisos e comunicados' });
-  menuItems.push({ id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks' as const, description: 'Feedbacks' });
+    items.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, view: 'dashboard', description: 'Visão geral' });
 
-  // Configurações menos mexidas e afins pro final
-  menuItems.push({ id: 'tarifas', label: 'Tarifas', icon: Coins, view: 'tarifas' as const, description: 'Preços kWh' });
-  menuItems.push({ id: 'timeline', label: 'Timeline', icon: Activity, view: 'timeline' as const, description: 'Atividades' });
-  menuItems.push({ id: 'push', label: 'Push', icon: BellRing, view: 'push' as const, description: 'Notificações push' });
+    items.push({
+      id: 'comercial',
+      label: 'Comercial',
+      icon: Users,
+      description: 'Vendas e clientes',
+      submenu: [
+        { id: 'simulacao', label: 'Propostas', icon: Zap, view: 'simulacao', description: 'Geração de propostas' },
+        { id: 'geradores', label: 'Geradores', icon: Factory, view: 'geradores', description: 'Clientes geradores' },
+        { id: 'consumidores', label: 'Consumidores', icon: Users, view: 'consumidores', description: 'Clientes consumidores' },
+        { id: 'representantes', label: 'Representantes', icon: UserCheck, view: 'representantes', description: 'Equipe comercial' },
+      ]
+    });
 
-  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
-    menuItems.push({ id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes' as const, description: 'Gestão de comissões' });
-    menuItems.push({ id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes' as const, description: 'Ajustes do sistema' });
-  }
+    const gestaoSub: MenuItemDef[] = [
+      { id: 'contratos', label: 'Contratos', icon: FileText, view: 'contratos', description: 'Documentos' },
+    ];
 
-  const superAdminMenuItems = [
-    { id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios' as const, description: 'Gestão de usuários' },
-    { id: 'logs', label: 'Auditoria', icon: Bell, view: 'logs' as const, description: 'Logs do sistema' }
-  ];
+    if (isOperatorPlus) {
+      gestaoSub.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes', description: 'Propostas solicitadas' });
+      gestaoSub.push({ id: 'pendentes', label: 'Pendentes', icon: UserCheck, view: 'pendentes', description: 'Aprovações' });
+      gestaoSub.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas', description: 'Alterações' });
+    }
+
+    items.push({
+      id: 'gestao',
+      label: 'Gestão',
+      icon: FileText,
+      description: 'Processos e docs',
+      submenu: gestaoSub
+    });
+
+    items.push({
+      id: 'desempenho',
+      label: 'Resultados',
+      icon: BarChart3,
+      description: 'Desempenho e relatórios',
+      submenu: [
+        { id: 'relatorios', label: 'Relatórios', icon: FileSpreadsheet, view: 'relatorios', description: 'Exportar dados' },
+        { id: 'dashboard-avancado', label: 'Gráficos', icon: BarChart3, view: 'dashboard-avancado', description: 'Dashboard avançado' },
+        { id: 'ranking', label: 'Ranking', icon: Trophy, view: 'ranking', description: 'Performance e metas' },
+      ]
+    });
+
+    items.push({
+      id: 'comunicacao',
+      label: 'Comunicação',
+      icon: MessageSquareText,
+      description: 'Avisos e engajamento',
+      submenu: [
+        { id: 'materiais', label: 'Materiais', icon: FolderOpen, view: 'materiais', description: 'Materiais comerciais' },
+        { id: 'comunicados', label: 'Comunicados', icon: Megaphone, view: 'comunicados', description: 'Avisos e comunicados' },
+        { id: 'feedbacks', label: 'Feedbacks', icon: MessageSquareText, view: 'feedbacks', description: 'Feedbacks' },
+      ]
+    });
+
+    const configSub: MenuItemDef[] = [
+      { id: 'tarifas', label: 'Tarifas', icon: Coins, view: 'tarifas', description: 'Preços kWh' },
+      { id: 'timeline', label: 'Timeline', icon: Activity, view: 'timeline', description: 'Atividades' },
+      { id: 'push', label: 'Push', icon: BellRing, view: 'push', description: 'Notificações push' },
+    ];
+
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+      configSub.push({ id: 'comissoes', label: 'Comissões', icon: DollarSign, view: 'comissoes', description: 'Gestão de comissões' });
+      configSub.push({ id: 'configuracoes', label: 'Configurações', icon: Cog, view: 'configuracoes', description: 'Ajustes do sistema' });
+    }
+
+    if (isSuperAdmin) {
+      configSub.push({ id: 'usuarios', label: 'Usuários', icon: Users, view: 'usuarios', description: 'Gestão de usuários' });
+      configSub.push({ id: 'logs', label: 'Auditoria', icon: Bell, view: 'logs', description: 'Logs do sistema' });
+    }
+
+    items.push({
+      id: 'config',
+      label: 'Sistema',
+      icon: Cog,
+      description: 'Configurações',
+      submenu: configSub
+    });
+
+    return items;
+  }, [userRole]);
+
+  // Expand group that contains the current nested active view
+  useEffect(() => {
+    if (isCollapsed) return;
+    menuItems.forEach(item => {
+      if (item.submenu?.some(sub => sub.view === currentView)) {
+        setOpenGroups(prev => {
+          if (!prev[item.id]) {
+            return { ...prev, [item.id]: true };
+          }
+          return prev;
+        });
+      }
+    });
+  }, [currentView, menuItems, isCollapsed]);
 
   const roleLabel: Record<string, string> = {
     'SUPER_ADMIN': 'Super Admin',
@@ -185,12 +261,8 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
     'USER': 'Usuário'
   };
 
-  const isSuperAdmin = userRole === 'SUPER_ADMIN';
-  const allMenuItems = isSuperAdmin ? [...menuItems, ...superAdminMenuItems] : menuItems;
-
   return (
     <>
-      {/* Botão Mobile Invisível no Desktop */}
       {isMobile && (
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -200,7 +272,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         </button>
       )}
 
-      {/* Overlay Mobile */}
       {isMobile && isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1500]"
@@ -208,7 +279,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
         />
       )}
 
-      {/* ── Premium Pagluz Sidebar ─────────────────────────────────────────── */}
       <div
         className={`fixed left-0 top-0 h-full bg-gradient-to-b from-accent to-accent-secondary text-slate-100 flex flex-col shadow-2xl overflow-x-hidden scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-all duration-300 ease-in-out z-[2000]
           ${isMobile ? (isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}`}
@@ -216,7 +286,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
           width: isMobile ? SIDEBAR_DEFAULT : (isCollapsed ? COLLAPSED_W : SIDEBAR_DEFAULT),
         }}
       >
-        {/* Header com Logo e Botão Retrátil */}
         <div className={`relative flex flex-col items-center shrink-0 border-b border-white/10 ${isCollapsed ? 'py-4 gap-2' : 'pt-4 pb-2'}`}>
           {!isCollapsed && (
             <div className="flex justify-center items-center w-full h-16 mt-4 mb-2 overflow-visible">
@@ -232,7 +301,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
             </div>
           )}
 
-          {/* Botão Retrátil Centralizado Abaixo */}
           {!isMobile && (
             <button
               onClick={toggleCollapse}
@@ -244,46 +312,99 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
           )}
         </div>
 
-        {/* Navegação Menu */}
-        <nav className="flex-1 py-6 space-y-1 px-3 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {allMenuItems.map(item => {
+        <nav className="flex-1 py-6 space-y-2 px-3 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {menuItems.map(item => {
             const Icon = item.icon;
-            const isActive = currentView === item.view;
+            const hasSub = item.submenu && item.submenu.length > 0;
+            const isGroupOpen = openGroups[item.id] || false;
+            
+            // Um item pai pode estar ativo se a visualização atual for ele ou algum de seus filhos
+            const isActive = item.view === currentView || (hasSub && item.submenu!.some(s => s.view === currentView));
 
             return (
-              <div key={item.id} className="relative group/item">
+              <div key={item.id} className="relative group/item space-y-1">
                 <button
                   onClick={() => {
-                    onViewChange(item.view);
-                    if (isMobile) setIsMobileMenuOpen(false);
+                    if (hasSub) {
+                      toggleGroup(item.id);
+                    } else if (item.view) {
+                      onViewChange(item.view);
+                      if (isMobile) setIsMobileMenuOpen(false);
+                    }
                   }}
                   className={`w-full flex items-center gap-3 rounded-xl transition-all duration-300 font-medium text-sm
                     ${isCollapsed ? 'justify-center p-3.5' : 'px-4 py-3.5'}
-                    ${isActive
+                    ${isActive && !hasSub
                       ? 'bg-white text-accent shadow-lg shadow-black/10 translate-x-1 font-semibold'
                       : 'text-blue-50 hover:bg-white/10 hover:text-white hover:translate-x-1'}`}
                 >
-                  {/* Ícone */}
-                  <div className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isActive ? 'bg-accent/10 text-accent' : 'bg-white/10 text-blue-100 group-hover/item:bg-white/20 group-hover/item:text-white'}`}>
+                  <div className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isActive && !hasSub ? 'bg-accent/10 text-accent' : 'bg-white/10 text-blue-100 group-hover/item:bg-white/20 group-hover/item:text-white'}`}>
                     <Icon className="h-5 w-5" />
                   </div>
 
-                  {/* Texto */}
                   {!isCollapsed && (
                     <span className="flex-1 text-left tracking-wide truncate">{item.label}</span>
                   )}
 
-                  {/* Seta ativo */}
-                  {!isCollapsed && isActive && (
+                  {!isCollapsed && hasSub && (
+                    <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-300 ${isGroupOpen ? 'rotate-180' : ''}`} />
+                  )}
+                  {!isCollapsed && isActive && !hasSub && (
                     <ChevronRight className="h-4 w-4 animate-in fade-in slide-in-from-left-2 shrink-0" />
                   )}
                 </button>
 
-                {/* Tooltip Hover no modo colapsado */}
+                {/* Submenu Expansion */}
+                {hasSub && isGroupOpen && !isCollapsed && (
+                  <div className="pl-11 pr-2 pb-1 space-y-1 animate-in slide-in-from-top-2 fade-in duration-200">
+                    {item.submenu!.map(sub => {
+                       const SubIcon = sub.icon;
+                       const isSubActive = currentView === sub.view;
+                       return (
+                         <button
+                           key={sub.id}
+                           onClick={() => {
+                             if (sub.view) onViewChange(sub.view);
+                             if (isMobile) setIsMobileMenuOpen(false);
+                           }}
+                           className={`w-full flex items-center gap-3 rounded-lg py-2.5 px-3 transition-colors text-sm
+                             ${isSubActive ? 'bg-white/20 text-white font-medium shadow-sm' : 'text-blue-100/70 hover:bg-white/10 hover:text-white'}`}
+                         >
+                           <SubIcon className="h-4 w-4 shrink-0" />
+                           <span className="flex-1 text-left truncate">{sub.label}</span>
+                         </button>
+                       )
+                    })}
+                  </div>
+                )}
+
+                {/* Submenu hover from collapsed sidebar */}
                 {isCollapsed && !isMobile && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-slate-900 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 group-hover/item:opacity-100 pointer-events-none z-50 whitespace-nowrap border border-white/10">
-                    {item.label}
-                    <span className="block text-white/50 text-[10px] mt-0.5">{item.description}</span>
+                  <div className="absolute left-full top-0 ml-3 bg-slate-900 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover/item:opacity-100 group-hover/item:pointer-events-auto pointer-events-none z-50 whitespace-nowrap overflow-hidden transition-opacity">
+                    <div className="px-3 py-2 border-b border-white/10 bg-slate-800">
+                      <span className="text-white text-xs font-medium">{item.label}</span>
+                      <span className="block text-white/50 text-[10px] mt-0.5">{item.description}</span>
+                    </div>
+                    {hasSub && (
+                      <div className="flex flex-col py-1">
+                        {item.submenu!.map(sub => {
+                           const isSubActive = currentView === sub.view;
+                           return (
+                             <button 
+                               key={sub.id}
+                               onClick={() => {
+                                 if (sub.view) onViewChange(sub.view);
+                               }}
+                               className={`px-4 py-2 text-xs flex items-center gap-2 text-left w-full hover:bg-white/10 transition-colors
+                                 ${isSubActive ? 'text-white bg-white/5 font-semibold' : 'text-blue-200/80 hover:text-white'}`}
+                             >
+                                <sub.icon className="h-3 w-3" />
+                                {sub.label}
+                             </button>
+                           );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -291,15 +412,11 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
           })}
         </nav>
 
-        {/* Perfil e Logout */}
         <div className="shrink-0 p-4 border-t border-white/10 bg-gradient-to-t from-black/20 to-transparent space-y-3">
-          {/* Card User */}
           <div className={`rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm
             ${isCollapsed ? 'p-1' : 'p-3'}`}
           >
             <div className={`flex items-center ${isCollapsed ? 'flex-col gap-2' : 'gap-3'}`}>
-
-              {/* Componente de Upload unificado */}
               <AvatarUpload
                 currentAvatarUrl={avatarUrl}
                 name={user?.name}
@@ -322,7 +439,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
                   <button
                     type="button"
                     onClick={(e) => {
-                      // Busca o input dentro do mesmo card de perfil
                       const card = e.currentTarget.closest('.rounded-xl');
                       const input = card?.querySelector('input[type="file"]') as HTMLInputElement;
                       input?.click();
@@ -336,7 +452,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
             </div>
           </div>
 
-          {/* Sair */}
           <button
             onClick={handleLogout}
             disabled={loading}
@@ -358,7 +473,6 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
               )}
             </div>
           </button>
-
         </div>
       </div>
     </>
