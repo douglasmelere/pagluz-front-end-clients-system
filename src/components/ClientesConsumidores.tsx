@@ -35,6 +35,7 @@ import { useClientesGeradores } from '../hooks/useClientesGeradores';
 import { useRepresentantesComerciais } from '../hooks/useRepresentantesComerciais';
 import { useCommissions } from '../hooks/useCommissions';
 import { api } from '../types/services/api';
+import { clienteConsumidorService } from '../types/services/clienteConsumidorService';
 import { applyPhoneMask, applyCepMask, applyDocumentMask, isValidEmail, isValidPhone, isValidCep, isValidCpf, isValidCnpj } from '../utils/masks';
 
 import { Consumer, ConsumerStatus, Generator, DocumentType } from '../types';
@@ -46,31 +47,6 @@ import Input from './ui/Input';
 import Select from './ui/Select';
 import Button from './ui/Button';
 
-// Funções auxiliares movidas para o topo para evitar erros de inicialização
-const getGeneratorName = (generatorId: string, geradoresList: Generator[]) => {
-  if (!generatorId || !geradoresList) return 'N/A';
-  const gerador = geradoresList.find(g => g.id === generatorId);
-  return (gerador?.ownerName) || (gerador ? 'ID sem nome' : 'ID não encontrado');
-};
-
-const renderGeneratorIcon = (sourceType: string, className: string) => {
-  const normalizedType = (sourceType || '').toUpperCase().trim();
-  switch (normalizedType) {
-    case 'SOLAR':
-      return <Sun className={className} />;
-    case 'WIND':
-      return <Wind className={className} />;
-    case 'HYDRO':
-    case 'HIDRO':
-      return <Droplet className={className} />;
-    case 'BIOMASS':
-    case 'BIOMASSA':
-      return <Leaf className={className} />;
-    default:
-      return <Factory className={className} />;
-  }
-};
-
 export default function ClientesConsumidores() {
   const toast = useToast();
   const {
@@ -80,8 +56,8 @@ export default function ClientesConsumidores() {
     updateCliente,
     allocateToGenerator,
     deallocateFromGenerator,
-    deleteCliente,
-    clearFilters
+    clearFilters,
+    refetch
   } = useClientesConsumidores();
 
   const { generateCommissionsForConsumer, commissions, refetch: refetchCommissions } = useCommissions();
@@ -121,15 +97,25 @@ export default function ClientesConsumidores() {
     }
   };
 
-
-  const handleDeleteConsumer = async (id: string, name: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o consumidor "${name}"? Esta ação não pode ser desfeita.`)) {
-      try {
-        await deleteCliente(id);
-        toast.showSuccess(`Consumidor "${name}" excluído com sucesso!`);
-      } catch (error) {
-        toast.showError('Erro ao excluir consumidor. Verifique se existem dependências (como comissões pagas).');
+  // Função para aprovar um consumidor individual
+  const handleApproveConsumer = async (consumer: Consumer) => {
+    try {
+      // Confirmar ação
+      const confirmed = window.confirm(`Deseja aprovar o consumidor "${consumer.name}"?`);
+      if (!confirmed) {
+        return;
       }
+
+      // Chamar API real de aprovação
+      await clienteConsumidorService.approve(consumer.id);
+
+      toast.showSuccess(`Consumidor "${consumer.name}" aprovado com sucesso!`);
+
+      // Recarregar a lista de consumidores
+      await refetch();
+
+    } catch (error) {
+      toast.showError('Erro ao aprovar consumidor. Tente novamente.');
     }
   };
 
@@ -151,20 +137,8 @@ export default function ClientesConsumidores() {
 
   // Removido useEffect que causava loop infinito
 
-  const filteredClientes = (clientesConsumidores || []).filter(cliente => {
-    const searchLower = searchTerm.toLowerCase();
-    const searchMatch = !searchTerm ||
-      (cliente.name || '').toLowerCase().includes(searchLower) ||
-      (cliente.cpfCnpj || '').includes(searchTerm) ||
-      (cliente.city || '').toLowerCase().includes(searchLower) ||
-      getGeneratorName(cliente.generatorId || '', geradores).toLowerCase().includes(searchLower);
+  const filteredClientes = clientesConsumidores || [];
 
-    const statusMatch = filterStatus === 'todos' || cliente.status === filterStatus;
-    const tipoMatch = filterTipo === 'todos' || cliente.consumerType === filterTipo;
-    const geradorMatch = filterGerador === 'todos' || cliente.generatorId === filterGerador;
-
-    return searchMatch && statusMatch && tipoMatch && geradorMatch;
-  });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -279,7 +253,29 @@ export default function ClientesConsumidores() {
     }
   };
 
+  const getGeneratorName = (generatorId: string, geradoresList: Generator[]) => {
+    if (!generatorId || !geradoresList) return 'N/A';
+    const gerador = geradoresList.find(g => g.id === generatorId);
+    return gerador ? gerador.ownerName : 'ID não encontrado';
+  };
 
+  const renderGeneratorIcon = (sourceType: string, className: string) => {
+    const normalizedType = (sourceType || '').toUpperCase().trim();
+    switch (normalizedType) {
+      case 'SOLAR':
+        return <Sun className={className} />;
+      case 'WIND':
+        return <Wind className={className} />;
+      case 'HYDRO':
+      case 'HIDRO':
+        return <Droplet className={className} />;
+      case 'BIOMASS':
+      case 'BIOMASSA':
+        return <Leaf className={className} />;
+      default:
+        return <Factory className={className} />;
+    }
+  };
 
 
 
@@ -534,10 +530,10 @@ export default function ClientesConsumidores() {
             generators={geradores}
             representatives={representantes}
             onEdit={handleEdit}
+            onApprove={handleApproveConsumer}
             onViewInvoice={(consumer) => setInvoiceModal({ isOpen: true, consumer })}
             onGenerateCommission={handleGenerateCommissionForConsumer}
             hasCommission={hasCommission}
-            onDelete={handleDeleteConsumer}
           />
 
           {/* Pagination Controls */}

@@ -102,12 +102,7 @@ export interface User {
   role: UserRole;
   isActive: boolean;
   createdAt: string;
-  fileUrl?: string;
-  proposalUrl?: string;
-  documentUrl?: string;
-  proposalFileUrl?: string;
   updatedAt: string;
-  avatarUrl?: string | null;
 }
 
 // Interfaces de Representantes
@@ -136,7 +131,6 @@ export interface Representative {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  avatarUrl?: string | null;
   lastLoginAt: string | null;
   loginCount: number;
   _count: {
@@ -279,13 +273,11 @@ export interface Commission {
     id: string;
     name: string;
     email: string;
-    avatarUrl?: string | null;
   };
   consumer: {
     id: string;
     name: string;
     email: string;
-    avatarUrl?: string | null;
     averageMonthlyConsumption?: number;
   };
 }
@@ -309,12 +301,15 @@ export interface CommissionFilters {
 // Interfaces de Configurações do Sistema
 export interface KwhPriceHistory {
   id: string;
-  value: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  updatedBy?: string;
-  createdBy?: string;
+  price: number;
+  previousPrice: number;
+  changedBy: string;
+  changedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface SystemSettings {
@@ -454,27 +449,3 @@ export interface AppAction {
   type: 'SET_VIEW' | 'SET_LOADING' | 'SET_ERROR' | 'CLEAR_ERROR';
   payload?: any;
 }
-
-// Admin Notifications
-export interface AdminNotification {
-  id: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
-
-// Proposal Requests
-export interface ProposalRequest {
-  id: string;
-  clientName: string;
-  status: 'PENDING' | 'GENERATED' | 'REJECTED';
-  representative: {
-    name: string;
-    email: string;
-  };
-  consumerType?: 'RESIDENTIAL' | 'COMMERCIAL' | 'INDUSTRIAL' | 'RURAL' | 'PUBLIC_POWER' | string;
-  createdAt: string;
-  // Others as needed per API return
-}
-
