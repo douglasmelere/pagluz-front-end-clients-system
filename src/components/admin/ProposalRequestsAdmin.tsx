@@ -24,11 +24,8 @@ export default function ProposalRequestsAdmin() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.get('/consumers?status=PROPOSAL_REQUESTED,PROPOSAL_GENERATED');
-      const filtered = Array.isArray(data) ? data.filter((c: any) => 
-        c.status === 'PROPOSAL_REQUESTED' || c.status === 'PROPOSAL_GENERATED'
-      ) : [];
-      setRequests(filtered);
+      const data = await api.get('/consumers/proposals');
+      setRequests(data || []);
     } catch (err) {
       setError('Erro ao carregar as solicitações de propostas.');
       toast.showError('Não foi possível carregar as solicitações.');
@@ -114,6 +111,31 @@ export default function ProposalRequestsAdmin() {
       setPreviewUrl(url);
     } catch (err: any) {
       toast.showError(err.message || 'Não foi possível carregar o documento anexado.');
+    }
+  };
+
+  const handleConfirmProposal = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await api.patch(`/consumers/${id}/proposal-confirm`);
+      toast.showSuccess('Proposta confirmada e movida para a fila de pendentes!');
+      fetchRequests();
+      setSelectedRequest(null);
+    } catch (err) {
+      toast.showError('Erro ao confirmar a proposta.');
+    }
+  };
+
+  const handleRefuseProposal = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Você tem certeza que deseja recusar esta solicitação de proposta?")) return;
+    try {
+      await api.patch(`/consumers/${id}/proposal-refuse`);
+      toast.showSuccess('Solicitação de proposta recusada.');
+      fetchRequests();
+      setSelectedRequest(null);
+    } catch (err) {
+      toast.showError('Erro ao recusar a proposta.');
     }
   };
 
@@ -222,9 +244,13 @@ export default function ProposalRequestsAdmin() {
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <CheckCircle className="w-3.5 h-3.5" /> Gerada
                         </span>
-                      ) : (
+                      ) : request.status === 'PROPOSAL_REJECTED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <XCircle className="w-3.5 h-3.5" /> {request.status}
+                          <XCircle className="w-3.5 h-3.5" /> Recusada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                          <AlertCircle className="w-3.5 h-3.5" /> {request.status}
                         </span>
                       )}
                     </td>
@@ -238,22 +264,43 @@ export default function ProposalRequestsAdmin() {
                           <Eye className="w-5 h-5" />
                         </button>
                         {request.status === 'PROPOSAL_REQUESTED' ? (
-                          <button
-                            onClick={(e) => triggerFileInput(request.id, e)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <Upload className="w-4 h-4" />
-                            Anexar e Gerar
-                          </button>
-                        ) : request.status === 'PROPOSAL_GENERATED' && (
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => handleViewDocument(request.id, e)}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium transition-colors"
+                              onClick={(e) => triggerFileInput(request.id, e)}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg text-sm font-medium transition-colors"
                             >
-                              <FileSignature className="w-4 h-4 text-accent" />
-                              Ver Proposta
+                              <Upload className="w-4 h-4" />
+                              Anexar e Gerar
                             </button>
+                            <button
+                              onClick={(e) => handleRefuseProposal(request.id, e)}
+                              className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Recusar Solicitação"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : (request.status === 'PROPOSAL_GENERATED' || request.status === 'PROPOSAL_REJECTED') && (
+                          <div className="flex items-center gap-2">
+                            {request.status === 'PROPOSAL_GENERATED' && (
+                              <>
+                                <button
+                                  onClick={(e) => handleConfirmProposal(request.id, e)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-sm font-medium transition-colors"
+                                  title="Mover para aprovação final"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                  Confirmar
+                                </button>
+                                <button
+                                  onClick={(e) => handleViewDocument(request.id, e)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  <FileSignature className="w-4 h-4 text-accent" />
+                                  Ver Proposta
+                                </button>
+                              </>
+                            )}
                             <button
                               onClick={(e) => triggerFileInput(request.id, e)}
                               className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium transition-colors"
@@ -264,7 +311,7 @@ export default function ProposalRequestsAdmin() {
                             <button
                               onClick={(e) => handleDeleteRequest(request.id, e)}
                               className="inline-flex items-center gap-2 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors"
-                              title="Excluir Solicitação"
+                              title="Excluir Registro"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -396,14 +443,23 @@ export default function ProposalRequestsAdmin() {
                   Fechar
                 </button>
                 {selectedRequest.status === 'PROPOSAL_REQUESTED' ? (
-                  <button
-                    onClick={(e) => triggerFileInput(selectedRequest.id, e)}
-                    className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Anexar Proposta Gerada
-                  </button>
-                ) : selectedRequest.status === 'PROPOSAL_GENERATED' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => handleRefuseProposal(selectedRequest.id, e)}
+                      className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg transition-colors flex items-center gap-2 border border-red-100"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Recusar Solicitação
+                    </button>
+                    <button
+                      onClick={(e) => triggerFileInput(selectedRequest.id, e)}
+                      className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Anexar Proposta Gerada
+                    </button>
+                  </div>
+                ) : (selectedRequest.status === 'PROPOSAL_GENERATED' || selectedRequest.status === 'PROPOSAL_REJECTED') && (
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => handleDeleteRequest(selectedRequest.id, e)}
@@ -419,13 +475,24 @@ export default function ProposalRequestsAdmin() {
                       <Upload className="h-4 w-4" />
                       Substituir
                     </button>
-                    <button
-                      onClick={(e) => handleViewDocument(selectedRequest.id, e)}
-                      className="px-5 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent-secondary transition-colors flex items-center gap-2"
-                    >
-                      <FileSignature className="h-4 w-4" />
-                      Ver Arquivo Anexado
-                    </button>
+                    {selectedRequest.status === 'PROPOSAL_GENERATED' && (
+                      <>
+                        <button
+                          onClick={(e) => handleViewDocument(selectedRequest.id, e)}
+                          className="px-5 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
+                        >
+                          <FileSignature className="h-4 w-4" />
+                          Ver Arquivo
+                        </button>
+                        <button
+                          onClick={(e) => handleConfirmProposal(selectedRequest.id, e)}
+                          className="px-5 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent-secondary transition-colors flex items-center gap-2"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Confirmar e Enviar para Aprovação Final
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
