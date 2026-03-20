@@ -30,7 +30,16 @@ export default function ProposalRequestsAdmin() {
       setLoading(true);
       setError(null);
       const response = await api.get('/consumers/proposals');
-      const data = Array.isArray(response) ? response : (response?.data && Array.isArray(response.data) ? response.data : []);
+      let data: Consumer[] = [];
+      if (Array.isArray(response)) {
+        data = response;
+      } else if (response?.data?.consumers && Array.isArray(response.data.consumers)) {
+        data = response.data.consumers;
+      } else if (response?.consumers && Array.isArray(response.consumers)) {
+        data = response.consumers;
+      } else if (response?.data && Array.isArray(response.data)) {
+        data = response.data;
+      }
       setRequests(data);
     } catch (err) {
       setError('Erro ao carregar as solicitações de propostas.');
