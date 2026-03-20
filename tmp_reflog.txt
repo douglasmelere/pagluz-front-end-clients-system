@@ -1,0 +1,30 @@
+7f8fa3e HEAD@{0}: commit: feat(ui): organize sidebar with submenus
+db5baa6 HEAD@{1}: checkout: moving from master to main
+c960196 HEAD@{2}: reset: moving to HEAD~1
+35596a7 HEAD@{3}: checkout: moving from main to master
+db5baa6 HEAD@{4}: reset: moving to HEAD~1
+3f297b5 HEAD@{5}: checkout: moving from master to main
+35596a7 HEAD@{6}: cherry-pick: feat(seo): add robots.txt, sitemap.xml and static html pages
+c960196 HEAD@{7}: checkout: moving from main to master
+3f297b5 HEAD@{8}: commit: feat(seo): add robots.txt, sitemap.xml and static html pages
+db5baa6 HEAD@{9}: commit: fix(ui): remove gap branco nos cards da simulacao e reordena sidebar
+cf8060b HEAD@{10}: commit: fix: recupera estrutura html do gerador de pagluz e mescla com a nova logica de taxas e calculos aprovada
+19d47ab HEAD@{11}: commit: feat: atualiza calculo e adicao de fases na geracao de propostas
+d29481b HEAD@{12}: commit: feat(proposals): add consumerType to proposal requests list
+2da1db0 HEAD@{13}: reset: moving to HEAD~1
+256d54a HEAD@{14}: commit: feat(ui): unify blue theme and show consumer type in proposal requests
+2da1db0 HEAD@{15}: commit: fix: profile picture persistence, display in commissions, and UI refinements in reports and modals
+70609ab HEAD@{16}: commit: feat: adiciona funcionalidade de exclusão de consumidores no frontend e limpa código não utilizado
+59bc321 HEAD@{17}: commit: fix: padroniza fontes modernas (sans-serif) em todos os títulos e no modal de comprovante de comissão, removendo a fonte antiga serifada
+63581d8 HEAD@{18}: commit: refactor: isola chaves do firebase no arquivo env e repassa service worker em tempo de execucao
+ea14664 HEAD@{19}: commit: feat: integracao Firebase Cloud Messaging para Push Notifications
+b21034a HEAD@{20}: commit: fix: adiciona text-white explicito nos h3 dos cards de relatorios - regra global h1-h6 no index.css sobreescrevia a cor herdada
+0d36eda HEAD@{21}: commit: fix: clareia texto informativo dos relatorios para blue-500
+8af0b28 HEAD@{22}: commit: fix: suaviza fonte do titulo Sobre os relatorios de blue-800 para blue-600
+7626559 HEAD@{23}: commit: feat: implementa 6 novas features do painel admin - Relatorios: exportacao Excel de comissoes, consumidores e representantes com filtros - Ranking e Metas: leaderboard com podium, tabela completa, criacao de metas com barras de progresso - Timeline: historico global de atividades com filtros por entidade/acao/representante - Push Notifications: envio individual ou broadcast com estatisticas de tokens - Dashboard Avancado: 6 graficos Recharts (area, barra, linha, pizza, horizontal, tabela) - Tarifas kWh: gestao de precos por concessionaria com versionamento e historico
+7344e85 HEAD@{24}: commit: fix: aplica createPortal no modal de solicitacoes de propostas - Corrige bug de overlay com bordas brancas causado por ancestor com transform/animation
+dfb0614 HEAD@{25}: commit: fix: aplica font-display nos titulos Por Tipo e Por Prioridade
+2fcb0a8 HEAD@{26}: commit: feat: implementa painel completo de Feedbacks para admin - Dashboard com metricas (total, abertos, em analise, resolvidos, recusados) - Lista com filtros por status, tipo e prioridade - Busca por texto em assunto, representante e descricao - View de detalhes com informacoes do representante - Thread de respostas estilo chat (admin vs representante) - Modais de resposta e atualizacao de status com createPortal - Distribuicao visual por tipo e prioridade com barras de progresso - Tempo medio de resolucao - Zona de perigo para exclusao de feedback - Item Feedbacks adicionado ao menu lateral (Sidebar)
+2057679 HEAD@{27}: commit: fix: usa createPortal para renderizar modais no document.body - Resolve bug de bordas brancas causado por ancestor com transform/animation - Modais agora escapam do stacking context do layout
+d432088 HEAD@{28}: commit: fix: corrige bug visual do overlay cinza com bordas brancas nas modais
+9888e5e HEAD@{29}: commit: fix: refatoração completa das modais de Materiais e Comunicados - Corrigidos bugs visuais de arredondamento e background leak - Implementado cabeçalho e rodapé fixos com scroll interno - Adicionados novos tokens de design (rounded-24px, shadow-black/20) - Melhorada a responsividade em dispositivos móveis

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../types/services/api';
-import { ProposalRequest } from '../../types';
+import { Consumer } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Loader2, FileText, CheckCircle, Clock, XCircle, AlertCircle, X, Eye, Upload, Trash2, FileSignature } from 'lucide-react';
@@ -10,8 +10,8 @@ import DocumentPreviewModal from '../ui/DocumentPreviewModal';
 import Toast from '../common/Toast';
 
 export default function ProposalRequestsAdmin() {
-  const [requests, setRequests] = useState<ProposalRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<ProposalRequest | null>(null);
+  const [requests, setRequests] = useState<Consumer[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<Consumer | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +24,11 @@ export default function ProposalRequestsAdmin() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.get('/proposal-requests');
-      setRequests(data || []);
+      const data = await api.get('/consumers?status=PROPOSAL_REQUESTED,PROPOSAL_GENERATED');
+      const filtered = Array.isArray(data) ? data.filter((c: any) => 
+        c.status === 'PROPOSAL_REQUESTED' || c.status === 'PROPOSAL_GENERATED'
+      ) : [];
+      setRequests(filtered);
     } catch (err) {
       setError('Erro ao carregar as solicitações de propostas.');
       toast.showError('Não foi possível carregar as solicitações.');
@@ -55,7 +58,7 @@ export default function ProposalRequestsAdmin() {
       const formData = new FormData();
       formData.append('file', file);
 
-      await api.patch(`/proposal-requests/${requestToGenerateId}/generate`, formData);
+      await api.patch(`/consumers/${requestToGenerateId}/proposal-generate`, formData);
       toast.showSuccess('Proposta gerada e arquivo enviado com sucesso!');
       fetchRequests();
       setSelectedRequest(null);
@@ -72,7 +75,7 @@ export default function ProposalRequestsAdmin() {
     if (!window.confirm("Você tem certeza que deseja excluir esta solicitação? Essa ação não pode ser desfeita.")) return;
 
     try {
-      await api.delete(`/proposal-requests/${id}`);
+      await api.delete(`/consumers/${id}`);
       toast.showSuccess('Solicitação excluída com sucesso!');
       fetchRequests();
       if (selectedRequest?.id === id) {
@@ -89,7 +92,7 @@ export default function ProposalRequestsAdmin() {
       const token = localStorage.getItem('accessToken');
       if (!token) throw new Error('Token não encontrado');
 
-      const response = await fetch(`${api.baseURL}/proposal-requests/${id}/document`, {
+      const response = await fetch(`${api.baseURL}/consumers/${id}/proposal-document`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -188,7 +191,7 @@ export default function ProposalRequestsAdmin() {
                 {requests.map((request) => (
                   <tr key={request.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-display font-medium text-slate-900">{request.clientName}</div>
+                      <div className="font-display font-medium text-slate-900">{request.name}</div>
                       <div className="text-xs text-slate-500 mt-0.5">ID: {request.id}</div>
                     </td>
                     <td className="px-6 py-4">
@@ -202,8 +205,8 @@ export default function ProposalRequestsAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-slate-900">{request.representative.name}</div>
-                      <div className="text-xs text-slate-500">{request.representative.email}</div>
+                      <div className="text-sm font-medium text-slate-900">{request.Representative?.name || request.representativeName || '-'}</div>
+                      <div className="text-xs text-slate-500">{request.Representative?.email || '-'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-slate-700">
@@ -211,11 +214,11 @@ export default function ProposalRequestsAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {request.status === 'PENDING' ? (
+                      {request.status === 'PROPOSAL_REQUESTED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          <Clock className="w-3.5 h-3.5" /> Pendente
+                          <Clock className="w-3.5 h-3.5" /> Solicitada
                         </span>
-                      ) : request.status === 'GENERATED' ? (
+                      ) : request.status === 'PROPOSAL_GENERATED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <CheckCircle className="w-3.5 h-3.5" /> Gerada
                         </span>
@@ -234,7 +237,7 @@ export default function ProposalRequestsAdmin() {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                        {request.status === 'PENDING' ? (
+                        {request.status === 'PROPOSAL_REQUESTED' ? (
                           <button
                             onClick={(e) => triggerFileInput(request.id, e)}
                             className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg text-sm font-medium transition-colors"
@@ -242,7 +245,7 @@ export default function ProposalRequestsAdmin() {
                             <Upload className="w-4 h-4" />
                             Anexar e Gerar
                           </button>
-                        ) : request.status === 'GENERATED' && (
+                        ) : request.status === 'PROPOSAL_GENERATED' && (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => handleViewDocument(request.id, e)}
@@ -301,12 +304,12 @@ export default function ProposalRequestsAdmin() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <span className="block text-sm font-medium text-slate-500 mb-1">Cliente Solicitante</span>
-                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.clientName}</span>
+                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.name}</span>
                     </div>
                     <div>
                       <span className="block text-sm font-medium text-slate-500 mb-1">Representante Vinculado</span>
-                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.representative?.name}</span>
-                      <span className="block text-sm text-slate-500">{selectedRequest.representative?.email}</span>
+                      <span className="block text-base font-display font-semibold text-slate-900">{selectedRequest.Representative?.name || selectedRequest.representativeName || '-'}</span>
+                      <span className="block text-sm text-slate-500">{selectedRequest.Representative?.email || '-'}</span>
                     </div>
                   </div>
 
@@ -317,19 +320,18 @@ export default function ProposalRequestsAdmin() {
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                       {Object.entries(selectedRequest).map(([key, value]) => {
-                        if (['id', 'clientName', 'representative', 'status', 'createdAt', 'updatedAt', 'fileUrl', 'proposalUrl', 'documentUrl', 'proposalFileUrl'].includes(key)) return null;
+                        if (['id', 'name', 'Representative', 'status', 'createdAt', 'updatedAt', 'fileUrl', 'proposalUrl', 'documentUrl', 'proposalFileUrl', 'generator', 'invoiceUrl', 'invoiceFileName', 'invoiceScannedData', 'representativeId', 'generatorId', 'allocatedPercentage', 'invoiceUploadedAt'].includes(key)) return null;
                         if (typeof value === 'object' && value !== null) return null;
                         if (value === null || value === undefined || value === '') return null;
 
                         const keyTranslations: Record<string, string> = {
-                          representativeId: 'ID do Representante',
                           invoiceAmount: 'Valor da Fatura (R$)',
                           phaseType: 'Tipo de Fase',
                           kwhValue: 'Valor kWh',
                           phone: 'Telefone',
                           email: 'E-mail',
-                          averageConsumption: 'Consumo Médio (kWh)',
-                          discount: 'Desconto',
+                          averageMonthlyConsumption: 'Consumo Médio (kWh)',
+                          discountOffered: 'Desconto Oferecido (%)',
                           state: 'UF',
                           city: 'Cidade',
                           street: 'Rua',
@@ -342,8 +344,7 @@ export default function ProposalRequestsAdmin() {
                           phase: 'Fase',
                           notes: 'Observações',
                           documentType: 'Tipo de Documento',
-                          cpfCnpj: 'CPF/CNPJ',
-                          discountOffered: 'Desconto Oferecido (%)'
+                          cpfCnpj: 'CPF/CNPJ'
                         };
 
                         const valueTranslations: Record<string, string> = {
@@ -378,14 +379,23 @@ export default function ProposalRequestsAdmin() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+              <div className="p-6 border-t border-slate-100 flex flex-wrap justify-end gap-3 bg-slate-50/50">
+                {selectedRequest.invoiceUrl && (
+                  <button
+                    onClick={() => setPreviewUrl(selectedRequest.invoiceUrl!)}
+                    className="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium rounded-lg transition-colors flex items-center gap-2 border border-purple-100 mr-auto"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Ver Fatura Original
+                  </button>
+                )}
                 <button
                   onClick={() => setSelectedRequest(null)}
                   className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   Fechar
                 </button>
-                {selectedRequest.status === 'PENDING' ? (
+                {selectedRequest.status === 'PROPOSAL_REQUESTED' ? (
                   <button
                     onClick={(e) => triggerFileInput(selectedRequest.id, e)}
                     className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
@@ -393,7 +403,7 @@ export default function ProposalRequestsAdmin() {
                     <Upload className="h-4 w-4" />
                     Anexar Proposta Gerada
                   </button>
-                ) : selectedRequest.status === 'GENERATED' && (
+                ) : selectedRequest.status === 'PROPOSAL_GENERATED' && (
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => handleDeleteRequest(selectedRequest.id, e)}
