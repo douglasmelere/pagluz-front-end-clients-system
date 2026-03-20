@@ -75,10 +75,14 @@ export const api = {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
-  patch: (endpoint: string, data: any) => apiRequest(endpoint, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  }),
+  patch: (endpoint: string, data: any) => {
+    const isFormData = data instanceof FormData;
+    return apiRequest(endpoint, {
+      method: 'PATCH',
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    });
+  },
   delete: (endpoint: string) => apiRequest(endpoint, {
     method: 'DELETE',
   }),

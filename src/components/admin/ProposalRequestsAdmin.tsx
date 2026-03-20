@@ -24,8 +24,9 @@ export default function ProposalRequestsAdmin() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.get('/consumers/proposals');
-      setRequests(data || []);
+      const response = await api.get('/consumers/proposals');
+      const data = Array.isArray(response) ? response : (response?.data && Array.isArray(response.data) ? response.data : []);
+      setRequests(data);
     } catch (err) {
       setError('Erro ao carregar as solicitações de propostas.');
       toast.showError('Não foi possível carregar as solicitações.');
@@ -117,7 +118,7 @@ export default function ProposalRequestsAdmin() {
   const handleConfirmProposal = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     try {
-      await api.patch(`/consumers/${id}/proposal-confirm`);
+      await api.patch(`/consumers/${id}/proposal-confirm`, {});
       toast.showSuccess('Proposta confirmada e movida para a fila de pendentes!');
       fetchRequests();
       setSelectedRequest(null);
@@ -130,7 +131,7 @@ export default function ProposalRequestsAdmin() {
     if (e) e.stopPropagation();
     if (!window.confirm("Você tem certeza que deseja recusar esta solicitação de proposta?")) return;
     try {
-      await api.patch(`/consumers/${id}/proposal-refuse`);
+      await api.patch(`/consumers/${id}/proposal-refuse`, {});
       toast.showSuccess('Solicitação de proposta recusada.');
       fetchRequests();
       setSelectedRequest(null);
