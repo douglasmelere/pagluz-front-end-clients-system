@@ -306,6 +306,14 @@ export default function ProposalRequestsAdmin() {
                                   Confirmar
                                 </button>
                                 <button
+                                  onClick={(e) => openRefuseModal(request.id, e)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 rounded-lg text-sm font-medium transition-colors"
+                                  title="Recusar Proposta"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                  Recusar
+                                </button>
+                                <button
                                   onClick={(e) => handleViewDocument(request.id, e)}
                                   className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium transition-colors"
                                 >
@@ -490,6 +498,13 @@ export default function ProposalRequestsAdmin() {
                     </button>
                     {selectedRequest.status === 'PROPOSAL_GENERATED' && (
                       <>
+                        <button
+                          onClick={(e) => openRefuseModal(selectedRequest.id, e)}
+                          className="px-5 py-2 bg-orange-50 text-orange-700 border border-orange-200 font-medium rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-2"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Recusar
+                        </button>
                         <button
                           onClick={(e) => handleViewDocument(selectedRequest.id, e)}
                           className="px-5 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
