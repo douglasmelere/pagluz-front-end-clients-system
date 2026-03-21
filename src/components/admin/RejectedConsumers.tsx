@@ -25,22 +25,17 @@ export default function RejectedConsumers() {
   const fetchRejected = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/consumers');
-      let allData: Consumer[] = [];
+      const response = await api.get('/consumers/rejected');
+      let rejected: Consumer[] = [];
       if (Array.isArray(response)) {
-        allData = response;
-      } else if (response?.data && Array.isArray(response.data)) {
-        allData = response.data;
+        rejected = response;
+      } else if (response?.data?.consumers && Array.isArray(response.data.consumers)) {
+        rejected = response.data.consumers;
       } else if (response?.consumers && Array.isArray(response.consumers)) {
-        allData = response.consumers;
+        rejected = response.consumers;
+      } else if (response?.data && Array.isArray(response.data)) {
+        rejected = response.data;
       }
-      
-      const rejected = allData.filter((c: any) => 
-        c.status === 'REJECTED' || 
-        c.status === 'PROPOSAL_REJECTED' || 
-        c.approvalStatus === 'REJECTED' || 
-        c.proposalStatus === 'PROPOSAL_REJECTED'
-      );
       
       setConsumers(rejected);
     } catch (error) {

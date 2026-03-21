@@ -82,6 +82,26 @@ export const clienteConsumidorService = {
     return api.get(`/consumers/pending${qs.toString() ? `?${qs.toString()}` : ''}`);
   },
 
+  // Lista consumidores recusados com filtros e paginação
+  async getRejected(params: {
+    state?: string;
+    city?: string;
+    representativeId?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    consumers: ClienteConsumidor[];
+    pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  }> {
+    const qs = new URLSearchParams();
+    Object.entries(params || {}).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+    });
+    return api.get(`/consumers/rejected${qs.toString() ? `?${qs.toString()}` : ''}`);
+  },
+
   // Aprova um consumidor pendente
   async approve(id: string): Promise<void> {
     // Nosso helper api.post sempre envia body; enviar {} para manter consistência
