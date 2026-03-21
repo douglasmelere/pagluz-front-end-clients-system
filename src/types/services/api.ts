@@ -10,8 +10,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  // Só definir Content-Type quando houver body (POST/PUT/PATCH)
-  const contentTypeHeader = options.body ? { 'Content-Type': 'application/json' } : {};
+  // Só definir Content-Type quando houver body e não for FormData
+  const isFormData = options.body instanceof FormData;
+  const contentTypeHeader = (options.body && !isFormData) ? { 'Content-Type': 'application/json' } : {};
 
   const headers = {
     ...baseHeaders,
@@ -67,14 +68,22 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 export const api = {
   baseURL: API_BASE_URL,
   get: (endpoint: string) => apiRequest(endpoint),
-  post: (endpoint: string, data: any) => apiRequest(endpoint, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  put: (endpoint: string, data: any) => apiRequest(endpoint, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
+  post: (endpoint: string, data: any) => {
+    const isFormData = data instanceof FormData;
+    return apiRequest(endpoint, {
+      method: 'POST',
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    });
+  },
+  put: (endpoint: string, data: any) => {
+    const isFormData = data instanceof FormData;
+    return apiRequest(endpoint, {
+      method: 'PUT',
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    });
+  },
   patch: (endpoint: string, data: any) => {
     const isFormData = data instanceof FormData;
     return apiRequest(endpoint, {
