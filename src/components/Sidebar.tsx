@@ -26,13 +26,14 @@ import {
   BarChart3,
   BellRing,
   Coins,
+  ThumbsDown,
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 import { api } from '../types/services/api';
 import AvatarUpload from './common/AvatarUpload';
 
-type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas';
+type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados';
 
 interface SidebarProps {
   currentView: AppView;
@@ -177,6 +178,7 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
       gestaoSub.push({ id: 'solicitacoes', label: 'Solicitações', icon: FileText, view: 'solicitacoes', description: 'Propostas solicitadas' });
       gestaoSub.push({ id: 'pendentes', label: 'Pendentes', icon: UserCheck, view: 'pendentes', description: 'Aprovações' });
       gestaoSub.push({ id: 'mudancas', label: 'Mudanças', icon: Bell, view: 'mudancas', description: 'Alterações' });
+      gestaoSub.push({ id: 'recusados', label: 'Recusados', icon: ThumbsDown, view: 'recusados', description: 'Consumidores recusados' });
     }
 
     items.push({

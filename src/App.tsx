@@ -16,6 +16,7 @@ import GestaoComissoes from './components/GestaoComissoes';
 import SimulacaoEconomia from './components/SimulacaoEconomia';
 import PendingChanges from './components/admin/PendingChanges';
 import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
+import RejectedConsumers from './components/admin/RejectedConsumers';
 import MateriaisComerciais from './components/MateriaisComerciais';
 import Comunicados from './components/Comunicados';
 import Feedbacks from './components/Feedbacks';
@@ -30,7 +31,7 @@ import { startVersionMonitoring, reloadWithoutCache } from './utils/versionCheck
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -129,6 +130,8 @@ function AppContent() {
         return <SimulacaoEconomia />;
       case 'solicitacoes':
         return <ProposalRequestsAdmin />;
+      case 'recusados':
+        return <RejectedConsumers />;
       case 'materiais':
         return <MateriaisComerciais />;
       case 'comunicados':
