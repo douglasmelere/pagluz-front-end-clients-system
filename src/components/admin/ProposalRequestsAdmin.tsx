@@ -232,7 +232,15 @@ export default function ProposalRequestsAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {requests.map((request) => (
+                {requests.map((request: any) => {
+                  const resolveStatus = (req: any) => {
+                    const statuses = [req.proposalStatus, req.status, req.approvalStatus];
+                    const proposalState = statuses.find(s => ['PROPOSAL_REQUESTED', 'PROPOSAL_GENERATED', 'PROPOSAL_REJECTED'].includes(s));
+                    return proposalState || req.proposalStatus || req.status || req.approvalStatus || 'UNKNOWN';
+                  };
+                  const currentStatus = resolveStatus(request);
+                  
+                  return (
                   <tr key={request.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-display font-medium text-slate-900">{request.name}</div>
@@ -258,21 +266,21 @@ export default function ProposalRequestsAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {request.status === 'PROPOSAL_REQUESTED' ? (
+                      {currentStatus === 'PROPOSAL_REQUESTED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                           <Clock className="w-3.5 h-3.5" /> Solicitada
                         </span>
-                      ) : request.status === 'PROPOSAL_GENERATED' ? (
+                      ) : currentStatus === 'PROPOSAL_GENERATED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <CheckCircle className="w-3.5 h-3.5" /> Gerada
                         </span>
-                      ) : request.status === 'PROPOSAL_REJECTED' ? (
+                      ) : currentStatus === 'PROPOSAL_REJECTED' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           <XCircle className="w-3.5 h-3.5" /> Recusada
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                          <AlertCircle className="w-3.5 h-3.5" /> {request.status}
+                          <AlertCircle className="w-3.5 h-3.5" /> {currentStatus}
                         </span>
                       )}
                     </td>
@@ -285,7 +293,7 @@ export default function ProposalRequestsAdmin() {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                        {request.status === 'PROPOSAL_REQUESTED' ? (
+                        {currentStatus === 'PROPOSAL_REQUESTED' ? (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => triggerFileInput(request.id, e)}
@@ -302,9 +310,9 @@ export default function ProposalRequestsAdmin() {
                               <XCircle className="w-5 h-5" />
                             </button>
                           </div>
-                        ) : (request.status === 'PROPOSAL_GENERATED' || request.status === 'PROPOSAL_REJECTED') && (
+                        ) : (currentStatus === 'PROPOSAL_GENERATED' || currentStatus === 'PROPOSAL_REJECTED') && (
                           <div className="flex items-center gap-2">
-                            {request.status === 'PROPOSAL_GENERATED' && (
+                            {currentStatus === 'PROPOSAL_GENERATED' && (
                               <>
                                 <button
                                   onClick={(e) => handleConfirmProposal(request.id, e)}
@@ -350,7 +358,7 @@ export default function ProposalRequestsAdmin() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
@@ -457,22 +465,33 @@ export default function ProposalRequestsAdmin() {
               </div>
 
               <div className="p-6 border-t border-slate-100 flex flex-wrap justify-end gap-3 bg-slate-50/50">
-                {selectedRequest.invoiceUrl && (
-                  <button
-                    onClick={() => setPreviewUrl(selectedRequest.invoiceUrl!)}
-                    className="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium rounded-lg transition-colors flex items-center gap-2 border border-purple-100 mr-auto"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Ver Fatura Original
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedRequest(null)}
-                  className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Fechar
-                </button>
-                {selectedRequest.status === 'PROPOSAL_REQUESTED' ? (
+                {(() => {
+                  const sReq: any = selectedRequest;
+                  const resolveStatus = (req: any) => {
+                    const statuses = [req.proposalStatus, req.status, req.approvalStatus];
+                    const proposalState = statuses.find(s => ['PROPOSAL_REQUESTED', 'PROPOSAL_GENERATED', 'PROPOSAL_REJECTED'].includes(s));
+                    return proposalState || req.proposalStatus || req.status || req.approvalStatus || 'UNKNOWN';
+                  };
+                  const modalStatus = resolveStatus(sReq);
+                  
+                  return (
+                    <>
+                      {selectedRequest.invoiceUrl && (
+                        <button
+                          onClick={() => setPreviewUrl(selectedRequest.invoiceUrl!)}
+                          className="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium rounded-lg transition-colors flex items-center gap-2 border border-purple-100 mr-auto"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Ver Fatura Original
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setSelectedRequest(null)}
+                        className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        Fechar
+                      </button>
+                      {modalStatus === 'PROPOSAL_REQUESTED' ? (
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => openRefuseModal(selectedRequest.id, e)}
@@ -489,7 +508,7 @@ export default function ProposalRequestsAdmin() {
                       Anexar Proposta Gerada
                     </button>
                   </div>
-                ) : (selectedRequest.status === 'PROPOSAL_GENERATED' || selectedRequest.status === 'PROPOSAL_REJECTED') && (
+                ) : (modalStatus === 'PROPOSAL_GENERATED' || modalStatus === 'PROPOSAL_REJECTED') && (
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => handleDeleteRequest(selectedRequest.id, e)}
@@ -505,7 +524,7 @@ export default function ProposalRequestsAdmin() {
                       <Upload className="h-4 w-4" />
                       Substituir
                     </button>
-                    {selectedRequest.status === 'PROPOSAL_GENERATED' && (
+                    {modalStatus === 'PROPOSAL_GENERATED' && (
                       <>
                         <button
                           onClick={(e) => openRefuseModal(selectedRequest.id, e)}
@@ -532,6 +551,9 @@ export default function ProposalRequestsAdmin() {
                     )}
                   </div>
                 )}
+                </>
+              )
+            })()}
               </div>
             </div>
           </div>
