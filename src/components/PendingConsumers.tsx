@@ -24,6 +24,7 @@ import Button from './ui/Button';
 import Input from './ui/Input';
 import Select from './ui/Select';
 import Badge from './ui/Badge';
+import { translateConsumerType } from '../utils/formatters';
 
 type Filters = {
   state?: string;
@@ -471,7 +472,7 @@ export default function PendingConsumers() {
                       </td>
                       <td className="px-6 py-4">
                         <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200">
-                          {c.consumerType}
+                          {translateConsumerType(c.consumerType)}
                         </Badge>
                       </td>
                       <td className="px-6 py-4">

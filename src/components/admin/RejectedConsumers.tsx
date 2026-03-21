@@ -14,6 +14,7 @@ import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { translateConsumerType } from '../../utils/formatters';
 
 export default function RejectedConsumers() {
   const { user } = useApp();
@@ -136,7 +137,7 @@ export default function RejectedConsumers() {
                         <span className="font-bold text-slate-900 font-display text-base">{c.name}</span>
                         <span className="text-xs text-slate-500 font-mono font-medium">{c.cpfCnpj}</span>
                         <Badge variant="outline" className="mt-2 w-max bg-slate-100 text-slate-600 border-slate-200 text-[10px]">
-                          {c.consumerType}
+                          {translateConsumerType(c.consumerType)}
                         </Badge>
                       </div>
                     </td>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Consumer, ConsumerStatus, Generator, DocumentType } from '../types';
 import { Badge } from './ui';
+import { translateConsumerType } from '../utils/formatters';
 
 interface ConsumerTableProps {
   consumers: Consumer[];
@@ -161,9 +162,9 @@ export default function ConsumerTable({
 
                   <td className="px-6 py-5">
                     <div className="space-y-1">
-                      <div className="text-xs font-medium text-slate-900 capitalize flex items-center">
+                      <div className="text-xs font-medium text-slate-900 flex items-center">
                         <Building className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                        {cliente.consumerType.replace('_', ' ').toLowerCase()}
+                        {translateConsumerType(cliente.consumerType)}
                       </div>
                       <div className="text-xs text-slate-600 flex items-center bg-slate-100 px-2 py-1 rounded-lg w-fit">
                         <Activity className="h-3.5 w-3.5 mr-2 text-orange-500" />

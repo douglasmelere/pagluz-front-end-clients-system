@@ -25,6 +25,7 @@ import { api } from '../types/services/api';
 import { useToast } from '../hooks/useToast';
 import { useNavigation } from '../hooks/useNavigation';
 import AdminNotificationsBell from './admin/AdminNotificationsBell';
+import { translateConsumerType } from '../utils/formatters';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -810,10 +811,7 @@ export default function Dashboard() {
                     <div key={consumerType.consumerType} className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-lg font-bold text-slate-900">
-                          {consumerType.consumerType === 'COMMERCIAL' ? 'Comercial' :
-                            consumerType.consumerType === 'RESIDENTIAL' ? 'Residencial' :
-                              consumerType.consumerType === 'INDUSTRIAL' ? 'Industrial' :
-                                consumerType.consumerType === 'RURAL' ? 'Rural' : consumerType.consumerType}
+                          {translateConsumerType(consumerType.consumerType)}
                         </span>
                         <span className="text-lg font-bold text-slate-900">{percentage}%</span>
                       </div>
