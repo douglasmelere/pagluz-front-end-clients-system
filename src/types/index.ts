@@ -109,6 +109,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  avatarUrl?: string | null;
 }
 
 // Interfaces de Representantes

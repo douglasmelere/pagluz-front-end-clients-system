@@ -97,13 +97,18 @@ export function useAuth() {
 
   const isAuthenticated = useMemo(() => !loading && !!user, [loading, user]);
 
+  const updateUser = useCallback((updatedUserData: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updatedUserData } : prev);
+  }, []);
+
   const result = {
     user,
     loading,
     error,
     login,
     logout,
-    isAuthenticated
+    isAuthenticated,
+    updateUser
   };
 
   // Removido log que pode causar re-renders

@@ -17,6 +17,7 @@ import SimulacaoEconomia from './components/SimulacaoEconomia';
 import PendingChanges from './components/admin/PendingChanges';
 import ProposalRequestsAdmin from './components/admin/ProposalRequestsAdmin';
 import RejectedConsumers from './components/admin/RejectedConsumers';
+import AIAssistant from './components/admin/AIAssistant';
 import MateriaisComerciais from './components/MateriaisComerciais';
 import Comunicados from './components/Comunicados';
 import Feedbacks from './components/Feedbacks';
@@ -31,7 +32,7 @@ import { startVersionMonitoring, reloadWithoutCache } from './utils/versionCheck
 
 function AppContent() {
   const { user, loading: authLoading, isAuthenticated } = useApp();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados' | 'ai-assistant'>('dashboard');
   const [sidebarWidth, setSidebarWidth] = useState(272);
 
   // Listener para eventos de navegação
@@ -150,6 +151,8 @@ function AppContent() {
         return <DashboardAvancado />;
       case 'tarifas':
         return <TarifasKwh />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       default:
         return <Dashboard />;
     }

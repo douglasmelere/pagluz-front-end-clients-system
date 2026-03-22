@@ -27,13 +27,14 @@ import {
   BellRing,
   Coins,
   ThumbsDown,
+  Bot
 } from 'lucide-react';
 import PagluzLogo from './common/PagluzLogo';
 import { useResponsive } from '../hooks/useResponsive';
 import { api } from '../types/services/api';
 import AvatarUpload from './common/AvatarUpload';
 
-type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados';
+type AppView = 'dashboard' | 'geradores' | 'consumidores' | 'pendentes' | 'mudancas' | 'representantes' | 'contratos' | 'usuarios' | 'logs' | 'configuracoes' | 'comissoes' | 'simulacao' | 'solicitacoes' | 'materiais' | 'comunicados' | 'feedbacks' | 'relatorios' | 'ranking' | 'timeline' | 'push' | 'dashboard-avancado' | 'tarifas' | 'recusados' | 'ai-assistant';
 
 interface SidebarProps {
   currentView: AppView;
@@ -156,6 +157,10 @@ export default function Sidebar({ currentView, onViewChange, onWidthChange }: Si
     const items: MenuItemDef[] = [];
 
     items.push({ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, view: 'dashboard', description: 'Visão geral' });
+
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+      items.push({ id: 'ai-assistant', label: 'IA Assistant', icon: Bot, view: 'ai-assistant', description: 'Assistente Virtual IA' });
+    }
 
     items.push({
       id: 'comercial',
